@@ -60,7 +60,19 @@ class Card:
                 self.player.hands.pop(i)
                 break
         field.played.append(self)
-        
+    
+    def opponentChoice(self):
+        field = self.field
+        msg = '相手を選択してください'+'\n'
+        opponentPlayers = field.players
+        opponentPlayers.remove(self.player)
+        for i in range(len(opponentPlayers)):
+            player = opponentPlayers[i]
+            msg += str(i) + '：' + player.name + '\n'
+            
+        opponentNumber = int(input(msg))
+        opponent = field.players[opponentNumber]
+        return opponent
 
 
 
@@ -75,15 +87,7 @@ class Card1(Card):
         field = self.field
         print(self.player.name,'が',self.name,'を使用しました。')
         if inType(type=Card1,list=field.played):
-            msg = '相手を選択してください'+'\n'
-            opponentPlayers = field.players
-            opponentPlayers.remove(self.player)
-            for i in range(len(opponentPlayers)):
-                player = opponentPlayers[i]
-                msg += str(i) + '：' + player.name + '\n'
-                
-            opponentNumber = int(input(msg))
-            opponent = field.players[opponentNumber]
+            opponent = super().opponentChoice()
 
             msg = '相手に捨てさせるカードを選択してください'+'\n'
             opponentHands = list(opponent.hands)
@@ -105,15 +109,7 @@ class Card2(Card):
     def play(self):
         field = self.field
         print(self.player.name,'が',self.name,'を使用しました。')
-        msg = '相手を選択してください'+'\n'
-        opponentPlayers = field.players
-        opponentPlayers.remove(self.player)
-        for i in range(len(opponentPlayers)):
-            player = opponentPlayers[i]
-            msg += str(i) + '：' + player.name + '\n'
-                
-        opponentNumber = int(input(msg))
-        opponent = field.players[opponentNumber]
+        opponent = super().opponentChoice()
         cards = [Card1(field=self.field,player=self),Card2(field=self.field,player=self)]
         msg = opponent.name+'が持っていそうなカードを予想してください。\n'
         for card in cards:
