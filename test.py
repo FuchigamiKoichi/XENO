@@ -1,7 +1,4 @@
-player1 = {'name':'Kishida','isDead':True,'Hands':[1,2],'Played':[1,3],'Afected':True,'Get':1}
-player2 = {'name':'Abe','isDead':True,'Hands':[1,2],'Played':[1,3],'Afected':True,'Get':1}
-Field = {'Played':[],'Players':[player1,player2],'Deck':[]}
-
+import random
 
 def inType(type:type,list:list):
     for content in list:
@@ -11,9 +8,48 @@ def inType(type:type,list:list):
             continue
     return False
 
+def shuffle(list:list):
+    list_copy = list.copy()
+    arange = []
+    for i in range(len(list)):
+        arange.append(i)
+    random.shuffle(arange)
+    
+    result = []
+    for i in arange:
+        result.append(list_copy[i])
+    return result
+    
+
+# ゲームクラス：ゲームに必要なものを定義する
+class Game:
+    def __init__(self,player_number):
+        # プレイヤーの生成
+        players = []
+        for i in range(player_number):
+            i += 1
+            msg = f'プレイヤー{i}の名前を入力してください'
+            name = str(input(msg))
+            players.append(Player(name=name))
+        players = shuffle(players)
+
+        # デッキを生成
+        deck = Deck()
+
+        # ゲームフィールドの生成
+        self.field = Field(players=players,deck=deck)
+    
+    def game(self):
+        msg = f'先攻・後攻を決めます'
+        print(msg)
+        players = self.field.players
+        msg = f'先攻は{players[0].name}です。'
+        print(msg)
+
+
 # プレイヤークラス
 class Player:
-    def __init__(self, name:str):
+    def __init__(self, name:str, ):
         self.name = name
         self.live = True # 生死の状態
         self.hands = [] # 手札
@@ -21,28 +57,38 @@ class Player:
         self.affected = True # 効果を受けつける状態かどうか
         self.get = 1 # 山札から
     
+    # リセット関数：値を初期状態に設定したい時に使う
     def reset(self):
         self.live = True
         self.hands = []
         self.played = []
         self.affected = True
         self.get = 1
+    
+    # ドロー関数：プレイヤーにハンドを追加する
+    def draw(self, number:int):
+        for _ in range(number):
+            self.hands.append()
 
+# デッククラス：ゲームの山札を定義する
+class Deck:
+    def __init__(self):
+        deck = []
+        for card in range(10):
+            card += 1
+            if card < 9:
+                for _ in range(2):
+                    deck.append(card)
+            else:
+                deck.append(card)
+        self.deck = shuffle(deck)
 
 # フィールドクラス
 class Field:
-    def __init__(self,players:list):
-        self.players = players
+    def __init__(self,players:list,deck:Deck):
         self.played = []
-        Deck = []
-        for number in range(10):
-            if number < 9:
-                for _ in range(2):
-                    Deck.append(number)
-            else:
-                Deck.append(number)
-        self.Deck = Deck
-
+        self.deck = deck
+        self.players = players
 
 # カードのスーパークラス
 # 数字と効果を定義
@@ -64,15 +110,21 @@ class Card:
     def opponentChoice(self):
         field = self.field
         msg = '相手を選択してください'+'\n'
-        opponentPlayers = field.players
-        opponentPlayers.remove(self.player)
-        for i in range(len(opponentPlayers)):
-            player = opponentPlayers[i]
-            msg += str(i) + '：' + player.name + '\n'
+        opponentPlayers = []
+        for player in field.players:
+            if player != self.player and player.affected:
+                opponentPlayers.append(player)
+
+        if len(opponentPlayers) != 0:
+            for i in range(len(opponentPlayers)):
+                player = opponentPlayers[i]
+                msg += str(i) + '：' + player.name + '\n'
+                opponentNumber = int(input(msg))
+                opponent = opponentPlayers[opponentNumber]
+            return opponent
+        else:
+            return None
             
-        opponentNumber = int(input(msg))
-        opponent = field.players[opponentNumber]
-        return opponent
 
 
 
@@ -88,15 +140,17 @@ class Card1(Card):
         print(self.player.name,'が',self.name,'を使用しました。')
         if inType(type=Card1,list=field.played):
             opponent = super().opponentChoice()
+            if opponent:
+                msg = '相手に捨てさせるカードを選択してください'+'\n'
+                opponentHands = list(opponent.hands)
+                for i in range(len(opponentHands)):
+                    card = opponent.hands[i]
+                    msg += str(i)+'：'+str(card.number)+str(card.name)+'\n'
 
-            msg = '相手に捨てさせるカードを選択してください'+'\n'
-            opponentHands = list(opponent.hands)
-            for i in range(len(opponentHands)):
-                card = opponent.hands[i]
-                msg += str(i)+'：'+str(card.number)+str(card.name)+'\n'
-
-            trushNumber = int(input(msg))
-            opponent.hands.pop(trushNumber)
+                trushNumber = int(input(msg))
+                opponent.hands.pop(trushNumber)
+            else:
+                print('選択可能な相手がいないため、カードの効果は使用できません。')
         
         super().move()
 
@@ -110,62 +164,58 @@ class Card2(Card):
         field = self.field
         print(self.player.name,'が',self.name,'を使用しました。')
         opponent = super().opponentChoice()
-        cards = [Card1(field=self.field,player=self),Card2(field=self.field,player=self)]
-        msg = opponent.name+'が持っていそうなカードを予想してください。\n'
-        for card in cards:
-            msg += str(card.number)+'：'+card.name+'\n'
-        predNumber = int(input(msg))
-        predCard = cards[predNumber-1]
-        if inType(type=type(predCard),list=opponent.hands):
-            opponent.live = False
+        if opponent: # opponentの存在確認
+            cards = [Card1(field=field,player=self),Card2(field=field,player=self)]
+            msg = opponent.name+'が持っていそうなカードを予想してください。\n'
+            for card in cards:
+                msg += str(card.number)+'：'+card.name+'\n'
+            predNumber = int(input(msg))
+            predCard = cards[predNumber-1]
+            if inType(type=type(predCard),list=opponent.hands):
+                opponent.live = False
+        else:
+            print('選択可能な相手がいないため、カードの効果は使用できません。')
         
         super().move()
 
 
-# プレイヤーを作成
-player1 = Player("Alice")
-player2 = Player("Bob")
+# カード3：占い師
+class Card3(Card):
+    def __init__(self, field, player):
+        super().__init__(number=3, name='占い師', field=field, player=player)
+    
+    def play(self):
+        print(self.player.name,'が',self.name,'を使用しました。')
+        opponent = super().opponentChoice()
+        if opponent: # opponentの存在確認
+            hands = []
+            for card in opponent.hands:
+                hands.append(f'{str(card.number)}：{card.name}')
+            print(f'{opponent.name}が持っているカードは{hands}です。')
+        else:
+            print('選択可能な相手がいないため、カードの効果は使用できません。')
 
-Game = Field(players=[player1,player2])
-card1_1 = Card1(field=Game,player=player1)
-card1_2 = Card1(field=Game,player=player1)
-card2_1 = Card2(field=Game,player=player1)
-card1_3 = Card1(field=Game,player=player2)
-card1_4 = Card1(field=Game,player=player2)
+        super().move()
 
+# カード4：乙女
+class Card4(Card):
+    def __init__(self, field, player):
+        super().__init__(number=4, name='乙女', field=field, player=player)
+    
+    def play(self):
+        print(self.player.name,'が',self.name,'を使用しました。')
+        self.player.affected = False
+        super().move()
 
-player1.hands = [card1_1,card2_1]
-player2.hands = [card1_3,card1_4]
+# カード5：死神
+class Card4(Card):
+    def __init__(self, field, player):
+        super().__init__(number=4, name='乙女', field=field, player=player)
+    
+    def play(self):
+        print(self.player.name,'が',self.name,'を使用しました。')
+        self.player.affected = False
+        super().move()
 
-# テスト
-players = [player1,player2]
-test = [1,2]
-
-for player in Game.players:
-    cards = []
-    for card in player.hands:
-        cards.append(card.name)
-    print(str(player.name),'が持っているカード','：',cards)
-
-cards = []
-for card in Game.played:
-    cards.append(card.name)
-print('場に出ているカード','：',cards)
-print()
-
-card2_1.play()
-print()
-
-for player in Game.players:
-    cards = []
-    for card in player.hands:
-        cards.append(card.name)
-    print(str(player.name),'が持っているカード','：',cards)
-
-cards = []
-for card in Game.played:
-    cards.append(card.name)
-print('場に出ているカード','：',cards)
-print()
-print(player1.name,'の命は',player1.live,'です。')
-print(player2.name,'の命は',player2.live,'です。')
+game = Game(2)
+game.game()
