@@ -19,37 +19,11 @@ def shuffle(list:list):
     for i in arange:
         result.append(list_copy[i])
     return result
-    
-
-# ゲームクラス：ゲームに必要なものを定義する
-class Game:
-    def __init__(self,player_number):
-        # プレイヤーの生成
-        players = []
-        for i in range(player_number):
-            i += 1
-            msg = f'プレイヤー{i}の名前を入力してください'
-            name = str(input(msg))
-            players.append(Player(name=name))
-        players = shuffle(players)
-
-        # デッキを生成
-        deck = Deck()
-
-        # ゲームフィールドの生成
-        self.field = Field(players=players,deck=deck)
-    
-    def game(self):
-        msg = f'先攻・後攻を決めます'
-        print(msg)
-        players = self.field.players
-        msg = f'先攻は{players[0].name}です。'
-        print(msg)
 
 
 # プレイヤークラス
 class Player:
-    def __init__(self, name:str, ):
+    def __init__(self, name:str):
         self.name = name
         self.live = True # 生死の状態
         self.hands = [] # 手札
@@ -57,38 +31,35 @@ class Player:
         self.affected = True # 効果を受けつける状態かどうか
         self.get = 1 # 山札から
     
-    # リセット関数：値を初期状態に設定したい時に使う
-    def reset(self):
-        self.live = True
-        self.hands = []
-        self.played = []
-        self.affected = True
-        self.get = 1
-    
-    # ドロー関数：プレイヤーにハンドを追加する
-    def draw(self, number:int):
-        for _ in range(number):
-            self.hands.append()
-
-# デッククラス：ゲームの山札を定義する
-class Deck:
-    def __init__(self):
-        deck = []
-        for card in range(10):
-            card += 1
-            if card < 9:
-                for _ in range(2):
-                    deck.append(card)
-            else:
-                deck.append(card)
-        self.deck = shuffle(deck)
+    def show_hands(self):
+        hands = []
+        for card in self.hands:
+            hands.append(card.name)
+        print(hands)
 
 # フィールドクラス
 class Field:
-    def __init__(self,players:list,deck:Deck):
+    def __init__(self,players:list):
         self.played = []
-        self.deck = deck
         self.players = players
+        admin = Player('admin')
+        cards = [Card1(field=self, player=admin),Card2(field=self,player=admin),Card3(field=self,player=admin),Card4(field=self,player=admin),Card5(field=self,player=admin)]
+        deck = []
+        for number in range(4):
+            if number < 8:
+                for _ in range(2):
+                    deck.append(cards[number])
+
+        self.deck = shuffle(deck)
+            
+
+    def draw(self, player:Player):
+        for _ in range(player.get):
+            # card = self.deck.pop()
+            card = Card5(field=self,player=Player('admin'))
+            card.player = player
+            player.hands.append(card)
+            print(f'{player.name}は{card.name}を引きました。')
 
 # カードのスーパークラス
 # 数字と効果を定義
@@ -188,10 +159,7 @@ class Card3(Card):
         print(self.player.name,'が',self.name,'を使用しました。')
         opponent = super().opponentChoice()
         if opponent: # opponentの存在確認
-            hands = []
-            for card in opponent.hands:
-                hands.append(f'{str(card.number)}：{card.name}')
-            print(f'{opponent.name}が持っているカードは{hands}です。')
+            opponent.show_hands()
         else:
             print('選択可能な相手がいないため、カードの効果は使用できません。')
 
@@ -208,14 +176,63 @@ class Card4(Card):
         super().move()
 
 # カード5：死神
-class Card4(Card):
+class Card5(Card):
     def __init__(self, field, player):
-        super().__init__(number=4, name='乙女', field=field, player=player)
+        super().__init__(number=4, name='死神', field=field, player=player)
     
     def play(self):
         print(self.player.name,'が',self.name,'を使用しました。')
-        self.player.affected = False
+        opponent = super().opponentChoice()
+        print(f'{opponent.name}は、山札から1枚引きます。')
+        if opponent: # opponentの存在確認
+            self.field.draw(player=opponent)
+        
+        drop_card = opponent.hands.pop(random.randint(0,1))
+        print(f'{opponent.name}の手札から{drop_card.name}を捨てました。')
+        opponent.show_hands()
+        self.field.played.append(drop_card)
         super().move()
+
+# ゲームクラス：ゲームに必要なものを定義する
+class Game:
+    def __init__(self,player_number):
+        # プレイヤーの生成
+        players = []
+        for i in range(player_number):
+            i += 1
+            msg = f'プレイヤー{i}の名前を入力してください。\n'
+            name = str(input(msg))
+            players.append(Player(name=name))
+        players = shuffle(players)
+
+        # ゲームフィールドの生成
+        self.field = Field(players=players)
+        for p in self.field.players:
+            self.field.draw(p)
+    
+    def turn(self, player:Player):
+        print()
+        msg = f'{player.name}の番です。\n山札からカードを1枚引きます。'
+        print(msg)
+        field = self.field
+        field.draw(player=player)
+        player.hands[0].play()
+    
+    def game(self):
+        msg = f'先攻・後攻を決めます'
+        print(msg)
+        print()
+        players = self.field.players
+        msg = f'先攻は{players[0].name}です。'
+        print(msg)
+        print()
+        self.turn(player=players[0])
+        hands = []
+        for card in players[0].hands:
+            hands.append(card.name)
+        print(f'{players[0].name}の手札は{hands}です。')
+        print()
+
 
 game = Game(2)
 game.game()
