@@ -63,7 +63,7 @@ class Field:
         #     print(f'{player.name}は{card.name}を引きました。')
         if player.get == 1:
             card = self.deck.pop()
-            card = Card7(field=self,player=Player('admin'))
+            card = Card8(field=self,player=Player('admin'))
             card.player = player
             player.hands.append(card)
             print(f'{player.name}は{card.name}を引きました。')
@@ -266,6 +266,21 @@ class Card7(Card):
         super().move()
 
 
+# カード8：精霊
+class Card8(Card):
+    def __init__(self, field, player):
+        super().__init__(number=8, name='精霊', field=field, player=player)
+    
+    def play(self):
+        print(self.player.name,'が',self.name,'を使用しました。')
+        opponent = super().opponentChoice()
+        if opponent:    
+            super().move()
+            copy = self.player.hands[0]
+            self.player.hands[0] = opponent.hands[0]
+            opponent.hands[0] = copy
+
+
 # ゲームクラス：ゲームに必要なものを定義する
 class Game:
     def __init__(self,player_number):
@@ -311,7 +326,7 @@ class Game:
         print()
         players[1].show_hands()
         print()
-        
+
         self.turn(player=players[0])
         print()
         players[0].show_hands()
