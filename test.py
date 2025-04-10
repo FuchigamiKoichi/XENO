@@ -43,27 +43,24 @@ class Field:
         self.played = []
         self.players = players
         admin = Player('admin')
-        cards = [Card1(field=self, player=admin),Card2(field=self,player=admin),Card3(field=self,player=admin),Card4(field=self,player=admin),Card5(field=self,player=admin),Card6(field=self,player=admin)]
+        cards = [Card1(field=self, player=admin),Card2(field=self,player=admin),Card3(field=self,player=admin),Card4(field=self,player=admin),Card5(field=self,player=admin),Card6(field=self,player=admin),Card7(field=self,player=admin),Card8(field=self,player=admin),Card9(field=self,player=admin),Card10(field=self,player=admin)]
         deck = []
-        for number in range(4):
-            if number < 8:
+        for number in range(10):
+            number += 1
+            if number <= 8:
                 for _ in range(2):
                     deck.append(cards[number])
+            else:
+                deck.append(cards[number])
 
         self.deck = shuffle(deck)
         self.reincarnation = self.deck.pop()
             
 
     def draw(self, player:Player):
-        # for _ in range(player.get):
-        #     # card = self.deck.pop()
-        #     card = Card6(field=self,player=Player('admin'))
-        #     card.player = player
-        #     player.hands.append(card)
-        #     print(f'{player.name}は{card.name}を引きました。')
         if player.get == 1:
             card = self.deck.pop()
-            card = Card8(field=self,player=Player('admin'))
+            card = Card9(field=self,player=Player('admin'))
             card.player = player
             player.hands.append(card)
             print(f'{player.name}は{card.name}を引きました。')
@@ -81,6 +78,7 @@ class Field:
                     self.deck.pop(i)
                     break
             player.get = 1
+        print(f'山札の残りは{len(self.deck)}です。')
 
 
 
@@ -146,14 +144,19 @@ class Card1(Card):
         if inType(type=Card1,list=field.played):
             opponent = super().opponentChoice()
             if opponent:
+                get_number = opponent.get
+                opponent.get = 1
+                self.field.draw(player=opponent)
+                opponent.get = get_number
                 msg = '相手に捨てさせるカードを選択してください'+'\n'
                 opponentHands = list(opponent.hands)
                 for i in range(len(opponentHands)):
                     card = opponent.hands[i]
-                    msg += str(i)+'：'+str(card.number)+str(card.name)+'\n'
+                    msg += str(i)+'：'+str(card.name)+'\n'
 
                 trushNumber = int(input(msg))
-                opponent.hands.pop(trushNumber)
+                trush_card = opponent.hands.pop(trushNumber)
+                self.field.played.append(trush_card)
             else:
                 print('選択可能な相手がいないため、カードの効果は使用できません。')
         
@@ -221,13 +224,16 @@ class Card5(Card):
         if opponent: # opponentの存在確認
             self.field.draw(player=opponent)
         
-        drop_card = opponent.hands.pop(random.randint(0,1))
-        if drop_card.number == 10:
-            # 捨てさせたカードが10の場合は相手を死亡させる
-            self.kill10(opponent)
-        print(f'{opponent.name}の手札から{drop_card.name}を捨てました。')
-        opponent.show_hands()
-        self.field.played.append(drop_card)
+            drop_card = opponent.hands.pop(random.randint(0,1))
+            self.field.played.append(drop_card)
+            if drop_card.number == 10:
+                # 捨てさせたカードが10の場合は相手を死亡させる
+                self.kill10(opponent)
+            print(f'{opponent.name}の手札から{drop_card.name}を捨てました。')
+            opponent.show_hands()
+            self.field.played.append(drop_card)
+        else:
+            print('選択可能な相手がいないため、カードの効果は使用できません。')
         super().move()
 
 
@@ -240,19 +246,22 @@ class Card6(Card):
         print(self.player.name,'が',self.name,'を使用しました。')
 
         opponent = super().opponentChoice()
-        if inType(type=Card6,list=self.field.played):
-            super().move()
-            if self.player.hands[0].number < opponent.hands[0].number:
-                super().kill(self.player)
-            elif self.player.hands[0].number == opponent.hands[0].number:
-                super().kill(self.player)
-                super().kill(opponent)
+        if opponent:
+            if inType(type=Card6,list=self.field.played):
+                super().move()
+                if self.player.hands[0].number < opponent.hands[0].number:
+                    super().kill(self.player)
+                elif self.player.hands[0].number == opponent.hands[0].number:
+                    super().kill(self.player)
+                    super().kill(opponent)
+                else:
+                    super().kill(opponent)
             else:
-                super().kill(opponent)
+                super().move()
+                self.player.show_hands()
+                opponent.show_hands()
         else:
-            super().move()
-            self.player.show_hands()
-            opponent.show_hands()
+            print('選択可能な相手がいないため、カードの効果は使用できません。')
 
 
 # カード7：賢者
@@ -279,6 +288,47 @@ class Card8(Card):
             copy = self.player.hands[0]
             self.player.hands[0] = opponent.hands[0]
             opponent.hands[0] = copy
+        else:
+            print('選択可能な相手がいないため、カードの効果は使用できません。')
+
+
+# カード9：賢者
+class Card9(Card):
+    def __init__(self, field, player):
+        super().__init__(number=9, name='皇帝', field=field, player=player)
+    
+    def play(self):
+        print(self.player.name,'が',self.name,'を使用しました。')
+        super().move()
+        opponent = super().opponentChoice()
+        if opponent:
+            get_number = opponent.get
+            opponent.get = 1
+            self.field.draw(player=opponent)
+            opponent.get = get_number
+            msg = '相手に捨てさせるカードを選択してください'+'\n'
+            opponentHands = list(opponent.hands)
+            for i in range(len(opponentHands)):
+                card = opponent.hands[i]
+                msg += str(i)+'：'+str(card.name)+'\n'
+
+            trushNumber = int(input(msg))
+            trush_card = opponent.hands.pop(trushNumber)
+            if trushNumber == 10:
+                self.kill()
+            self.field.played.append(trush_card)
+        else:
+            print('選択可能な相手がいないため、カードの効果は使用できません。')
+
+
+# カード10：英雄
+class Card10(Card):
+    def __init__(self, field, player):
+        super().__init__(number=10, name='英雄', field=field, player=player)
+    
+    def play(self):
+        print(self.player.name,'が',self.name,'を使用しました。')
+        super().move()
 
 
 # ゲームクラス：ゲームに必要なものを定義する
