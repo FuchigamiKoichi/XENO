@@ -35,7 +35,7 @@ class Player:
         hands = []
         for card in self.hands:
             hands.append(card.name)
-        print(hands)
+        print(f'{self.name}の手札は{hands}です。')
 
 # フィールドクラス
 class Field:
@@ -43,7 +43,7 @@ class Field:
         self.played = []
         self.players = players
         admin = Player('admin')
-        cards = [Card1(field=self, player=admin),Card2(field=self,player=admin),Card3(field=self,player=admin),Card4(field=self,player=admin),Card5(field=self,player=admin)]
+        cards = [Card1(field=self, player=admin),Card2(field=self,player=admin),Card3(field=self,player=admin),Card4(field=self,player=admin),Card5(field=self,player=admin),Card6(field=self,player=admin)]
         deck = []
         for number in range(4):
             if number < 8:
@@ -51,15 +51,17 @@ class Field:
                     deck.append(cards[number])
 
         self.deck = shuffle(deck)
+        self.reincarnation = self.deck.pop()
             
 
     def draw(self, player:Player):
         for _ in range(player.get):
             # card = self.deck.pop()
-            card = Card5(field=self,player=Player('admin'))
+            card = Card6(field=self,player=Player('admin'))
             card.player = player
             player.hands.append(card)
             print(f'{player.name}は{card.name}を引きました。')
+
 
 # カードのスーパークラス
 # 数字と効果を定義
@@ -95,6 +97,17 @@ class Card:
             return opponent
         else:
             return None
+    
+    def kill(self,player:Player):
+        player.live = False
+        print(f'{player.name}は死亡しました。')
+    
+    def kill10(self,player:Player):
+        for card in player.hands:
+            card.move()
+        player.hands.append(self.field.reincarnation)
+        print(f'{player.name}は転生しました。')
+        player.show_hands()
             
 
 
@@ -143,7 +156,7 @@ class Card2(Card):
             predNumber = int(input(msg))
             predCard = cards[predNumber-1]
             if inType(type=type(predCard),list=opponent.hands):
-                opponent.live = False
+                self.kill(opponent)
         else:
             print('選択可能な相手がいないため、カードの効果は使用できません。')
         
@@ -178,7 +191,7 @@ class Card4(Card):
 # カード5：死神
 class Card5(Card):
     def __init__(self, field, player):
-        super().__init__(number=4, name='死神', field=field, player=player)
+        super().__init__(number=5, name='死神', field=field, player=player)
     
     def play(self):
         print(self.player.name,'が',self.name,'を使用しました。')
@@ -188,10 +201,38 @@ class Card5(Card):
             self.field.draw(player=opponent)
         
         drop_card = opponent.hands.pop(random.randint(0,1))
+        if drop_card.number == 10:
+            # 捨てさせたカードが10の場合は相手を死亡させる
+            self.kill10(opponent)
         print(f'{opponent.name}の手札から{drop_card.name}を捨てました。')
         opponent.show_hands()
         self.field.played.append(drop_card)
         super().move()
+
+
+# カード6：貴族
+class Card6(Card):
+    def __init__(self, field, player):
+        super().__init__(number=6, name='貴族', field=field, player=player)
+    
+    def play(self):
+        print(self.player.name,'が',self.name,'を使用しました。')
+
+        opponent = super().opponentChoice()
+        if inType(type=Card6,list=self.field.played):
+            super().move()
+            if self.player.hands[0].number < opponent.hands[0].number:
+                super().kill(self.player)
+            elif self.player.hands[0].number == opponent.hands[0].number:
+                super().kill(self.player)
+                super().kill(opponent)
+            else:
+                super().kill(opponent)
+        else:
+            super().move()
+            self.player.show_hands()
+            opponent.show_hands()
+
 
 # ゲームクラス：ゲームに必要なものを定義する
 class Game:
@@ -227,11 +268,13 @@ class Game:
         print(msg)
         print()
         self.turn(player=players[0])
-        hands = []
-        for card in players[0].hands:
-            hands.append(card.name)
-        print(f'{players[0].name}の手札は{hands}です。')
         print()
+        players[0].show_hands()
+        print()
+        msg = f'後攻は{players[1].name}です。'
+        self.turn(player=players[1])
+        print()
+        players[1].show_hands()
 
 
 game = Game(2)
