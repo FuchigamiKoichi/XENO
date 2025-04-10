@@ -55,12 +55,33 @@ class Field:
             
 
     def draw(self, player:Player):
-        for _ in range(player.get):
-            # card = self.deck.pop()
-            card = Card6(field=self,player=Player('admin'))
+        # for _ in range(player.get):
+        #     # card = self.deck.pop()
+        #     card = Card6(field=self,player=Player('admin'))
+        #     card.player = player
+        #     player.hands.append(card)
+        #     print(f'{player.name}は{card.name}を引きました。')
+        if player.get == 1:
+            card = self.deck.pop()
+            card = Card7(field=self,player=Player('admin'))
             card.player = player
             player.hands.append(card)
             print(f'{player.name}は{card.name}を引きました。')
+            player.get = 1
+        else:
+            cards = self.deck[:player.get]
+            msg = f'山札の上から{player.get}枚のカードは以下の通りです。\n欲しいカードを選択してください。\n'
+            for i in range(len(cards)):
+                msg += f'{i}：{cards[i].name}\n'
+            get_card_number = int(input(msg))
+            get_card = cards[get_card_number]
+            player.hands.append(get_card)
+            for i in range(len(self.deck)):
+                if type(get_card) == type(self.deck[i]):
+                    self.deck.pop(i)
+                    break
+            player.get = 1
+
 
 
 # カードのスーパークラス
@@ -234,6 +255,17 @@ class Card6(Card):
             opponent.show_hands()
 
 
+# カード7：賢者
+class Card7(Card):
+    def __init__(self, field, player):
+        super().__init__(number=7, name='賢者', field=field, player=player)
+    
+    def play(self):
+        print(self.player.name,'が',self.name,'を使用しました。')
+        self.player.get = 3
+        super().move()
+
+
 # ゲームクラス：ゲームに必要なものを定義する
 class Game:
     def __init__(self,player_number):
@@ -253,10 +285,12 @@ class Game:
     
     def turn(self, player:Player):
         print()
-        msg = f'{player.name}の番です。\n山札からカードを1枚引きます。'
+        msg = f'{player.name}の番です。'
         print(msg)
+        print(f'山札からカードを{player.get}枚引きます。')
         field = self.field
         field.draw(player=player)
+        player.show_hands()
         player.hands[0].play()
     
     def game(self):
@@ -264,17 +298,23 @@ class Game:
         print(msg)
         print()
         players = self.field.players
-        msg = f'先攻は{players[0].name}です。'
-        print(msg)
         print()
+        print(f'先攻は{players[0].name}\n後攻は{players[1].name}\nです。')
+
+
         self.turn(player=players[0])
         print()
         players[0].show_hands()
         print()
-        msg = f'後攻は{players[1].name}です。'
+
         self.turn(player=players[1])
         print()
         players[1].show_hands()
+        print()
+        
+        self.turn(player=players[0])
+        print()
+        players[0].show_hands()
 
 
 game = Game(2)
