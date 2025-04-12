@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>XENO - ゲーム</title>
+    <title>XENO - 3人プレイ </title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -856,10 +856,6 @@
             }, 600);
             // ** 山札の残り枚数を更新 **
             deckCountElement.textContent = `残り枚数: ${decks.length}`;
-
-            
-            //山札がなくなったら互いのカードを比べ、勝敗を決める
-            checkDeckEmpty();
         }
 
         
@@ -1228,31 +1224,6 @@
             logMessages.appendChild(newEntry);
             logMessages.scrollTop = logMessages.scrollHeight;
         }
-
-        function checkDeckEmpty(){
-            if(deck.length == 0){
-                // 両者の手札を公開
-                showBothHands();
-                // 手札の value を取得
-                let playerCard = playerHand[0];
-                let cpuCard = opponentHand[0];
-
-                 // 勝敗判定
-                if (playerCard.value > cpuCard.value) {
-                    showResult("あなたの勝ち！");
-                } else if (playerCard.value < cpuCard.value) {
-                    showResult("CPUの勝ち！");
-                } else {
-                    showResult("引き分け！");
-                }
-            }
-        }
-
-        function showResult(message){
-            alert(message);
-        }
-
-
 
         // テスト用（ゲーム開始時に1回ターン開始）
         window.onload = function () {
