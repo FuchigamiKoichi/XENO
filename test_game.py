@@ -46,8 +46,8 @@ class Field:
         cards = [Card1(field=self, player=admin),Card2(field=self,player=admin),Card3(field=self,player=admin),Card4(field=self,player=admin),Card5(field=self,player=admin),Card6(field=self,player=admin),Card7(field=self,player=admin),Card8(field=self,player=admin),Card9(field=self,player=admin),Card10(field=self,player=admin)]
         deck = []
         for number in range(10):
-            number += 1
-            if number <= 8:
+            number
+            if number+1 <= 8:
                 for _ in range(2):
                     deck.append(cards[number])
             else:
@@ -60,7 +60,6 @@ class Field:
     def draw(self, player:Player):
         if player.get == 1:
             card = self.deck.pop()
-            card = Card9(field=self,player=Player('admin'))
             card.player = player
             player.hands.append(card)
             print(f'{player.name}は{card.name}を引きました。')
@@ -72,6 +71,7 @@ class Field:
                 msg += f'{i}：{cards[i].name}\n'
             get_card_number = int(input(msg))
             get_card = cards[get_card_number]
+            get_card.player = player
             player.hands.append(get_card)
             for i in range(len(self.deck)):
                 if type(get_card) == type(self.deck[i]):
@@ -111,8 +111,8 @@ class Card:
             for i in range(len(opponentPlayers)):
                 player = opponentPlayers[i]
                 msg += str(i) + '：' + player.name + '\n'
-                opponentNumber = int(input(msg))
-                opponent = opponentPlayers[opponentNumber]
+            opponentNumber = int(input(msg))
+            opponent = opponentPlayers[opponentNumber]
             return opponent
         else:
             return None
@@ -173,7 +173,8 @@ class Card2(Card):
         print(self.player.name,'が',self.name,'を使用しました。')
         opponent = super().opponentChoice()
         if opponent: # opponentの存在確認
-            cards = [Card1(field=field,player=self),Card2(field=field,player=self)]
+            admin = Player('admin')
+            cards = [Card1(field=self, player=admin),Card2(field=self,player=admin),Card3(field=self,player=admin),Card4(field=self,player=admin),Card5(field=self,player=admin),Card6(field=self,player=admin),Card7(field=self,player=admin),Card8(field=self,player=admin),Card9(field=self,player=admin),Card10(field=self,player=admin)]
             msg = opponent.name+'が持っていそうなカードを予想してください。\n'
             for card in cards:
                 msg += str(card.number)+'：'+card.name+'\n'
@@ -350,12 +351,17 @@ class Game:
     
     def turn(self, player:Player):
         print()
+        print('holder',player.hands[0].player.name)
         msg = f'{player.name}の番です。'
         print(msg)
         print(f'山札からカードを{player.get}枚引きます。')
         field = self.field
         field.draw(player=player)
         player.show_hands()
+        if player.hands[0].player.name != player.name:
+            print('\n\n\n')
+            print('エラー!!!!!')
+            print('\n\n\n')
         player.hands[0].play()
     
     def game(self):
@@ -364,22 +370,19 @@ class Game:
         print()
         players = self.field.players
         print()
-        print(f'先攻は{players[0].name}\n後攻は{players[1].name}\nです。')
+        print('プレイの順序は次のとおりです。\n')
+        for i in range(len(players)):
+            print(f'{i+1}：{players[i].name}')
+            for card in players[i].hands:
+                print(f'holder：{card.player.name}')
 
-
-        self.turn(player=players[0])
-        print()
-        players[0].show_hands()
-        print()
-
-        self.turn(player=players[1])
-        print()
-        players[1].show_hands()
-        print()
-
-        self.turn(player=players[0])
-        print()
-        players[0].show_hands()
+        
+        while players[0].live:
+            for player in players:
+                self.turn(player=player)
+                print()
+                player.show_hands()
+                print()
 
 
 game = Game(2)
