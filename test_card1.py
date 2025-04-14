@@ -72,12 +72,3 @@ def test_played():
     else:
         result = 'omit'
     assert result == 'contain'
-
-def test_holder():
-    p = m.Player(name='test_player')
-    o = m.Player(name='test_object')
-    f = m.Field(players=[p,o])
-    card1_1 = m.Card1(player=p,field=f)
-    card1_2 = m.Card2(player=o,field=f)
-    p.hands.append(card)
-    p.hands[0].play(choice=choice)
