@@ -123,6 +123,9 @@ def create_data(field,player):
                 pred[subject_num].append(pred_data)
 
     data = {'players_length':len(players), 'other_players':state,'my_hands':my_hands,'my_played':my_played, 'other_played':other_played, 'look_hands':look_hands,'looked_hands':looked_hands , 'pred':pred, 'reincarnation':True if(field.reincarnation) else False}
+    for i in range(len(players)):
+        if players[i] == player:
+            field.game.log[i].append(data)
     return data
 
 
@@ -147,7 +150,8 @@ class Player:
 
 # フィールドクラス
 class Field:
-    def __init__(self,players:list):
+    def __init__(self,players:list,game):
+        self.game = game
         self.played = []
         self.players = players
         admin = Player('admin')
@@ -165,6 +169,7 @@ class Field:
         self.reincarnation = self.deck.pop()
             
     def draw(self, player, choice):
+        player.affected = True
         cards = self.deck[:player.get]
         choices = []
         for card in cards:
@@ -230,6 +235,7 @@ class Card:
         for card in player.hands:
             card.move()
         player.hands.append(self.field.reincarnation)
+        self.field.reincarnation = None
         player.show_hands()
             
 
@@ -331,6 +337,7 @@ class Card5(Card):
             self.field.draw(player=opponent, choice=choice)
         
             drop_card = opponent.hands.pop(random.randint(0,1))
+            drop_card.player = opponent
             opponent.looked.append({'subject':self.player,'card':drop_card})
             self.field.played.append(drop_card)
             if drop_card.number == 10:
@@ -365,7 +372,7 @@ class Card6(Card):
                 opponent.looked.append({'subject':self.player, 'card':opponent.hands[0]})
                 opponent.look.append(self.player.hands[0])
         else:
-            return ''
+            super().move()
 
 
 # カード7：賢者
@@ -394,8 +401,10 @@ class Card8(Card):
                     opponent.hands[0] = copy
                     opponent.look.append(self.player.hands[0])
                     self.player.look.append(opponent.hands[0])
+                    opponent.looked.append({'subject':self.player,'card':opponent.hands[0]})
+                    self.player.looked.append({'subject':opponent,'card':self.player.hands[0]})
         else:
-            return ''
+            super().move()
 
 
 # カード9：皇帝
@@ -452,10 +461,8 @@ class Game:
         players = shuffle(players)
 
         # ゲームフィールドの生成
-        self.field = Field(players=players)
-        for p in self.field.players:
-            self.field.draw(p,choice=choice)
-        
+        self.field = Field(players=players, game=self)
+
         # 勝者
         self.winners = []
         # 敗者
@@ -510,6 +517,8 @@ class Game:
     def game(self, choice):
         players = self.field.players
         state = [True]
+        for p in self.field.players:
+            self.field.draw(p,choice=choice)
         
         while len(self.field.deck) > 0 and state[0]:
             for player in players:
@@ -544,7 +553,5 @@ class Game:
                         self.log[i].append('win')
                     else:
                         self.log[i].append('lose')
-
-
-game = Game(2, get_name=get_name)
-game.game(choice=choice)
+        
+        return self.log
