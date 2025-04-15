@@ -1,4 +1,4 @@
-import module as m
+import xeno as m
 
 def choice(now,choices,kind):
     return choices[0]

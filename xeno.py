@@ -128,7 +128,7 @@ def create_data(field,player):
                 pred_data = {'subject':subject_num, 'object':object_num, 'pred_card':pred_card_num}
                 pred[subject_num].append(pred_data)
 
-    data = {'players_length':len(players), 'other_players':state,'my_hands':my_hands,'my_played':my_played, 'other_played':other_played, 'look_hands':look_hands,'looked_hands':looked_hands , 'pred':pred, 'reincarnation':True if(field.reincarnation) else False}
+    data = {'players_length':len(players), 'other_players':state,'my_hands':my_hands,'my_played':my_played, 'other_played':other_played, 'look_hands':look_hands,'looked_hands':looked_hands , 'pred':pred, 'reincarnation':True if(len(field.reincarnation)>0) else False}
     # for i in range(len(players)):
     #     if players[i] == player:
     #         field.game.log[i].append(data)
@@ -172,7 +172,8 @@ class Field:
                 deck.append(cards[number])
 
         self.deck = shuffle(deck)
-        self.reincarnation = self.deck.pop()
+        reincarnation_card = self.deck.pop()
+        self.reincarnation = [reincarnation_card]
             
     def draw(self, player, choice):
         player.affected = True
@@ -243,8 +244,8 @@ class Card:
     def kill10(self,player:Player):
         for card in player.hands:
             card.move()
-        player.hands.append(self.field.reincarnation)
-        self.field.reincarnation = None
+        reincarnation_card = self.field.reincarnation.pop()
+        player.hands.append(reincarnation_card)
         player.show_hands()
             
 
@@ -393,6 +394,7 @@ class Card7(Card):
     
     def play(self, choice):
         self.player.get = 3
+        self.field.deck = shuffle(self.field.deck)
         super().move()
 
 
@@ -516,17 +518,17 @@ class Game:
             field.draw(player=player,choice=choice)
             player.show_hands()
             hands = []
-            if not len(player.hands)==1 and player.hands[0].number==10:
-                for card in player.hands:
-                    if card.number != 10:
-                        hands.append(card.number)
-                card_number = int(choice(now=create_data(field=field,player=player),choices=hands,kind='play_card'))
-                create_log(create_data(field=field,player=player),choices=hands,kind='play_card',field=self.field,player=player,choice=card_number)
-                for i in range(len(player.hands)):
-                    if player.hands[i].number == card_number:
-                        card_index = i
-                        break
-                player.hands[card_index].play(choice=choice)
+            # if not len(player.hands)==1 and player.hands[0].number==10:
+            for card in player.hands:
+                if card.number != 10:
+                    hands.append(card.number)
+            card_number = int(choice(now=create_data(field=field,player=player),choices=hands,kind='play_card'))
+            create_log(create_data(field=field,player=player),choices=hands,kind='play_card',field=self.field,player=player,choice=card_number)
+            for i in range(len(player.hands)):
+                if player.hands[i].number == card_number:
+                    card_index = i
+                    break
+            player.hands[card_index].play(choice=choice)
     
     def game(self, choice):
         try:
@@ -543,11 +545,15 @@ class Game:
                     state = self.isContinue() # ゲームがアクティブか
 
                     if state[0]:
-                        continue
+                        if len(self.field.deck)>0:
+                            continue
+                        else:
+                            break
                     else:
                         self.winners = state[1]
                         self.losers = state[2]
                         break
+
             
             l = 0
             for player in players:
