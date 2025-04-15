@@ -13,7 +13,6 @@ def choice(now,choices,kind):
 def get_name():
     return 'test_player'
 
-
 for _ in range(10000):
     game = x.Game(2, get_name=get_name)
     data = game.game(choice=choice)
@@ -29,4 +28,7 @@ for _ in range(10000):
         for l in log:
             for p in l:
                 print(p)
+            print()
+            print()
+            print()
         break
