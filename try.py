@@ -1,13 +1,4 @@
-import module as m
+import time
 
-def choice(now,choices,kind):
-    return choices[0]
-
-p = m.Player(name='test_player')
-o = m.Player(name='test_object')
-f = m.Field(players=[p,o])
-card = m.Card1(player=p,field=f)
-p.hands.append(card)
-p.hands[0].play(choice=choice)
-print(p.hands)
-print(f.played)
+for _ in range(3):
+    print(int((time.time()*1000000)%(10**1)*3))
