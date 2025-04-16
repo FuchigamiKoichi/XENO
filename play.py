@@ -11,24 +11,25 @@ def choice(now,choices,kind):
     return choice
 
 def get_name():
-    return 'test_player'
+    number = random.randint(0,9)
+    return 'test_player'+str(number)
 
-for _ in range(10000):
+for i in range(1000):
     game = x.Game(2, get_name=get_name)
     data = game.game(choice=choice)
     if data[0]:
-        log = data[1]
+        # log = data[1]
+        # with open('./result/log.csv', 'a') as f:
+        #     writer = csv.writer(f)
+        #     for l in log:
+        #         writer.writerow(l)
+        continue
+    else:
+        log = data[2]
+        err = data[1]
+        print(err)
         with open('./result/log.csv', 'a') as f:
             writer = csv.writer(f)
             for l in log:
                 writer.writerow(l)
-    else:
-        log = data[1]
-        print('error')
-        for l in log:
-            for p in l:
-                print(p)
-            print()
-            print()
-            print()
         break
