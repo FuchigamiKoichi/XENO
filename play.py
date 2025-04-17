@@ -14,7 +14,7 @@ def get_name():
     number = random.randint(0,9)
     return 'test_player'+str(number)
 
-for i in range(10**5):
+for i in range(10**2):
     game = x.Game(2, get_name=get_name)
     data = game.game(choice_func=choice)
     if data[0]:

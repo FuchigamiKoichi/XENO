@@ -526,7 +526,7 @@ class Game:
             else:
                 for i in range(len(players)):
                     if players[i].live:
-                        self.log[i].append('lose')
+                        self.log[i].append('win')
                         winners.append(players[i])
                     else:
                         self.log[i].append('lose')
