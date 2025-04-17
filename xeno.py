@@ -1,8 +1,6 @@
 import random
 import traceback
 
-# モジュール用関数：出力を決める
-
 def choice(now,choices,kind):
     out = {'now':now,'kind':kind,'choices':choices}
     return input(f'{out}')
@@ -172,7 +170,6 @@ class Field:
         cards = [Card1(field=self, player=admin),Card2(field=self,player=admin),Card3(field=self,player=admin),Card4(field=self,player=admin),Card5(field=self,player=admin),Card6(field=self,player=admin),Card7(field=self,player=admin),Card8(field=self,player=admin),Card9(field=self,player=admin),Card10(field=self,player=admin)]
         deck = []
         for number in range(10):
-            number
             if number+1 <= 8:
                 for _ in range(2):
                     deck.append(cards[number])
@@ -183,14 +180,14 @@ class Field:
         reincarnation_card = self.deck.pop()
         self.reincarnation = [reincarnation_card]
             
-    def draw(self, player, choice):
+    def draw(self, player, choice_func):
         player.affected = True
         cards = self.deck[:player.get]
         if len(cards) > 0:
             choices = []
             for card in cards:
                 choices.append(card.number)
-            choice_number= int(choice(create_data(field=self,player=player),choices=choices,kind='draw'))
+            choice_number= int(choice_func(create_data(field=self,player=player),choices=choices,kind='draw'))
             create_log(create_data(field=self,player=player),choices=choices,kind='draw',field=self,player=player,choice=choice_number)
             for i in range(len(cards)):
                 if cards[i].number == choice_number:
@@ -199,7 +196,7 @@ class Field:
             get_card = cards[get_card_index]
             get_card.player = player
             player.hands.append(get_card)
-            self.deck.remove(get_card)
+            self.deck.pop(get_card_index)
             player.get = 1
         return {'player':player}
 
@@ -216,7 +213,11 @@ class Card:
     
     def move(self):
         field = self.field
-        self.player.hands.remove(self)
+        for i in range(len(self.player.hands)):
+            if self.player.hands[i] == self:
+                move_index = i
+                break
+        self.player.hands.pop(move_index)
         field.played.append(self)
         return self
     
@@ -243,6 +244,7 @@ class Card:
         player.live = False
     
     def kill10(self,player:Player):
+        set_owner(player=player)
         for card in player.hands:
             card.move()
         reincarnation_card = self.field.reincarnation.pop()
@@ -269,7 +271,7 @@ class Card1(Card):
                 if opponent:
                     get_number = opponent.get
                     opponent.get = 1
-                    field.draw(player=opponent, choice=choice)
+                    field.draw(player=opponent, choice_func=choice)
                     opponent.get = get_number
                     opponentHands = list(opponent.hands)
                     choices = []
@@ -301,7 +303,7 @@ class Card2(Card):
         opponent = self.opponentChoice(choice=choice)
         if opponent: # opponentの存在確認
             admin = Player('admin')
-            cards = [Card1(field=self, player=admin),Card2(field=self,player=admin),Card3(field=self,player=admin),Card4(field=self,player=admin),Card5(field=self,player=admin),Card6(field=self,player=admin),Card7(field=self,player=admin),Card8(field=self,player=admin),Card9(field=self,player=admin),Card10(field=self,player=admin)]
+            cards = [Card1(field=field, player=admin),Card2(field=field,player=admin),Card3(field=field,player=admin),Card4(field=field,player=admin),Card5(field=field,player=admin),Card6(field=field,player=admin),Card7(field=field,player=admin),Card8(field=field,player=admin),Card9(field=field,player=admin),Card10(field=field,player=admin)]
             cards_number = []
             for card in cards:
                 cards_number.append(card.number)
@@ -346,7 +348,7 @@ class Card5(Card):
         if len(self.field.deck)>1:
             opponent = self.opponentChoice(choice=choice)
             if opponent: # opponentの存在確認
-                self.field.draw(player=opponent, choice=choice)
+                self.field.draw(player=opponent, choice_func=choice)
             
                 drop_card = opponent.hands.pop(random.randint(0,len(opponent.hands)-1))
                 drop_card.player = opponent
@@ -425,7 +427,7 @@ class Card9(Card):
         if opponent:
             get_number = opponent.get
             opponent.get = 1
-            self.field.draw(player=opponent,choice=choice)
+            self.field.draw(player=opponent,choice_func=choice)
             opponent.get = get_number
             opponentHands = list(opponent.hands)
             choices = []
@@ -482,102 +484,103 @@ class Game:
     def isContinue(self):
         field = self.field
         players = field.players
-        lives = 0
+
+        winners = []
+        losers = []
+        l = 0
         for player in players:
-            if player.live:
-                lives += 1
-            else:
-                lives += 0
+            l += 1
 
-        if lives < 2:
-            winners = []
-            losers = []
-            for i in range(len(players)):
-                player = players[i]
-                if player.live:
-                    winners.append(player)
-                    self.log[i].append('win')
-                else:
-                    losers.append(player)
-                    self.log[i].append('lose')
-            return [False, winners, losers]
-        else:
-            return [True]
-    
-    def turn(self, player:Player, choice):
-        if player.live:
-            field = self.field
-            field.draw(player=player,choice=choice)
-            if len(player.hands) > 2:
-                player.show_hands()
-                hands = []
-                # if not len(player.hands)==1 and player.hands[0].number==10:
-                for card in player.hands:
-                    if card.number != 10:
-                        hands.append(card.number)
-                card_number = int(choice(now=create_data(field=field,player=player),choices=hands,kind='play_card'))
-                create_log(create_data(field=field,player=player),choices=hands,kind='play_card',field=self.field,player=player,choice=card_number)
-                for i in range(len(player.hands)):
-                    if player.hands[i].number == card_number:
-                        card_index = i
-                        break
-                player.hands[card_index].play(choice=choice)
-    
-    def game(self, choice):
-        try:
-            players = self.field.players
-            state = [True]
-            log_players = []
-            for p in players:
-                self.field.draw(player=p,choice=choice)
-                log_hands = p.hands.copy()
-                log_players.append(log_hands)
-            
-            turn_number = 1
-            while len(self.field.deck) > 0 and state[0]:
-                for player in players:
-                    if state[0]:
-                        turn_number += 1
-                        self.turn(player=player, choice=choice)
-                    
-                        state = self.isContinue() # ゲームがアクティブか
-
-                        if state[0]:
-                            if len(self.field.deck)>0:
-                                continue
-                            else:
-                                state = [False]
-                                break
-                        else:
-                            self.winners = state[1]
-                            self.losers = state[2]
-                            break
-
-            
-            l = 0
-            for player in players:
-                if player.live:
-                    l +=  1
-
-            if len(self.field.deck) == 0 and l>1:
-                players = self.field.players
+        if len(field.deck) == 0 or l < 2:
+            if l>2:
                 maxarg = 0
+                eq = True
                 for i in range(len(players)):
                     player = players[i]
                     max = players[maxarg]
                     if player.hands[0].number > max.hands[0].number:
+                        eq = False
                         maxarg = i
                 
-                if players[0].hands[0].number == players[maxarg].hands[0].number:
+                if eq:
                     for l in self.log:
                         l.append('lose')
                 else:
-                    for i in range(len(players)):
-                        player = players[i]
-                        if i == maxarg:
-                            self.log[i].append('win')
+                    if l == 0:
+                        for i in range(len(players)):
+                            player = players[i]
+                            if i == maxarg:
+                                self.log[i].append('win')
+                                winners.append(players[i])
+                            else:
+                                self.log[i].append('lose')
+                                losers.append(players[i])
+                    else:
+                        for i in range(len(players)):
+                            if players[i].live:
+                                self.log[i].append('win')
+                                winners.append(players[i])
+                            else:
+                                self.log[i].append('lose')
+                                losers.append(players[i])
+            else:
+                for i in range(len(players)):
+                    if players[i].live:
+                        self.log[i].append('lose')
+                        winners.append(players[i])
+                    else:
+                        self.log[i].append('lose')
+                        losers.append(players[i])
+
+
+            return [False,winners,losers]
+        else:
+            return [True]
+    
+    def turn(self, player:Player, choice):
+        set_owner(player=player)
+        field = self.field
+        field.draw(player=player,choice_func=choice)
+        set_owner(player=player)
+        if len(player.hands) > 1:
+            player.show_hands()
+            hands = []
+            # if not len(player.hands)==1 and player.hands[0].number==10:
+            for card in player.hands:
+                if card.number != 10:
+                    hands.append(card.number)
+            card_number = int(choice(now=create_data(field=field,player=player),choices=hands,kind='play_card'))
+            create_log(create_data(field=field,player=player),choices=hands,kind='play_card',field=self.field,player=player,choice=card_number)
+            for i in range(len(player.hands)):
+                if player.hands[i].number == card_number:
+                    card_index = i
+                    break
+            player.hands[card_index].play(choice=choice)
+    
+    def game(self, choice_func):
+        try:
+            players = self.field.players
+            state = [True]
+            for p in players:
+                self.field.draw(player=p,choice_func=choice_func)
+                set_owner(player=p)
+                
+            turn_number = 1
+            while len(self.field.deck) > 0 and state[0]:
+                for player in players:
+                    set_owner(player=player)
+                    if state[0]:
+                        turn_number += 1
+                        self.turn(player=player, choice=choice_func)
+                    
+                        state = self.isContinue() # ゲームがアクティブか
+
+                        if state[0]:
+                            continue
                         else:
-                            self.log[i].append('lose')
+                            self.winners = state[1]
+                            self.losers = state[2]
+                            break
             
             return [True,self.log]
         except Exception as e:
