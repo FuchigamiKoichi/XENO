@@ -15,11 +15,13 @@ def get_name():
     return 'test_player'+str(number)
 
 # while True:
-for _ in range(1000):
+for _ in range(10**4):
     game = x.Game(2, get_name=get_name)
     data = game.game(choice_func=choice)
     if data[0]:
         log = data[1]
+        if log[0][-1] == log[1][-1] == 'win':
+            print('err：勝者が複数人います')
         # with open('/Volumes/ANIME/xeno/log.csv', 'a') as f:
         with open('result/log.csv', 'a') as f:
             writer = csv.writer(f)
