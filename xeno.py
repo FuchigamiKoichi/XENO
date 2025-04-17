@@ -266,28 +266,27 @@ class Card1(Card):
         field = self.field
         if inType(type=Card1,list=field.played):
             self.move()
-            if len(self.field.deck)>0:
-                opponent = self.opponentChoice(choice=choice)
-                if opponent:
-                    get_number = opponent.get
-                    opponent.get = 1
-                    field.draw(player=opponent, choice_func=choice)
-                    opponent.get = get_number
-                    opponentHands = list(opponent.hands)
-                    choices = []
-                    for card in opponentHands:
-                        choices.append(card.number)
-                        self.player.look.append(card)
-                        opponent.looked.append({'subject':self.player,'card':card})
+            opponent = self.opponentChoice(choice=choice)
+            if opponent and len(self.field.deck)>0:
+                get_number = opponent.get
+                opponent.get = 1
+                field.draw(player=opponent, choice_func=choice)
+                opponent.get = get_number
+                opponentHands = list(opponent.hands)
+                choices = []
+                for card in opponentHands:
+                    choices.append(card.number)
+                    self.player.look.append(card)
+                    opponent.looked.append({'subject':self.player,'card':card})
 
-                    card_number = int(choice(now=create_data(field=field,player=self.player),choices=choices,kind='trush'))
-                    create_log(create_data(field=self.field,player=self.player),choices=choices,kind='trush',field=self.field,player=self.player,choice=card_number)
-                    for i in range(len(opponent.hands)):
-                        if opponent.hands[i].number == card_number:
-                            trushNumber = i
-                            break
-                    trush_card = opponent.hands.pop(trushNumber)
-                    self.field.played.append(trush_card)
+                card_number = int(choice(now=create_data(field=field,player=self.player),choices=choices,kind='trush'))
+                create_log(create_data(field=self.field,player=self.player),choices=choices,kind='trush',field=self.field,player=self.player,choice=card_number)
+                for i in range(len(opponent.hands)):
+                    if opponent.hands[i].number == card_number:
+                        trushNumber = i
+                        break
+                trush_card = opponent.hands.pop(trushNumber)
+                self.field.played.append(trush_card)
         else:
             self.move()
 
@@ -345,19 +344,18 @@ class Card5(Card):
     
     def play(self,choice):
         self.move()
-        if len(self.field.deck)>1:
-            opponent = self.opponentChoice(choice=choice)
-            if opponent: # opponentの存在確認
-                self.field.draw(player=opponent, choice_func=choice)
-            
-                drop_card = opponent.hands.pop(random.randint(0,len(opponent.hands)-1))
-                drop_card.player = opponent
-                opponent.looked.append({'subject':self.player,'card':drop_card})
-                self.field.played.append(drop_card)
-                if drop_card.number == 10:
-                    # 捨てさせたカードが10の場合は相手を死亡させる
-                    self.kill10(opponent)
-                opponent.show_hands()
+        opponent = self.opponentChoice(choice=choice)
+        if opponent and len(self.field.deck)>0: # opponentの存在確認
+            self.field.draw(player=opponent, choice_func=choice)
+        
+            drop_card = opponent.hands.pop(random.randint(0,len(opponent.hands)-1))
+            drop_card.player = opponent
+            opponent.looked.append({'subject':self.player,'card':drop_card})
+            self.field.played.append(drop_card)
+            if drop_card.number == 10:
+                # 捨てさせたカードが10の場合は相手を死亡させる
+                self.kill10(opponent)
+            opponent.show_hands()
 
 
 # カード6：貴族
@@ -368,19 +366,18 @@ class Card6(Card):
     def play(self,choice):
         self.move()
         opponent = self.opponentChoice(choice=choice)
-        if opponent:
-            if len(self.player.hands) > 0:
-                if self.player.hands[0].number < opponent.hands[0].number:
-                    super().kill(self.player)
-                elif self.player.hands[0].number == opponent.hands[0].number:
-                    super().kill(self.player)
-                    super().kill(opponent)
-                else:
-                    super().kill(opponent)
-                self.player.looked.append({'subject':opponent, 'card':self.player.hands[0]})
-                self.player.look.append(opponent.hands[0])
-                opponent.looked.append({'subject':self.player, 'card':opponent.hands[0]})
-                opponent.look.append(self.player.hands[0])
+        if opponent and len(self.player.hands)>0:
+            if self.player.hands[0].number < opponent.hands[0].number:
+                self.kill(self.player)
+            elif self.player.hands[0].number == opponent.hands[0].number:
+                self.kill(self.player)
+                self.kill(opponent)
+            else:
+                self.kill(opponent)
+            self.player.looked.append({'subject':opponent, 'card':self.player.hands[0]})
+            self.player.look.append(opponent.hands[0])
+            opponent.looked.append({'subject':self.player, 'card':opponent.hands[0]})
+            opponent.look.append(self.player.hands[0])
 
 
 # カード7：賢者
@@ -424,7 +421,7 @@ class Card9(Card):
     def play(self, choice):
         self.move()
         opponent = self.opponentChoice(choice=choice)
-        if opponent:
+        if opponent and len(self.field.deck)>0:
             get_number = opponent.get
             opponent.get = 1
             self.field.draw(player=opponent,choice_func=choice)
@@ -489,10 +486,11 @@ class Game:
         losers = []
         l = 0
         for player in players:
-            l += 1
-
-        if len(field.deck) == 0 or l < 2:
-            if l>2:
+            if player.live:
+                l += 1
+        
+        if len(self.field.deck) == 0 or l < 2:
+            if l>=2:
                 maxarg = 0
                 eq = True
                 for i in range(len(players)):
@@ -506,23 +504,13 @@ class Game:
                     for l in self.log:
                         l.append('lose')
                 else:
-                    if l == 0:
-                        for i in range(len(players)):
-                            player = players[i]
-                            if i == maxarg:
-                                self.log[i].append('win')
-                                winners.append(players[i])
-                            else:
-                                self.log[i].append('lose')
-                                losers.append(players[i])
-                    else:
-                        for i in range(len(players)):
-                            if players[i].live:
-                                self.log[i].append('win')
-                                winners.append(players[i])
-                            else:
-                                self.log[i].append('lose')
-                                losers.append(players[i])
+                    for i in range(len(players)):
+                        if i == maxarg:
+                            self.log[i].append('win')
+                            winners.append(players[i])
+                        else:
+                            self.log[i].append('lose')
+                            losers.append(players[i])
             else:
                 for i in range(len(players)):
                     if players[i].live:
@@ -539,8 +527,7 @@ class Game:
     
     def turn(self, player:Player, choice):
         set_owner(player=player)
-        field = self.field
-        field.draw(player=player,choice_func=choice)
+        self.field.draw(player=player,choice_func=choice)
         set_owner(player=player)
         if len(player.hands) > 1:
             player.show_hands()
@@ -549,8 +536,8 @@ class Game:
             for card in player.hands:
                 if card.number != 10:
                     hands.append(card.number)
-            card_number = int(choice(now=create_data(field=field,player=player),choices=hands,kind='play_card'))
-            create_log(create_data(field=field,player=player),choices=hands,kind='play_card',field=self.field,player=player,choice=card_number)
+            card_number = int(choice(now=create_data(field=self.field,player=player),choices=hands,kind='play_card'))
+            create_log(create_data(field=self.field,player=player),choices=hands,kind='play_card',field=self.field,player=player,choice=card_number)
             for i in range(len(player.hands)):
                 if player.hands[i].number == card_number:
                     card_index = i
@@ -569,18 +556,15 @@ class Game:
             while len(self.field.deck) > 0 and state[0]:
                 for player in players:
                     set_owner(player=player)
+                    state = self.isContinue() # ゲームがアクティブか
                     if state[0]:
                         turn_number += 1
                         self.turn(player=player, choice=choice_func)
-                    
-                        state = self.isContinue() # ゲームがアクティブか
 
-                        if state[0]:
-                            continue
-                        else:
-                            self.winners = state[1]
-                            self.losers = state[2]
-                            break
+                    else:
+                        self.winners = state[1]
+                        self.losers = state[2]
+                        break
             
             return [True,self.log]
         except Exception as e:

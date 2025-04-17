@@ -14,12 +14,14 @@ def get_name():
     number = random.randint(0,9)
     return 'test_player'+str(number)
 
-for i in range(10**2):
+# while True:
+for _ in range(1000):
     game = x.Game(2, get_name=get_name)
     data = game.game(choice_func=choice)
     if data[0]:
         log = data[1]
-        with open('./result/log.csv', 'a') as f:
+        # with open('/Volumes/ANIME/xeno/log.csv', 'a') as f:
+        with open('result/log.csv', 'a') as f:
             writer = csv.writer(f)
             for l in log:
                 writer.writerow(l)
@@ -27,7 +29,7 @@ for i in range(10**2):
         log = data[2]
         err = data[1]
         print(err)
-        with open('./result/log.csv', 'a') as f:
+        with open('result/log.csv', 'a') as f:
             writer = csv.writer(f)
             for l in log:
                 writer.writerow(l)
