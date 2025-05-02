@@ -44,7 +44,7 @@ def create_data(field,player):
         num = 0
         for i in range(len(players)):
             if players[i] != player:
-                if players[i] is card.player:
+                if players[i] == player:
                     look_hands[num].append(card.number)
                 num += 1
     
@@ -147,7 +147,7 @@ class Field:
         self.played = [[] for i in range(len(players))]
         self.players = players
         admin = Player('admin')
-        cards = [Card1(field=self, player=admin),Card2(field=self,player=admin),Card3(field=self,player=admin),Card4(field=self,player=admin),Card5(field=self,player=admin),Card6(field=self,player=admin),Card7(field=self,player=admin),Card8(field=self,player=admin),Card9(field=self,player=admin),Card10(field=self,player=admin)]
+        cards = [Card1(field=self),Card2(field=self),Card3(field=self),Card4(field=self),Card5(field=self),Card6(field=self),Card7(field=self),Card8(field=self),Card9(field=self),Card10(field=self)]
         deck = []
         for number in range(10):
             if number+1 <= 8:
@@ -195,7 +195,7 @@ class Card:
                 move_index = i
                 break
         player.hands.pop(move_index)
-        field.played[player.turn_number].append(self)
+        field.played[player.turn_number-1].append(self)
     
     def opponentChoice(self, choice, me:Player):
         field = self.field
@@ -212,7 +212,7 @@ class Card:
 
         if len(opponentPlayers) != 0:
             opponentNumber = int(choice(now=create_data(field=self.field,player=me),choices=choices,kind='opponentChoice'))
-            create_log(create_data(field=self.field,player=me),choices=choices,kind='opponentChoice',field=self.field,player=self.player,choice=opponentNumber)
+            create_log(create_data(field=self.field,player=me),choices=choices,kind='opponentChoice',field=self.field,player=me,choice=opponentNumber)
             opponent = opponentPlayers[opponentNumber]
             return opponent
         else:
@@ -249,17 +249,17 @@ class Card1(Card):
                 choices = []
                 for card in opponentHands:
                     choices.append(card.number)
-                    self.player.look.append(card)
-                    opponent.looked.append({'subject':self.player,'card':card})
+                    player.look.append(card)
+                    opponent.looked.append({'subject':player,'card':card})
 
-                card_number = int(choice(now=create_data(field=field,player=self.player),choices=choices,kind='trush'))
-                create_log(create_data(field=self.field,player=self.player),choices=choices,kind='trush',field=self.field,player=self.player,choice=card_number)
+                card_number = int(choice(now=create_data(field=field,player=player),choices=choices,kind='trush'))
+                create_log(create_data(field=self.field,player=player),choices=choices,kind='trush',field=self.field,player=player,choice=card_number)
                 for i in range(len(opponent.hands)):
                     if opponent.hands[i].number == card_number:
                         trushNumber = i
                         break
                 trush_card = opponent.hands.pop(trushNumber)
-                self.field.played[player.turn_number].append(trush_card)
+                self.field.played[player.turn_number-1].append(trush_card)
         else:
             self.move(player=player)
 
@@ -275,17 +275,17 @@ class Card2(Card):
         opponent = self.opponentChoice(choice=choice, me=player)
         if opponent: # opponentの存在確認
             admin = Player('admin')
-            cards = [Card1(field=field, player=admin),Card2(field=field,player=admin),Card3(field=field,player=admin),Card4(field=field,player=admin),Card5(field=field,player=admin),Card6(field=field,player=admin),Card7(field=field,player=admin),Card8(field=field,player=admin),Card9(field=field,player=admin),Card10(field=field,player=admin)]
+            cards = [Card1(field=field),Card2(field=field),Card3(field=field),Card4(field=field),Card5(field=field),Card6(field=field),Card7(field=field),Card8(field=field),Card9(field=field),Card10(field=field)]
             cards_number = []
             for card in cards:
                 cards_number.append(card.number)
-            predNumber = int(choice(now=create_data(field=field,player=self.player),choices=cards_number,kind='pred'))
-            create_log(create_data(field=self.field,player=self.player),choices=cards_number,kind='pred',field=self.field,player=self.player,choice=predNumber)
+            predNumber = int(choice(now=create_data(field=field,player=player),choices=cards_number,kind='pred'))
+            create_log(create_data(field=self.field,player=player),choices=cards_number,kind='pred',field=self.field,player=player,choice=predNumber)
             predCard = cards[predNumber-1]
             data = {'opponent':opponent,'pred_card':predCard}
-            self.player.pred.append(data)
+            player.pred.append(data)
             if inType(type=type(predCard),list=opponent.hands):
-                self.kill(opponent)
+                self.kill(opponent=opponent)
 
 
 # カード3：占い師
@@ -298,8 +298,8 @@ class Card3(Card):
         opponent = self.opponentChoice(choice=choice, me=player)
         if opponent: # opponentの存在確認
             for card in opponent.hands:
-                self.player.look.append(card)
-                opponent.looked.append({'subject':self.player,'card':card})
+                player.look.append(card)
+                opponent.looked.append({'subject':player,'card':card})
 
 
 # カード4：乙女
@@ -309,7 +309,7 @@ class Card4(Card):
     
     def play(self, choice, player:Player):
         self.move(player=player)
-        self.player.affected = False
+        player.affected = False
 
 
 # カード5：死神
@@ -325,12 +325,11 @@ class Card5(Card):
         
             drop_card = opponent.hands.pop(random.randint(0,len(opponent.hands)-1))
             drop_card.player = opponent
-            opponent.looked.append({'subject':self.player,'card':drop_card})
-            self.field.played[opponent.turn_number].append(drop_card)
+            opponent.looked.append({'subject':player,'card':drop_card})
+            self.field.played[opponent.turn_number-1].append(drop_card)
             if drop_card.number == 10:
                 # 捨てさせたカードが10の場合は相手を死亡させる
                 self.kill10(opponent=opponent)
-            opponent.show_hands()
 
 
 # カード6：貴族
@@ -341,18 +340,18 @@ class Card6(Card):
     def play(self, choice, player:Player):
         self.move(player=player)
         opponent = self.opponentChoice(choice=choice, me=player)
-        if opponent and len(self.player.hands)>0:
-            if self.player.hands[0].number < opponent.hands[0].number:
-                self.kill(opponent=self.player)
-            elif self.player.hands[0].number == opponent.hands[0].number:
-                self.kill(opponent=self.player)
+        if opponent and len(player.hands)>0:
+            if player.hands[0].number < opponent.hands[0].number:
+                self.kill(opponent=player)
+            elif player.hands[0].number == opponent.hands[0].number:
+                self.kill(opponent=player)
                 self.kill(opponent=opponent)
             else:
                 self.kill(opponent=opponent)
-            self.player.looked.append({'subject':opponent, 'card':self.player.hands[0]})
-            self.player.look.append(opponent.hands[0])
-            opponent.looked.append({'subject':self.player, 'card':opponent.hands[0]})
-            opponent.look.append(self.player.hands[0])
+            player.looked.append({'subject':opponent, 'card':player.hands[0]})
+            player.look.append(opponent.hands[0])
+            opponent.looked.append({'subject':player, 'card':opponent.hands[0]})
+            opponent.look.append(player.hands[0])
 
 
 # カード7：賢者
@@ -362,7 +361,7 @@ class Card7(Card):
     
     def play(self, choice, player:Player):
         self.move(player=player)
-        self.player.get = 3
+        player.get = 3
         self.field.deck = shuffle(self.field.deck)
 
 
@@ -380,10 +379,10 @@ class Card8(Card):
                 copy_opponent = opponent.hands.pop()
                 player.hands.append(copy_opponent)
                 opponent.hands.append(copy_self)
-                opponent.look.append(self.player.hands[0])
+                opponent.look.append(player.hands[0])
                 player.look.append(opponent.hands[0])
-                opponent.looked.append({'subject':self.player,'card':opponent.hands[0]})
-                player.looked.append({'subject':opponent,'card':self.player.hands[0]})
+                opponent.looked.append({'subject':player,'card':opponent.hands[0]})
+                player.looked.append({'subject':opponent,'card':player.hands[0]})
 
 
 # カード9：皇帝
@@ -405,8 +404,8 @@ class Card9(Card):
                 choices.append(card.number)
                 player.look.append(card)
 
-            choice_number = int(choice(now=create_data(field=self.field,player=self.player),choices=choices,kind='trush'))
-            create_log(create_data(field=self.field,player=self.player),choices=choices,kind='trush',field=self.field,player=self.player,choice=choice_number)
+            choice_number = int(choice(now=create_data(field=self.field,player=player),choices=choices,kind='trush'))
+            create_log(create_data(field=self.field,player=player),choices=choices,kind='trush',field=self.field,player=player,choice=choice_number)
             for i in range(len(opponent.hands)):
                 card = opponent.hands[i]
                 if card.number == choice_number:
@@ -415,7 +414,7 @@ class Card9(Card):
             trush_card = opponent.hands.pop(choice_index)
             self.field.played.append(trush_card)
             if trush_card.number == 10:
-                self.kill(player=opponent)
+                self.kill(opponent=opponent)
 
 
 # カード10：英雄
@@ -504,7 +503,6 @@ class Game:
     def turn(self, player:Player, choice):
         self.field.draw(player=player,choice_func=choice)
         if len(player.hands) > 1:
-            player.show_hands()
             hands = []
             # if not len(player.hands)==1 and player.hands[0].number==10:
             for card in player.hands:
