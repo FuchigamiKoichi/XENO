@@ -105,7 +105,7 @@ def create_data(field,player):
 # 配列の中に指定した数字のカードがあるかを確認するため
 def inType(type:type,list:list):
     for content in list:
-        if isinstance(content,type):
+        if type(content)==type:
             return True
         else:
             continue
@@ -538,11 +538,9 @@ class Game:
             while len(self.field.deck) > 0 and state[0]:
                 for i in range(len(players)):
                     player = players[i]
-                    choice_func = player.choice
                     state = self.isContinue() # ゲームがアクティブか
                     if state[0]:
                         self.turn(player=player)
-
                     else:
                         self.winners = state[1]
                         self.losers = state[2]
