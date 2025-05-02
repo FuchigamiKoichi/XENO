@@ -1,45 +1,12 @@
 import random
 import traceback
 
-def choice(now,choices,kind):
-    out = {'now':now,'kind':kind,'choices':choices}
-    return input(f'{out}')
 
 def create_log(now,choices,kind,field,player,choice):
     out = {'now':now,'kind':kind,'choices':choices,'choice':choice}
     for i in range(len(field.players)):
         if field.players[i]is player:
             field.game.log[i].append(out) 
-
-def create_err_log(err):
-    print(err)
-
-def get_name():
-    return input('名前を入力してください')
-
-def set_owner(player):
-    for card in player.hands:
-        card.player = player
-
-def inType(type:type,list:list):
-    for content in list:
-        if isinstance(content,type):
-            return True
-        else:
-            continue
-    return False
-
-def shuffle(list:list):
-    list_copy = list.copy()
-    arange = []
-    for i in range(len(list)):
-        arange.append(i)
-    random.shuffle(arange)
-    
-    result = []
-    for i in arange:
-        result.append(list_copy[i])
-    return result
 
 
 def create_data(field,player):
@@ -61,17 +28,13 @@ def create_data(field,player):
         else:
             pred[-1] = []
             
-
     my_played = []
-    for card in field.played:
-        num = 0
-        if player is card.player:
-            my_played.append(card.number)
+    for i in range(len(field.played)):
+        played = field.played[i]
+        if i+1 == player.turn_number:
+            my_played = played
         else:
-            for i in range(len(players)):
-                if players[i] is card.player:
-                    other_played[num].append(card.number)
-            num += 1
+            other_played[i+1] = played
     
     my_hands = []
     for card in player.hands:
@@ -134,17 +97,26 @@ def create_data(field,player):
                 pred_data = {'subject':subject_num, 'object':object_num, 'pred_card':pred_card_num}
                 pred[subject_num].append(pred_data)
 
-    data = {'players_length':len(players), 'other_players':state, 'card_number':len(field.deck), 'my_hands':my_hands,'my_played':my_played, 'other_played':other_played, 'look_hands':look_hands,'looked_hands':looked_hands , 'pred':pred, 'reincarnation':True if(len(field.reincarnation)>0) else False}
-    # for i in range(len(players)):
-    #     if players[i] == player:
-    #         field.game.log[i].append(data)
+    data = {'players_length':len(players),'my_turn_number':player.turn_number ,'other_players':state, 'card_number':len(field.deck), 'my_hands':my_hands,'my_played':my_played, 'other_played':other_played, 'look_hands':look_hands,'looked_hands':looked_hands , 'pred':pred, 'reincarnation':True if(len(field.reincarnation)>0) else False}
     return data
+
+
+# 配列の中に指定した型が存在するかを確認
+# 配列の中に指定した数字のカードがあるかを確認するため
+def inType(type:type,list:list):
+    for content in list:
+        if isinstance(content,type):
+            return True
+        else:
+            continue
+    return False
 
 
 # プレイヤークラス
 class Player:
     def __init__(self, name:str):
         self.name = name
+        self.turn_number = -1
         self.live = True # 生死の状態
         self.hands = [] # 手札
         self.played = [] # 場に出したカード
@@ -153,18 +125,26 @@ class Player:
         self.pred = []
         self.affected = True # 効果を受けつける状態かどうか
         self.get = 1 # 山札から
+
+
+def shuffle(list:list):
+    list_copy = list.copy()
+    arange = []
+    for i in range(len(list)):
+        arange.append(i)
+    random.shuffle(arange)
     
-    def show_hands(self):
-        hands = []
-        for card in self.hands:
-            hands.append(card.name)
-        return {'player':self}
+    result = []
+    for i in arange:
+        result.append(list_copy[i])
+    return result
+
 
 # フィールドクラス
 class Field:
     def __init__(self,players:list,game):
         self.game = game
-        self.played = []
+        self.played = [[] for i in range(len(players))]
         self.players = players
         admin = Player('admin')
         cards = [Card1(field=self, player=admin),Card2(field=self,player=admin),Card3(field=self,player=admin),Card4(field=self,player=admin),Card5(field=self,player=admin),Card6(field=self,player=admin),Card7(field=self,player=admin),Card8(field=self,player=admin),Card9(field=self,player=admin),Card10(field=self,player=admin)]
@@ -179,7 +159,7 @@ class Field:
         self.deck = shuffle(deck)
         reincarnation_card = self.deck.pop()
         self.reincarnation = [reincarnation_card]
-            
+
     def draw(self, player, choice_func):
         player.affected = True
         cards = self.deck[:player.get]
@@ -198,75 +178,68 @@ class Field:
             player.hands.append(get_card)
             self.deck.pop(get_card_index)
             player.get = 1
-        return {'player':player}
-
 
 
 # カードのスーパークラス
 # 数字と効果を定義
 class Card:
-    def __init__(self,number:int,name:str,field:Field,player:Player):
+    def __init__(self,number:int,name:str,field:Field):
         self.number = number
         self.name = name
-        self.player = player
         self.field = field
     
-    def move(self):
+    def move(self, player):
         field = self.field
-        for i in range(len(self.player.hands)):
-            if self.player.hands[i] == self:
+        for i in range(len(player.hands)):
+            if player.hands[i] == self:
                 move_index = i
                 break
-        self.player.hands.pop(move_index)
-        field.played.append(self)
-        return self
+        player.hands.pop(move_index)
+        field.played[player.turn_number].append(self)
     
-    def opponentChoice(self, choice):
+    def opponentChoice(self, choice, me:Player):
         field = self.field
         num = 0
+        choices = []
         opponentPlayers_number = []
         opponentPlayers = []
         for player in field.players:
-            if player != self.player and player.affected:
+            if player != me and player.affected:
                 opponentPlayers_number.append(num)
                 opponentPlayers.append(player)
+                choices.append({'select_number':num,'player':player})
                 num += 1
 
         if len(opponentPlayers) != 0:
-            opponentNumber = int(choice(now=create_data(field=self.field,player=self.player),choices=opponentPlayers_number,kind='opponentChoice'))
-            create_log(create_data(field=self.field,player=self.player),choices=opponentPlayers_number,kind='opponentChoice',field=self.field,player=self.player,choice=opponentNumber)
+            opponentNumber = int(choice(now=create_data(field=self.field,player=me),choices=choices,kind='opponentChoice'))
+            create_log(create_data(field=self.field,player=me),choices=choices,kind='opponentChoice',field=self.field,player=self.player,choice=opponentNumber)
             opponent = opponentPlayers[opponentNumber]
             return opponent
         else:
             return None
+        
+    def kill(self,opponent:Player):
+        opponent.live = False
     
-    def kill(self,player:Player):
-        player.live = False
-    
-    def kill10(self,player:Player):
-        set_owner(player=player)
-        for card in player.hands:
-            card.move()
+    def kill10(self, opponent:Player):
+        for card in opponent.hands:
+            card.move(player=opponent)
         reincarnation_card = self.field.reincarnation.pop()
-        reincarnation_card.player = player
-        player.hands.append(reincarnation_card)
-        player.show_hands()
-            
-
+        opponent.hands.append(reincarnation_card)
 
 
 # カード1:少年
 # 一枚目では効果無し、二枚目では「公開処刑」
 class Card1(Card):
-    def __init__(self,field,player):
-        super().__init__(number=1,name='少年',field=field, player=player)
+    def __init__(self, field):
+        super().__init__(number=1,name='少年',field=field)
     
     # opponent:攻撃対象の敵
-    def play(self, choice):
+    def play(self, choice, player:Player):
         field = self.field
         if inType(type=Card1,list=field.played):
-            self.move()
-            opponent = self.opponentChoice(choice=choice)
+            self.move(player=player)
+            opponent = self.opponentChoice(choice=choice,me=player)
             if opponent and len(self.field.deck)>0:
                 get_number = opponent.get
                 opponent.get = 1
@@ -286,20 +259,20 @@ class Card1(Card):
                         trushNumber = i
                         break
                 trush_card = opponent.hands.pop(trushNumber)
-                self.field.played.append(trush_card)
+                self.field.played[player.turn_number].append(trush_card)
         else:
-            self.move()
+            self.move(player=player)
 
 
 # カード2:兵士
 class Card2(Card):
-    def __init__(self, field, player):
-        super().__init__(number=2, name='兵士', field=field, player=player)
+    def __init__(self, field):
+        super().__init__(number=2, name='兵士', field=field)
     
-    def play(self, choice):
-        self.move()
+    def play(self, choice, player:Player):
+        self.move(player=player)
         field = self.field
-        opponent = self.opponentChoice(choice=choice)
+        opponent = self.opponentChoice(choice=choice, me=player)
         if opponent: # opponentの存在確認
             admin = Player('admin')
             cards = [Card1(field=field, player=admin),Card2(field=field,player=admin),Card3(field=field,player=admin),Card4(field=field,player=admin),Card5(field=field,player=admin),Card6(field=field,player=admin),Card7(field=field,player=admin),Card8(field=field,player=admin),Card9(field=field,player=admin),Card10(field=field,player=admin)]
@@ -317,63 +290,65 @@ class Card2(Card):
 
 # カード3：占い師
 class Card3(Card):
-    def __init__(self, field, player):
-        super().__init__(number=3, name='占い師', field=field, player=player)
+    def __init__(self, field):
+        super().__init__(number=3, name='占い師', field=field)
     
-    def play(self, choice):
-        self.move()
-        opponent = self.opponentChoice(choice=choice)
+    def play(self, choice, player:Player):
+        self.move(player=player)
+        opponent = self.opponentChoice(choice=choice, me=player)
         if opponent: # opponentの存在確認
             for card in opponent.hands:
                 self.player.look.append(card)
                 opponent.looked.append({'subject':self.player,'card':card})
 
+
 # カード4：乙女
 class Card4(Card):
-    def __init__(self, field, player):
-        super().__init__(number=4, name='乙女', field=field, player=player)
+    def __init__(self, field):
+        super().__init__(number=4, name='乙女', field=field)
     
-    def play(self,choice):
-        self.move()
+    def play(self, choice, player:Player):
+        self.move(player=player)
         self.player.affected = False
+
 
 # カード5：死神
 class Card5(Card):
-    def __init__(self, field, player):
-        super().__init__(number=5, name='死神', field=field, player=player)
+    def __init__(self, field):
+        super().__init__(number=5, name='死神', field=field)
     
-    def play(self,choice):
-        self.move()
-        opponent = self.opponentChoice(choice=choice)
+    def play(self, choice, player:Player):
+        self.move(player=player)
+        opponent = self.opponentChoice(choice=choice, me=player)
         if opponent and len(self.field.deck)>0: # opponentの存在確認
             self.field.draw(player=opponent, choice_func=choice)
         
             drop_card = opponent.hands.pop(random.randint(0,len(opponent.hands)-1))
             drop_card.player = opponent
             opponent.looked.append({'subject':self.player,'card':drop_card})
-            self.field.played.append(drop_card)
+            self.field.played[opponent.turn_number].append(drop_card)
             if drop_card.number == 10:
                 # 捨てさせたカードが10の場合は相手を死亡させる
-                self.kill10(opponent)
+                self.kill10(opponent=opponent)
             opponent.show_hands()
 
 
 # カード6：貴族
 class Card6(Card):
-    def __init__(self, field, player):
-        super().__init__(number=6, name='貴族', field=field, player=player)
+    def __init__(self, field):
+        super().__init__(number=6, name='貴族', field=field)
     
-    def play(self,choice):
-        self.move()
-        opponent = self.opponentChoice(choice=choice)
+    def play(self, choice, player:Player):
+        self.move(player=player)
+        opponent = self.opponentChoice(choice=choice, me=player)
         if opponent and len(self.player.hands)>0:
             if self.player.hands[0].number < opponent.hands[0].number:
-                self.kill(self.player)
+                self.kill(opponent=self.player)
             elif self.player.hands[0].number == opponent.hands[0].number:
-                self.kill(self.player)
-                self.kill(opponent)
+                self.kill(opponent=self.player)
+                self.kill(opponent=opponent)
             else:
-                self.kill(opponent)
+                self.kill(opponent=opponent)
             self.player.looked.append({'subject':opponent, 'card':self.player.hands[0]})
             self.player.look.append(opponent.hands[0])
             opponent.looked.append({'subject':self.player, 'card':opponent.hands[0]})
@@ -382,45 +357,43 @@ class Card6(Card):
 
 # カード7：賢者
 class Card7(Card):
-    def __init__(self, field, player):
-        super().__init__(number=7, name='賢者', field=field, player=player)
+    def __init__(self, field):
+        super().__init__(number=7, name='賢者', field=field)
     
-    def play(self, choice):
-        self.move()
+    def play(self, choice, player:Player):
+        self.move(player=player)
         self.player.get = 3
         self.field.deck = shuffle(self.field.deck)
 
 
 # カード8：精霊
 class Card8(Card):
-    def __init__(self, field, player):
-        super().__init__(number=8, name='精霊', field=field, player=player)
+    def __init__(self, field):
+        super().__init__(number=8, name='精霊', field=field)
     
-    def play(self,choice):
-        self.move()
-        opponent = self.opponentChoice(choice=choice)
+    def play(self,choice, player:Player):
+        self.move(player=player)
+        opponent = self.opponentChoice(choice=choice,me=player)
         if opponent: 
-            if len(self.player.hands)>0 and len(opponent.hands)>0:
-                copy_self = self.player.hands.pop()
+            if len(player.hands)>0 and len(opponent.hands)>0:
+                copy_self = player.hands.pop()
                 copy_opponent = opponent.hands.pop()
-                copy_opponent.player = self.player
-                self.player.hands.append(copy_opponent)
-                copy_self.player = opponent
+                player.hands.append(copy_opponent)
                 opponent.hands.append(copy_self)
                 opponent.look.append(self.player.hands[0])
-                self.player.look.append(opponent.hands[0])
+                player.look.append(opponent.hands[0])
                 opponent.looked.append({'subject':self.player,'card':opponent.hands[0]})
-                self.player.looked.append({'subject':opponent,'card':self.player.hands[0]})
+                player.looked.append({'subject':opponent,'card':self.player.hands[0]})
 
 
 # カード9：皇帝
 class Card9(Card):
-    def __init__(self, field, player):
-        super().__init__(number=9, name='皇帝', field=field, player=player)
+    def __init__(self, field):
+        super().__init__(number=9, name='皇帝', field=field)
     
-    def play(self, choice):
-        self.move()
-        opponent = self.opponentChoice(choice=choice)
+    def play(self, choice, player:Player):
+        self.move(player=player)
+        opponent = self.opponentChoice(choice=choice,me=player)
         if opponent and len(self.field.deck)>0:
             get_number = opponent.get
             opponent.get = 1
@@ -430,7 +403,7 @@ class Card9(Card):
             choices = []
             for card in opponentHands:
                 choices.append(card.number)
-                self.player.look.append(card)
+                player.look.append(card)
 
             choice_number = int(choice(now=create_data(field=self.field,player=self.player),choices=choices,kind='trush'))
             create_log(create_data(field=self.field,player=self.player),choices=choices,kind='trush',field=self.field,player=self.player,choice=choice_number)
@@ -447,11 +420,11 @@ class Card9(Card):
 
 # カード10：英雄
 class Card10(Card):
-    def __init__(self, field, player):
-        super().__init__(number=10, name='英雄', field=field, player=player)
+    def __init__(self, field):
+        super().__init__(number=10, name='英雄', field=field)
     
-    def play(self, choice):
-        self.move()
+    def play(self, choice, player:Player):
+        return None
 
 
 # ゲームクラス：ゲームに必要なものを定義する
@@ -464,6 +437,9 @@ class Game:
             name = str(get_name(i))
             players.append(Player(name=name))
         players = shuffle(players)
+        for i in range(len(players)):
+            player = players[i]
+            player.turn_number = i+1
 
         # ゲームフィールドの生成
         self.field = Field(players=players, game=self)
@@ -526,9 +502,7 @@ class Game:
             return [True]
     
     def turn(self, player:Player, choice):
-        set_owner(player=player)
         self.field.draw(player=player,choice_func=choice)
-        set_owner(player=player)
         if len(player.hands) > 1:
             player.show_hands()
             hands = []
@@ -542,7 +516,7 @@ class Game:
                 if player.hands[i].number == card_number:
                     card_index = i
                     break
-            player.hands[card_index].play(choice=choice)
+            player.hands[card_index].play(choice=choice,player=player)
     
     def game(self, choice_funcs):
         try:
@@ -552,17 +526,12 @@ class Game:
                 p = players[i]
                 choice_func = choice_funcs[i]
                 self.field.draw(player=p,choice_func=choice_func)
-                set_owner(player=p)
-                
-            turn_number = 1
             while len(self.field.deck) > 0 and state[0]:
                 for i in range(len(players)):
                     player = players[i]
                     choice_func = choice_funcs[i]
-                    set_owner(player=player)
                     state = self.isContinue() # ゲームがアクティブか
                     if state[0]:
-                        turn_number += 1
                         self.turn(player=player, choice=choice_func)
 
                     else:
