@@ -25,6 +25,7 @@
         <div>
           <button id="createRoomBtn">ルームの作成</button>
           <button id="showRoomsBtn">ルームの確認</button>
+          <button id="startGameBtn">ゲームの開始</button>
         </div>
       </div>
     </div>
@@ -58,6 +59,7 @@
     const gameArea = document.getElementById('gameArea');
 
     const rooms = document.getElementById('rooms');
+    const gameStart = document.getElementById('startGameBtn');
 
     // ルームを確認する
     showRoomsBtn.addEventListener('click', () => {
@@ -92,6 +94,7 @@
           alert(response ? response.message : 'ルーム参加に失敗しました');
         } else {
           roomInfo.innerText = `ルーム ${response.roomId} に参加しました。メンバー: ${response.players.length}人`;
+          socket.emit('startGame', roomId);
         }
       });
     });

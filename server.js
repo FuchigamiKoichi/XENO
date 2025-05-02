@@ -43,7 +43,7 @@ io.on('connection', (socket) => {
     // ソケットをそのルームにジョインさせる
     socket.join(roomId);
     // players 配列に登録
-    rooms[roomId].players.push(socket.id);
+    // rooms[roomId].players.push(socket.id);
 
     console.log(`ルーム作成: ${roomId}`);
     if (callback) {
@@ -84,7 +84,7 @@ io.on('connection', (socket) => {
 
     // ここでゲーム開始に必要な初期化を行う
     // 例: room.gameState = { ... };
-    io.to(roomId).emit('gameStarted', { message: 'ゲーム開始！' });
+    io.to(roomId).emit('game.html');
   });
 
   // ゲーム中のプレイヤー操作を受け取る例

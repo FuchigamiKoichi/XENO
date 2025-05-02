@@ -1,0 +1,1263 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>XENO - ゲーム</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #222;
+            color: white;
+        }
+        .container {
+            margin-top: 20vh;
+        }
+        button {
+            background-color: #ffcc00;
+            border: none;
+            padding: 10px 20px;
+            font-size: 20px;
+            cursor: pointer;
+        }
+        /* ボタンをまとめたラッパー */
+        #buttonGroup {
+            position: absolute;
+            top: 10px;
+            right: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px; /* ボタンの間隔 */
+        }
+        /* 共通ボタンスタイル（赤） */
+        #buttonGroup button {
+            padding: 10px 15px;
+            font-size: 16px;
+            background-color: red;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        #surrenderButton {
+            background-color: blue !important;
+        }
+        #ruleButton {
+            background-color:green !important;
+        }
+        /* 先行・後攻ボタンを最前面に配置 */
+        #turnSelection {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(0, 0, 0, 0.8);
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            z-index: 1000; /* 最前面 */
+        }
+        /* ボタンのスタイル */
+        #turnSelection button {
+            font-size: 18px;
+            padding: 10px 20px;
+            margin: 10px;
+            cursor: pointer;
+        }
+
+        /* ターン表示 */
+        #turnIndicator {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 20px;
+            font-size: 24px;
+            text-align: center;
+            border-radius: 10px;
+            opacity: 0; /* 初期状態で透明 */
+            transition: opacity 0.5s ease-in-out; /* フェードアニメーション */
+            display: none; /* 初期状態で非表示 */
+            z-index: 1000; /* 最前面に表示 */
+        }
+        /*後攻*/
+        #second_turn {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 20px;
+            font-size: 24px;
+            text-align: center;
+            border-radius: 10px;
+            opacity: 0; /* 初期状態で透明 */
+            transition: opacity 0.5s ease-in-out; /* フェードアニメーション */
+            display: none; /* 初期状態で非表示 */
+            z-index: 1000; /* 最前面に表示 */
+        }
+        /* ボタンのホバー時のスタイル */
+        #backToTitle:hover {
+            background-color: darkred;
+        }
+        .game-screen {
+            display: none;
+            position:relative;
+            flex-direction: column;
+            align-items: center;
+        }
+        /* 相手の中央エリア（プレイエリアと手札） */
+        #opponent-center-area {
+            display: flex; /* 横並び配置 */
+            justify-content: flex-start; /* 左寄せ */
+            align-items: center; /* 縦方向の中央揃え */
+        }
+        /* 相手のプレイエリア */
+        #opponent-playArea {
+            width: 600px;
+            height: 150px;
+            background-color: darkred;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid white;
+            font-size: 18px;
+            color: white;
+            margin: 10px auto; /* 中央配置 */
+            position: relative;
+        }
+        /* 相手の手札ゾーン */
+        #opponent-hand {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 20px; /* プレイエリアとの間隔 */
+        }
+        /* 中央エリア（手札とプレイエリア） */
+        #center-area {
+            display: flex; /* 横並び配置 */
+            justify-content: flex-start; /* 左寄せ */
+            align-items: center; /* 縦方向の中央揃え */
+        }
+        /* 山札の配置 */
+        #deck-container {
+            margin-right: 20px; /* プレイエリアとの間にスペースを入れる */
+            display: flex; /* 明示的にflexにしてみます */
+            flex-direction: column; /* 山札と残り枚数を縦に配置 */
+            text-align: center;
+            flex-shrink: 0; /* 山札のサイズが縮まないようにする */
+            position: relative; /* 必要：子要素を絶対配置するため */
+        }
+        /* 山札 */
+        #deck {
+            width: 100px;
+            height: 150px;
+            cursor: pointer;
+            z-index: 2;
+        }
+        /* 横向きのカード */
+        #side-card-container {
+            position: absolute;
+            top: 130px; /* デッキの上部に配置 */
+            left: 80px; /* デッキの右隣に配置 (調整が必要かも) */
+            z-index: 1; /* 他の要素の上に表示されるように */
+        }
+        .side-card {
+            width: 100px;
+            height: 150px;
+            transform: rotate(90deg); /* 横向きに回転 */
+            transform-origin: top right; /* 回転の基準を右上に設定 */
+            cursor: pointer;
+            z-index: 1; /* 横向きカードのz-indexを山札より低く設定 */
+        }
+        /* 残り枚数表示の位置 */
+        #deck-count {
+            margin-top: 10px;
+            font-size: 14px;
+        }
+        /* プレイエリア */
+        #playArea {
+            width: 600px;
+            height: 150px;
+            background-color: darkgreen;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid white;
+            font-size: 20px;
+            color: white;
+            margin: 20px;
+            position: relative;
+            flex-grow: 1; /* プレイエリアが残りのスペースを占めるように設定 */
+        }
+        /* 手札ゾーン */
+        .hand-zone {
+            display: flex;
+            gap: 10px;
+            margin: 20px;
+        }
+        .card {
+            width: 100px;
+            height: 150px;
+            display:block;
+            cursor: pointer;
+            transition: transform 0.3s ease-in-out;
+        }
+        /* 使用済みカード
+        /* モーダルの背景 */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            bottom: 30px;     /*ウィンドウの下端からの位置*/
+            right: 40px;      /*ウィンドウの右端からの位置*/
+            min-width: 350px; /*サイズ指定（モーダル横幅）*/
+            min-height: 300px;
+            background-color: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+        }
+        /* モーダル本体 */
+        .modal-content {
+            background-color:black;
+            padding: 20px;
+            border-radius: 10px;
+            width: 60%;
+            max-width: 500px;
+            text-align: center;
+            position: relative;
+        }
+        #ruleModal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5); /* 背景を半透明に */
+            display: flex;
+            z-index: 3;
+            justify-content: center;
+            align-items: center;
+        }
+        /* モーダルの画像 */
+        .rule-image {
+            width: 40%;  /* 画像の横幅をモーダル内で調整 */
+            max-width: 150px; /* 最大サイズを制限 */
+            height: auto; /* 縦横比を維持 */
+            margin: 20px 0; /* 上下の余白 */
+            border-radius: 10px; /* 角を丸くする */
+        }
+        #closeRule {
+            font-size:40px;
+            background-color: #f00; /* ボタンの背景色（例: 赤） */
+            position: absolute;
+            top: 10px;
+            right: 10px;
+        }
+        /* タブボタンのスタイル */
+        .tab-buttons {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 10px;
+        }
+
+        .tab-btn {
+            padding: 10px 20px;
+            margin: 5px;
+            border: none;
+            background: #ddd;
+            cursor: pointer;
+        }
+
+        .tab-btn.active {
+            background: #007bff;
+            color: white;
+        }
+
+        /* タブのコンテンツ */
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* 閉じるボタン */
+        .close-btn {
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            font-size: 24px;
+            cursor: pointer;
+        }
+        /* 使用済みカードの一覧を横並びにする */
+        #usedCardsList {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+        }
+        /* 使用済みカードの画像 */
+        .used-card {
+            width: 80px;
+            height: 120px;
+            border: 2px solid #000;
+        }
+        .card-image {
+            width: 100px;
+            margin: 5px;
+            border-radius: 8px;
+        }
+        /* カード拡大表示エリア */
+        #cardZoom {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: rgba(0, 0, 0, 0.8);
+            display: none; /* 初期状態では非表示 */
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.5s ease-in-out;
+        }
+        /* 拡大表示するカード */
+        #cardZoom img {
+            width: 200px;
+            height: 300px;
+            transform: scale(0.5);
+            transition: transform 0.5s ease-in-out;
+        }
+        #effectDescription {
+            margin-top: 10px;
+            padding: 10px 14px;
+            background: rgba(0, 0, 0, 0.7); /* 半透明の黒背景 */
+            color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+            font-size:60px;
+            line-height: 1.4;
+            display: inline-block;
+            max-width: 90%;
+            opacity: 1;
+            z-index: 7;
+            transition: opacity 0.5s ease-in-out;
+        }
+
+        #cardZoom.show #effectDescription {
+            opacity: 1;
+        }
+        #cardZoom:not(.show) #effectDescription {
+            opacity: 0;
+        }
+        /* 表示時のアニメーション */
+        #cardZoom.show {
+            display: flex;
+            opacity: 1;
+        }
+        #cardZoom.show img {
+            transform: scale(2);
+        }
+        /* ターン表示 */
+        #turnIndicator {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 36px;
+            font-weight: bold;
+            color: white;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 20px 40px;
+            border-radius: 10px;
+            z-index: 4000; /* 最前面に表示 */
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.5s ease-in-out, visibility 0.5s;
+        }
+        /* ログエリア */
+        #log-area {
+            width: 180px;
+            height: 800px;
+            padding: 10px;
+            top: 0px;
+            left: 2px;
+            background-color:rgba(255, 255, 255, 0.15); /* 白っぽい半透明 */;
+            border-right: 2px solid #ccc;
+            overflow-y: auto;
+            position: absolute;
+            font-size: 14px;
+            box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+            backdrop-filter: blur(4px);
+        }
+        #log-area h3 {
+            margin-top: 0;
+        }
+        #log-messages {
+            color:white;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container" id="startScreen">
+        <h1>XENO</h1>
+        <button onclick="startGame()">ゲーム開始</button>
+        <button onclick="showRules()">ルール説明</button>
+    </div>
+    <div class="game-screen" id="gameScreen">
+        <!-- ログエリア -->
+        <div id="left-column">
+            <!-- ログエリア -->
+            <div id="log-area">
+              <h3>ログ</h3>
+              <div id="log-messages"></div>
+            </div>
+        </div>
+        <h2>対戦画面</h2>
+        <div id="buttonGroup">
+            <!-- タイトル画面に戻るボタン -->
+            <button id="backToTitle" onclick="goToTitle()">タイトル画面に戻る</button>
+            <!--  投降ボタンを追加 -->
+            <button id="surrenderButton" onclick="surrender()">投降する</button>
+            <button id="ruleButton">ルール説明</button>
+        </div>
+    
+        <!-- 相手のプレイエリアと手札 -->
+        <div id="opponent-center-area">
+            <!-- 相手のプレイエリア -->
+            <div id="opponent-playArea">相手のプレイエリア</div>
+            <!-- 相手の手札 -->
+            <div id="opponent-hand" class="hand-zone">
+    
+            </div>
+        </div>
+
+        <!-- 使用済みカード一覧を表示するモーダル -->
+        <div id="usedCardsModal" class="modal">
+            <div class="modal-content">
+                <span class="close-btn" onclick="closeUsedCards()">&times;</span>
+                <h2>使用済みカード</h2>
+                <div id="usedCardsList"></div>
+            </div>
+        </div>
+
+        <!-- ルール説明のモーダルウィンドウ -->
+        <div id="ruleModal" style="display: none;">
+            <div id="modal-content">
+                <span id="closeRule" style="cursor: pointer;">&times</span>
+                <h2>ZENOのルール</h2>
+                
+                <!-- タブ切り替えボタン -->
+                <div class="tab-buttons">
+                    <button class="tab-btn active" data-target="page1">基本ルール</button>
+                    <button class="tab-btn" data-target="page2">カードの種類</button>
+                    <button class="tab-btn" data-target="page3">勝利条件</button>
+                </div>
+                <!-- タブのコンテンツ -->
+                <div class="tab-content active" id="page1">
+                    <p>カードには強さを示す1〜10までの数字が書いてあります。
+                        1〜8のカードは2枚ずつ、9と10のカードは1枚ずつあります（合計18枚）。
+                        各ターン、2枚の手札のうち1枚を場に出して効果を発動します。
+                        山札がない場合、カードを引く必要がある効果は発動できません。
+                        カードの効果で相手を脱落させると勝利します。
+                        英雄が皇帝以外の効果で捨てさせられた場合、あるいは手札に英雄があるプレイヤーが脱落させられた場合は手札をすべて捨てて転生札を手札に加え、復活します。
+                        ゲーム開始時に山札が無くなった場合は、より大きいカードを持っているプレイヤーが勝利します。
+                    </p>
+                </div>
+                <div class="tab-content" id="page2">
+                    <h2>少年</h2>
+                    <img src="boy.jpg" class="rule-image">
+                    <h3>カード効果【革命】</h3>
+                    <p>
+                        1枚目は何の効果も発動しないが、場に2枚目が出た場合は皇帝と同じ「公開処刑」が発動する。
+                        (相手に山札から1枚引かせて手札を公開させ、どちらか1枚を指定し捨てさせる。ただし英雄に対する即死効果はない)
+                        手札に持っておくか、すぐに場に出すか戦路が問われるカードです。効果を発動できれば強力ですが、発動できないと足踏みとなってしまう上小さいカードを持ち続けるとリスクが高くなるため、扱いには注意が必要です。
+                    </p>
+                </div>
+                <div class="tab-content" id="page3">
+                    <p>これは勝利条件の説明です。</p>
+                </div>
+            </div>
+        </div>
+        <!-- 山札とプレイエリア -->
+        <div id="deck-container">
+            <img id="deck" src="0.jpg" alt="山札">
+            <div id="deck-count">残り枚数:17</div> <!-- 残り枚数表示 -->
+            <!-- 横向きのカード -->
+            <div id="side-card-container">
+                <!-- <img class="side-card" src="0.jpg" alt="横向きカード"> -->
+            </div>
+        </div>
+        <div id="center-area">
+            <!-- 自分の手札 -->
+            <div id="player-hand" class="hand-zone">
+                
+            </div>
+            <div id="playArea">プレイエリア</div>
+        </div>
+        <div id="turnSelection">
+            <p>先行か後攻を選んでください</p>
+            <button onclick="selectTurn(true)">先行</button>
+            <button onclick="selectTurn(false)">後攻</button>
+        </div>
+        <div id="turnIndicator">あなたのターンです</div>
+        <div id="second_turn">相手のターンです</div>
+        <!-- カード拡大表示エリア -->
+        <div id="cardZoom">
+            <img id="zoomedCard" src="" alt="拡大カード">
+            <div id="effectDescription" class="effect-text"></div>
+        </div>
+    </div>
+    <script>
+        // プレイヤーと相手の手札
+        let playerHand = [];
+        let opponentHand = [];  // 相手の手札（裏向き）
+        
+        //相手と自分のプレイエリアについての設定
+        document.addEventListener("DOMContentLoaded", () => {
+            document.getElementById("playArea").addEventListener("click", showUsedCards);
+        });
+
+        document.addEventListener("DOMContentLoaded", () => {
+            document.getElementById("opponent-playArea").addEventListener("click", showOpponentUsedCards);
+        });
+
+        // ルール説明ボタンとモーダルウィンドウ
+        let ruleButton = document.getElementById("ruleButton");
+        let ruleModal = document.getElementById("ruleModal");
+        let closeRule = document.getElementById("clothRule");
+
+        function startGame() {
+            document.getElementById("startScreen").style.display = "none";
+            document.getElementById("gameScreen").style.display = "flex";
+            // ゲーム開始時に手札を初期化
+            playerHand = [];
+            opponentHand = [];
+            dealInitialHands(); // 最初の手札を配る処理
+        }
+        function showRules() {
+            alert("XENOのルール:\n1. カードを出して効果を発動！\n2. 相手を脱落させれば勝利！");
+        }
+
+        // ルール説明ボタンがクリックされたらモーダルを表示
+        ruleButton.onclick = function() {
+            ruleModal.style.display = "block";
+        };
+
+        // モーダルの閉じるボタンにクリックイベントを追加
+        document.getElementById("closeRule").addEventListener("click", function() {
+            document.getElementById("ruleModal").style.display = "none";
+        });
+        
+        document.addEventListener("DOMContentLoaded", function () {
+            const ruleModal = document.getElementById("ruleModal");
+            const closeRule = document.getElementById("closeRule");
+            const tabButtons = document.querySelectorAll(".tab-btn");
+            const tabContents = document.querySelectorAll(".tab-content");
+
+            // タブの切り替え処理
+            tabButtons.forEach(button => {
+                button.addEventListener("click", function () {
+                    const targetId = this.getAttribute("data-target");
+
+                    // すべてのタブを非アクティブにする
+                    tabButtons.forEach(btn => btn.classList.remove("active"));
+                    tabContents.forEach(content => content.classList.remove("active"));
+
+                    // 選択したタブのみアクティブにする
+                    this.classList.add("active");
+                    document.getElementById(targetId).classList.add("active");
+                });
+            });
+        })
+
+        function goToTitle() {
+            document.getElementById("gameScreen").style.display = "none";
+            document.getElementById("startScreen").style.display = "block";
+            resetGame(); 
+        }
+        
+        function playCard(cardElement) {
+            if (!isPlayerTurn == true) {
+                return;
+            } else {
+                isPlayerTurn = false;
+                let imgSrc = cardElement.src; // クリックしたカードの画像を取得
+                usedCards.push(imgSrc); // 使用済みリストに追加
+
+                // 拡大表示エリア
+                let zoomArea = document.getElementById("cardZoom");
+                let zoomedCard = document.getElementById("zoomedCard");
+
+                // 画像を設定し、拡大エリアを表示
+                zoomedCard.src = imgSrc;
+                zoomArea.classList.add("show");
+
+                // 1秒後にフェードアウト
+                setTimeout(() => {
+                    zoomArea.classList.remove("show");
+                }, 1000);
+
+                // 効果説明テキスト
+                let CharacterConsoleValue;
+                let fileName = imgSrc.split("/").pop();
+                let characterName = getCharacterName(fileName);
+                let effectText = document.getElementById("effectDescription");
+                effectText.textContent = getEffectDescription(characterName);
+
+                // 1.5秒後（アニメーション完了後）にプレイエリアに移動
+                setTimeout(() => {
+                    let playArea = document.getElementById("playArea");
+
+                    let newCard = document.createElement("img");
+                    newCard.src = imgSrc;
+                    newCard.classList.add("played-card");
+
+                    // 既に出されているカードの数を使って、位置と重なり順を調整
+                    const index = playArea.children.length;
+                    newCard.style.position = "absolute";
+                    newCard.style.left = `${index * 40}px`;  // 横方向に10pxずつずらす
+                    newCard.style.zIndex = index;
+
+                    // スムーズなアニメーションのためのスタイル設定
+                    newCard.style.width = "100px";
+                    newCard.style.height = "150px";
+                    newCard.style.transition = "transform 0.5s ease-in-out";
+                    playArea.appendChild(newCard);
+
+                    console.log('cardElement：'+cardElement)
+                    // 手札から削除
+                    cardElement.remove();
+                    
+                    console.log("fileName:" + fileName);
+                   
+                    addLog("プレイヤー１が" + characterName + "を使用しました");
+                }, 1500);
+                // **3秒後に「相手のターンです」を表示**
+                setTimeout(() => {
+                    let secondTurnIndicator = document.getElementById("second_turn");
+                    secondTurnIndicator.style.display = "block";
+                    secondTurnIndicator.style.opacity = "1";
+
+                    // **さらに2秒後に CPU のターンを開始 & 「相手のターンです」を消す**
+                    setTimeout(() => {
+                        secondTurnIndicator.style.opacity = "0";
+                        secondTurnIndicator.style.display = "none";
+                        cpuTurn(); // CPUのターン開始
+                    }, 2000);
+                }, 3000);
+            }
+        }
+        
+        //場に出したキャラクターの名前を取得(例：皇帝)
+        function getCharacterName(filename) {
+            // 結果を入れる変数を用意
+            let characterConsoleName = "不明なキャラクター";
+            let ofCard;
+            OriginalDecks = [
+                { name: "boy.jpg", value: 1 ,character:"少年"},
+                { name: "boy.jpg", value: 1,character:"少年"},
+                { name: "soldier.jpg", value: 2,character:"兵士" },
+                { name: "soldier.jpg", value: 2,character:"兵士" },
+                { name: "diviner.jpg", value: 3,character:"占い師" },
+                { name: "diviner.jpg", value: 3,character:"占い師" },
+                { name: "noble.jpg", value: 6,character:"貴族" },
+                { name: "noble.jpg", value: 6,character:"貴族" },
+                { name: "maiden.jpg", value: 4,character:"乙女" },
+                { name: "maiden.jpg", value: 4,character:"乙女" },
+                { name: "sage.jpg", value: 7,character:"賢者" },
+                { name: "sage.jpg", value: 7,character:"賢者" },
+                { name: "reaper.jpg", value: 5,character:"死神" },
+                { name: "reaper.jpg", value: 5,character:"死神" },
+                { name: "spirit.jpg", value: 8,character:"精霊" },
+                { name: "spirit.jpg", value: 8,character:"精霊" },
+                { name: "kaizer.jpg", value: 9,character:"皇帝" },
+                { name: "hero.jpg", value: 10,character:"英雄" },
+            ];
+            // decks 配列を1つずつ確認
+            for (let i = 0; i < OriginalDecks.length; i++) {
+                ofCard = OriginalDecks[i];
+
+                // ファイル名が一致するかを確認
+                if (ofCard.name === filename) {
+                    // 一致したらキャラクター名をセットして終了
+                    characterConsoleName = ofCard.character;
+                    CharacterConsoleValue = ofCard.value;
+                    break;
+                }else{
+                    console.log("ofCard:" + ofCard.name);
+                }
+            }
+            return characterConsoleName;
+        }
+
+        
+
+        function getEffectDescription(characterName) {
+            switch (characterName) {
+                case "少年":
+                    return "少年";
+                case "兵士":
+                    return "兵士の効果：相手の手札を推測！";
+                case "占い師":
+                    return "占い師の効果：相手の手札を覗く！";
+                case "乙女":
+                    return "乙女の効果：次のターンまで守られる！";
+                case "死神":
+                    return "死神の効果：相手に手札を捨てさせる！";
+                case "貴族":
+                    return "貴族の効果：対決！";
+                case "賢者":
+                    return "賢者の効果：次のターンで山札のトップ3枚からカードを選択！";
+                case "精霊":
+                    return "精霊の効果：カードを交換！";
+                case "皇帝":
+                    return "皇帝の効果：相手を恐怖に！";
+                case "英雄":
+                    return "英雄の効果：最強の一撃！";
+                default:
+                    return "効果は特にありません。";
+            }
+        }
+    
+        decks = [
+                { name: "boy.jpg", value: 1 ,character:"少年"},
+                { name: "boy.jpg", value: 1,character:"少年"},
+                { name: "soldier.jpg", value: 2,character:"兵士" },
+                { name: "soldier.jpg", value: 2,character:"兵士" },
+                { name: "diviner.jpg", value: 3,character:"占い師" },
+                { name: "diviner.jpg", value: 3,character:"占い師" },
+                { name: "noble.jpg", value: 6,character:"貴族" },
+                { name: "noble.jpg", value: 6,character:"貴族" },
+                { name: "maiden.jpg", value: 4,character:"乙女" },
+                { name: "maiden.jpg", value: 4,character:"乙女" },
+                { name: "sage.jpg", value: 7,character:"賢者" },
+                { name: "sage.jpg", value: 7,character:"賢者" },
+                { name: "reaper.jpg", value: 5,character:"死神" },
+                { name: "reaper.jpg", value: 5,character:"死神" },
+                { name: "spirit.jpg", value: 8,character:"精霊" },
+                { name: "spirit.jpg", value: 8,character:"精霊" },
+                { name: "kaizer.jpg", value: 9,character:"皇帝" },
+                { name: "hero.jpg", value: 10,character:"英雄" },
+            ];
+        let isPlayerTurn;
+        let usedCards = []; // 使用されたカードを保存
+        let opponentUsedCards = [];//相手の使用したカードを保存
+        
+        // 山札をシャッフルする関数
+        function initializeDeck() {
+            shuffle(decks); // シャッフルのみ実行
+        }
+        // 配列をシャッフルする関数（Fisher-Yatesアルゴリズム）
+        function shuffle(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                let j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+
+        let opponentCard;
+        // 最初の手札を配る
+        function dealInitialHands() {
+            initializeDeck(); // 山札をシャッフル
+            // プレイヤーの手札を配る
+            let deckCountElement = document.getElementById("deck-count");
+            let playerCard = decks.pop();
+            console.log("プレイヤーに配られたカード:", playerCard);
+            playerHand.push(playerCard);
+
+            let playerHandZone = document.getElementById("player-hand");
+            let playerCardImg = document.createElement("img");
+            playerCardImg.src = playerCard.name;
+            playerCardImg.classList.add("card");
+
+            playerCardImg.onclick = function () {
+                playCard(this);
+            };
+            playerHandZone.appendChild(playerCardImg);
+            
+            // 相手に1枚配る（裏向き）
+            opponentCard = decks.pop(); // 山札からカードを1枚取得
+            alert("相手に配られたカード: " + JSON.stringify(opponentCard));
+            opponentHand.push(opponentCard); // 相手の手札に追加
+            let opponentHandZone = document.getElementById("opponent-hand"); // 相手の手札エリア
+            let opponentCardImg = document.createElement("img");
+            opponentCardImg.src = "0.jpg"; // 裏向きカード
+            opponentCardImg.classList.add("card");
+
+            // 相手のカードにも情報を設定
+            opponentCardImg.dataset.cardInfo = JSON.stringify(opponentCard);
+            opponentHandZone.appendChild(opponentCardImg);
+            // ** 山札の残り枚数を更新 **
+            deckCountElement.textContent = `残り枚数: ${decks.length}`;
+        }
+
+        // 山札から手札にカードを追加
+        function drawCardToHand() {
+            let deckElement = document.getElementById("deck"); // 山札の要素
+            let deckCountElement = document.getElementById("deck-count"); // 修正
+            let playerHand = document.getElementById("player-hand"); // プレイヤーの手札
+            if (decks.length === 0) {
+                 // 山札が空なら、山札の要素を非表示にする
+                deckElement.style.transition = "opacity 0.5s ease-out"; // フェードアウトアニメーション
+                deckElement.style.opacity = "0"; // 山札を消す
+                setTimeout(() => {
+                    deckElement.style.display = "none"; // アニメーション後に非表示にする
+                    deckCountElement.style.display = "none"; // 残り枚数の表示も非表示にする
+                }, 500); // 500ms後に完全に非表示
+                return; // 山札が空なので、カードを引く処理を停止
+            }
+            let drawnCard = decks.pop(); // 山札から1枚引く
+            let newCard = document.createElement("img");
+            newCard.src = drawnCard.name; // 画像のパスを組み立てる
+            newCard.classList.add("card");
+
+            // cardInfoをdata属性に設定
+            newCard.dataset.cardInfo = JSON.stringify(drawnCard); // cardInfoをdata属性として格納
+
+            
+            // ** 初期位置（山札の位置）を取得 **
+            let deckRect = deckElement.getBoundingClientRect();
+            let handRect = playerHand.getBoundingClientRect();
+            newCard.style.position = "absolute";
+            newCard.style.left = `${deckRect.left}px`;
+            newCard.style.top = `${deckRect.top}px`;
+            newCard.style.width = "100px"; 
+            newCard.style.height = "150px";
+            newCard.style.opacity = "0"; // 最初は透明
+            
+            document.body.appendChild(newCard); // 一時的にbodyに追加
+            // ** 少し遅延を入れてアニメーションを開始 **
+            setTimeout(() => {
+                newCard.style.transition = "left 0.5s ease-out, top 0.5s ease-out, opacity 0.5s";
+                newCard.style.left = `${handRect.left + 20}px`;
+                newCard.style.top = `${handRect.top + 20}px`;
+                newCard.style.opacity = "1";
+            }, 10);
+            // ** アニメーション完了後に手札に追加 **
+            setTimeout(() => {
+                newCard.style.position = "static";
+                newCard.style.transition = "none";
+                playerHand.appendChild(newCard); // 手札エリアに正式追加
+                // カードにクリックイベントを追加（手札に追加後）
+                newCard.addEventListener("click", function() {
+                    playCard(newCard);  // プレイヤーがカードを選択した場合の処理
+                });
+            }, 600);
+            // ** 山札の残り枚数を更新 **
+            deckCountElement.textContent = `残り枚数: ${decks.length}`;
+
+            
+            //山札がなくなったら互いのカードを比べ、勝敗を決める
+            checkDeckEmpty();
+        }
+
+        
+        // CPUが山札からカードを引く
+        function cpuDrawCardToHand() {
+            let deckElement = document.getElementById("deck"); // 山札の要素
+            let deckCountElement = document.getElementById("deck-count"); // 残り枚数表示
+            let cpuHand = document.getElementById("opponent-hand"); // CPUの手札エリア
+            
+            if (decks.length === 0) {
+                // 山札が空なら非表示にする
+                deckElement.style.transition = "opacity 0.5s ease-out";
+                deckElement.style.opacity = "0";
+                setTimeout(() => {
+                    deckElement.style.display = "none";
+                    deckCountElement.style.display = "none";
+                }, 500);
+                return;
+            }
+
+            let drawnCard = decks.pop(); // 山札からカードを1枚引く
+            let newCard = document.createElement("img");
+            newCard.src = "0.jpg";
+            alert("相手に配られたカード: " + JSON.stringify(drawnCard));
+            opponentHand.push(drawnCard); // 相手の手札に追加
+            newCard.classList.add("card");
+            
+            // cardInfoをdata属性に設定（JSON文字列として格納）
+            // newCard = JSON.stringify(drawnCard);
+            // datasetに格納されたカード情報をデバッグ用に表示
+            addLog("カード情報（dataset）: " + newCard.name);
+
+            // ** 初期位置（山札の位置）を取得 **
+            let deckRect = deckElement.getBoundingClientRect();
+            let cpuHandRect = cpuHand.getBoundingClientRect();
+            console.log('newCard',newCard)
+            newCard.style.position = "absolute";
+            newCard.style.left = `${deckRect.left}px`;
+            newCard.style.top = `${deckRect.top}px`;
+            newCard.style.width = "100px";
+            newCard.style.height = "150px";
+            newCard.style.opacity = "0"; // 最初は透明
+
+            document.body.appendChild(newCard); // 一時的にbodyに追加
+
+            // ** 少し遅延を入れてアニメーションを開始 **
+            setTimeout(() => {
+                newCard.style.transition = "left 0.5s ease-out, top 0.5s ease-out, opacity 0.5s";
+                newCard.style.left = `${cpuHandRect.left + 20}px`;
+                newCard.style.top = `${cpuHandRect.top + 20}px`;
+                newCard.style.opacity = "1";
+            }, 10);
+
+            // ** アニメーション完了後にCPUの手札に追加 **
+            setTimeout(() => {
+                newCard.style.position = "static";
+                newCard.style.transition = "none";
+                cpuHand.appendChild(newCard); // CPUの手札エリアに正式追加
+            }, 600);
+
+            // ** 山札の残り枚数を更新 **
+            deckCountElement.textContent = `残り枚数: ${decks.length}`;
+        }
+
+        function showUsedCards() {
+            let modal = document.getElementById("usedCardsModal");
+            let modalContent = document.getElementById("usedCardsList");
+            modalContent.innerHTML = ""; // 既存のカード一覧をクリア
+
+            usedCards.forEach(imgSrc => {
+                let cardImg = document.createElement("img");
+                cardImg.src = imgSrc;
+                cardImg.classList.add("used-card"); // CSSで調整する
+                modalContent.appendChild(cardImg);
+            });
+
+            modal.style.display = "block"; // モーダルを表示
+        }
+
+        function showOpponentUsedCards(){
+            let modal = document.getElementById("usedCardsModal");
+            let modalContent = document.getElementById("usedCardsList");
+            modalContent.innerHTML = ""; // 既存のカード一覧をクリア
+
+            opponentUsedCards.forEach(imgSrc => {
+                let cardImg = document.createElement("img");
+                cardImg.src = imgSrc;
+                cardImg.classList.add("used-card"); // CSSで調整する
+                modalContent.appendChild(cardImg);
+            });
+            modal.style.display = "block"; // モーダルを表示
+        }
+        // モーダルを閉じる処理
+        function closeUsedCards() {
+            let modal = document.getElementById("usedCardsModal");
+            modal.style.display = "none";
+        }
+        console.log(decks); // シャッフルされた山札を確認
+
+        //ターンを決める
+        function selectTurn(playerGoesFarst) {
+            // ボタンを非表示にする
+            document.getElementById("turnSelection").style.display = "none";
+            
+            if (playerGoesFarst) {
+                // 先行の場合、「あなたのターンです」を表示
+                showTurnIndicator();
+                setTimeout(() => {
+                    drawCardToHand(); // ターン開始後にカードを引く
+                    setTimeout(() => {
+                        isPlayerTurn = playerGoesFarst;
+                    }, 1000); // フェードアウト完了後
+                }, 2000); // 2秒後にカードを引く
+                
+            }else{
+                // 後攻の場合、相手のターンと表示
+                showTurnIndicator_s();
+                // CPUのターン開始
+                setTimeout(cpuTurn, 1000);
+            }
+        }
+        //自分のターン
+        function showTurnIndicator() {
+            let turnIndicator = document.getElementById("turnIndicator");
+            turnIndicator.style.visibility = "visible"; // 要素を可視化
+            turnIndicator.style.opacity = "1"; // フェードイン
+            turnIndicator.style.display = "block"; // 表示
+            // 1.5秒後にフェードアウト
+            setTimeout(() => {
+                turnIndicator.style.opacity = "0"; // フェードアウト
+                setTimeout(() => {
+                    turnIndicator.style.display = "none"; // 完全に非表示
+                }, 500); // フェードアウト完了後
+            }, 1500);
+        }
+        //相手のターン
+        function showTurnIndicator_s(){
+            let secondTurn = document.getElementById("second_turn");
+            secondTurn.style.visibility = "visible"; // 要素を可視化
+            secondTurn.style.opacity = "1"; // フェードイン
+            secondTurn.style.display = "block"; // 表示
+            
+            // 1.5秒後にフェードアウト
+            setTimeout(() => {
+                secondTurn.style.opacity = "0"; // フェードアウト
+                setTimeout(() => {
+                    secondTurn.style.display = "none"; // 完全に非表示
+                }, 500); // フェードアウト完了後
+            }, 1500);
+        }
+        // ターンの切り替えを担う関数
+        function updateTurnIndicator() {
+            if (isPlayerTurn) {
+                document.getElementById("turnIndicator").style.display = "block";
+                document.getElementById("second_turn").style.display = "none";
+            } else {
+                document.getElementById("turnIndicator").style.display = "none";
+                isPlayerTurn = true;
+                selectTurn(isPlayerTurn);
+            }
+        }
+        function updateUsedCardsDisplay() {
+            const usedCardsContainer = document.getElementById("usedCardsContainer");
+            usedCardsContainer.innerHTML = ""; // 以前のカード表示を消去
+            // 使用されたカードを表示
+            usedCards.forEach(cardSrc => {
+                let cardElement = document.createElement("img");
+                cardElement.src = cardSrc;
+                cardElement.classList.add("card-image");
+                usedCardsContainer.appendChild(cardElement);
+            });
+        }
+        // CPUの行動
+        function cpuTurn() {
+            alert("CPUぬターン")
+            let availableCards = Array.from(opponentHand);
+            console.log('opponentHand.length：',opponentHand.length)
+            console.log('opponentHand：'+opponentHand[0].name)
+            showTurnIndicator_s();
+            // CPUが山札からカードを1枚引く
+            cpuDrawCardToHand();
+            
+
+            //CPUがカードを選択して場に出す処理
+            setTimeout(() => {
+                // CPUの手札を取得
+                let opponentHandCards = Array.from(document.getElementById("opponent-hand").children);
+                // console.log('availableCards')
+                // console.log(availableCards)
+                playHandCard = cpuPlayCard(availableCards);
+                alert("相手が出すカード: " + playHandCard.name)
+
+                // カードを出してから5秒後に「相手のターンです」と表示
+                setTimeout(() => {
+                    updateTurnIndicator(); // 「相手のターンです」表示
+                }, 3000);
+            }, 3000);
+        }
+        /// 2枚のカードから1枚を選んでプレイする関数
+        function cpuPlayCard(handCards) {
+            console.log('handCards'+handCards)
+            handCards.forEach((currentCard, index) => {
+                // currentCardとそのdataset.cardInfoの中身を表示
+                alert(`カード番号 ${index} - dataset.cardInfo: ${currentCard.name}`);
+
+            });
+            // CPUの手札から最も高いカードを選択
+            let chosenCard = handCards.reduce((maxCard, currentCard) => {
+                // カード情報をJSON.parseでオブジェクトに変換
+                console.log('currentCard：'+currentCard)
+                let currentCardInfo = JSON.parse(currentCard); // 文字列をオブジェクトに変換
+                let maxCardInfo = JSON.parse(maxCard); // 文字列をオブジェクトに変換
+
+                alert("currentCurdInfo " + JSON.stringify(currentCardInfo));
+
+                // 比較して、値が大きい方を選ぶ
+                return (currentCardInfo.value > maxCardInfo.value) ? currentCard : maxCard;
+            });
+
+            playCard_cpu(chosenCard); // カードをプレイ
+            return chosenCard
+        }
+        // playCard関数を呼び出す部分
+        function playCard_cpu(card) {
+            if (isPlayerTurn == true) {
+                alert("何もしなくてくさ");
+                return;
+            } else {
+                
+                console.log(card)
+                let imgSrc = card.name; // カードの画像を取得
+                opponentUsedCards.push(imgSrc); // 使用済みリストに追加
+
+                // 拡大表示エリア
+                let zoomArea = document.getElementById("cardZoom");
+                let zoomedCard = document.getElementById("zoomedCard");
+                let effectText = document.getElementById("effectDescription"); // ←★ 効果説明テキストの要素
+
+                // character名が含まれていれば効果表示、それ以外は空文字
+                if (card.character) {
+                    effectText.textContent = getEffectDescription(card.character);
+                } else {
+                    effectText.textContent = "";
+                }
+
+
+
+                // 画像を設定し、拡大エリアを表示
+                zoomedCard.src = card.name;
+                zoomArea.classList.add("show");
+
+                // 1秒後にフェードアウト
+                setTimeout(() => {
+                    zoomArea.classList.remove("show");
+                }, 3000);
+
+                // 1.5秒後（アニメーション完了後）にプレイエリアに移動
+                setTimeout(() => {
+                    let playArea = document.getElementById("opponent-playArea");
+
+                    // 新しいカードをプレイエリアに追加
+                    let newCard = document.createElement("img");
+                    console.log('card.name：'+card.name)
+                    newCard.src = card.name;  // 表面画像に変更
+                    newCard.classList.add("played-card");
+
+                    // 既に出されているカードの数を使って、位置と重なり順を調整
+                    const index = playArea.children.length;
+                    newCard.style.position = "absolute";
+                    newCard.style.left = `${index * 40}px`;  // 横方向に10pxずつずらす
+                    newCard.style.zIndex = index;
+
+                    // スムーズなアニメーションのためのスタイル設定
+                    newCard.style.width = "100px";
+                    newCard.style.height = "150px";
+                    newCard.style.transition = "transform 0.5s ease-in-out";
+                    playArea.appendChild(newCard);
+                    // 手札からカードを削除
+                    console.log('card：'+card)
+                    document.getElementById("opponent-hand").firstElementChild.remove();
+                    for(let i=0;i<opponentHand.length;i++){
+                        if(opponentHand[i].name === card.name){
+                            opponentHand.splice(i,1)
+                            break
+                        }
+                    }
+                    addLog("CPUが" + card.character + "を使用しました");
+                }, 3000);
+            }
+        }
+
+
+        function setupSideCard() {
+            if (decks.length === 0) return;
+
+            // decks からランダムに1枚取り出す（内容は使わないが、山札から減らす）
+            const index = Math.floor(Math.random() * decks.length);
+            const sideCardData = decks.splice(index, 1)[0]; // decks から削除
+
+            const sideCard = document.createElement("img");
+            sideCard.src = "0.jpg"; // 裏面画像
+            sideCard.classList.add("side-card");
+
+            const sideContainer = document.getElementById("side-card-container");
+            sideContainer.appendChild(sideCard);
+
+            // （必要なら）valueだけ保持しておく（ただし今は使わない）
+            sideCard.setAttribute("data-value", sideCardData.value);
+        }
+
+        function surrender() {
+            if (confirm("本当に投降しますか？")) {
+                alert("あなたは投降しました。CPUの勝ちです。");
+                goToTitle(); // タイトルに戻る関数
+                resetGame();
+            }
+        }
+
+        function resetGame() {
+            // 1. 山札を元に戻す（originalDecks をシャッフルしてコピー）
+            decks = [
+                { name: "boy.jpg", value: 1 ,character:"少年"},
+                { name: "boy.jpg", value: 1,character:"少年"},
+                { name: "soldier.jpg", value: 2,character:"兵士" },
+                { name: "soldier.jpg", value: 2,character:"兵士" },
+                { name: "diviner.jpg", value: 3,character:"占い師" },
+                { name: "diviner.jpg", value: 3,character:"占い師" },
+                { name: "noble.jpg", value: 6,character:"貴族" },
+                { name: "noble.jpg", value: 6,character:"貴族" },
+                { name: "maiden.jpg", value: 4,character:"乙女" },
+                { name: "maiden.jpg", value: 4,character:"乙女" },
+                { name: "sage.jpg", value: 7,character:"賢者" },
+                { name: "sage.jpg", value: 7,character:"賢者" },
+                { name: "reaper.jpg", value: 5,character:"死神" },
+                { name: "reaper.jpg", value: 5,character:"死神" },
+                { name: "spirit.jpg", value: 8,character:"精霊" },
+                { name: "spirit.jpg", value: 8,character:"精霊" },
+                { name: "kaizer.jpg", value: 9,character:"皇帝" },
+                { name: "hero.jpg", value: 10,character:"英雄" },
+            ];
+            shuffle(decks);
+
+            // 2. 手札・場のカードをすべて消す
+            document.getElementById("player-hand").innerHTML = "";
+            document.getElementById("opponent-hand").innerHTML = "";
+            document.getElementById("playArea").innerHTML = "";
+            document.getElementById("opponentArea").innerHTML = "";
+
+            // 3. 山札を表示し直す
+            const deckEl = document.getElementById("deck");
+            const deckCount = document.getElementById("deck-count");
+            deckEl.style.display = "block";
+            deckEl.style.opacity = "1";
+            deckCount.style.display = "block";
+            deckCount.textContent = decks.length;
+            // 4. サイドカードの再描画
+            setupSideCard();
+            // 5. ターン表示をリセット
+            document.getElementById("turn-indicator").textContent = "ゲームをリセットしました";
+        }
+
+        function addLog(message) {
+            const logMessages = document.getElementById("log-messages");
+            const newEntry = document.createElement("div");
+            newEntry.textContent = message;
+            logMessages.appendChild(newEntry);
+            logMessages.scrollTop = logMessages.scrollHeight;
+        }
+
+        function checkDeckEmpty(){
+            if(deck.length == 0){
+                // 両者の手札を公開
+                showBothHands();
+                // 手札の value を取得
+                let playerCard = playerHand[0];
+                let cpuCard = opponentHand[0];
+
+                 // 勝敗判定
+                if (playerCard.value > cpuCard.value) {
+                    showResult("あなたの勝ち！");
+                } else if (playerCard.value < cpuCard.value) {
+                    showResult("CPUの勝ち！");
+                } else {
+                    showResult("引き分け！");
+                }
+            }
+        }
+
+        function showResult(message){
+            alert(message);
+        }
+
+
+
+        // テスト用（ゲーム開始時に1回ターン開始）
+        window.onload = function () {
+            setupSideCard();
+        };
+    </script>
+</body>
+</html>
