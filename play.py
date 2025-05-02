@@ -85,7 +85,7 @@ def choice_player(now,choices,kind):
 
     if kind=='opponentChoice':
         for i in range(len(choices)):
-            print(choices[i]['select_number'],choices[i]['player'])
+            print(choices[i]['select_number'],choices[i]['player'].name)
     else:
         print(choices)
     return input()
@@ -94,20 +94,31 @@ def get_name_player(index:int):
     # input関数でプレイヤーに名前を選択させる
     return input(f'名前を入力してください')
 
-funcs = [{'get_name':get_name_cpu, 'choice':choice_cpu},{'get_name':get_name_cpu,'choice':choice_cpu}]
+# funcs = [{'get_name':get_name_cpu, 'choice':choice_cpu},{'get_name':get_name_player,'choice':choice_player}]
 # game = x.Game(2, funcs=funcs)
 # data = game.game()
-# print(data[1])
+# if data[0]:
+#     for d in data[1]:
+#         print()
+#         print(d)
+# else:
+#     print(data[1])
 
 
+funcs = [{'get_name':get_name_cpu, 'choice':choice_cpu},{'get_name':get_name_cpu,'choice':choice_cpu}]
 # while True:
-for _ in range(10**6):
+for _ in range(10**7):
     game = x.Game(2, funcs=funcs)
     data = game.game()
     if data[0]:
         log = data[1]
-        if log[0][-1] == log[1][-1] == 'win':
-            print('err：勝者が複数人います')
+        if not (log[0][-1] == 'win' or log[0][-1] == 'lose') and (log[1][-1] == 'win' or log[1][-1] == 'lose'):
+            print('err：勝利判定が行われていません!')
+            with open('result/log.csv', 'a') as f:
+                writer = csv.writer(f)
+                for l in log:
+                    writer.writerow(l)
+            break
     else:
         log = data[2]
         err = data[1]
