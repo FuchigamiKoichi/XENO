@@ -107,7 +107,7 @@ def get_name_player(index:int):
 
 funcs = [{'get_name':get_name_cpu, 'choice':choice_cpu},{'get_name':get_name_cpu,'choice':choice_cpu}]
 # while True:
-for _ in range(10**6):
+for _ in range(10):
     game = x.Game(2, funcs=funcs)
     data = game.game()
     if data[0]:
