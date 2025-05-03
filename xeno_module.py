@@ -103,13 +103,12 @@ def create_data(field,player):
 
 # 配列の中に指定した型が存在するかを確認
 # 配列の中に指定した数字のカードがあるかを確認するため
-def inType(type:type,list:list):
+def inType(sample,list:list):
+    result = False
     for content in list:
-        if type(content)==type:
-            return True
-        else:
-            continue
-    return False
+        if type(content)==type(sample):
+            result = True
+    return result
 
 
 # プレイヤークラス
@@ -196,7 +195,8 @@ class Card:
                 move_index = i
                 break
         player.hands.pop(move_index)
-        field.played[player.turn_number-1].append(self)
+        turn_number = int(player.turn_number)
+        field.played[turn_number-1].append(self)
     
     def opponentChoice(self, me:Player):
         choice = me.choice
@@ -240,10 +240,19 @@ class Card1(Card):
     def play(self, player:Player):
         choice = player.choice
         field = self.field
+        played = field.played.copy()
         played_cards = []
-        for i in range(len(field.played)):
-            played_cards.append(field.played[i])
-        if inType(type=Card1,list=played_cards):
+        print()
+        print(played)
+        for i in range(len(played)):
+            for j in range(len(played[i])):
+                played_cards.append(played[i][j])
+        print()
+        print(played_cards)
+        print(inType(sample=Card1(field=field),list=played_cards))
+        print()
+        print()
+        if inType(sample=Card1,list=played_cards):
             self.move(player=player)
             opponent = self.opponentChoice(me=player)
             if opponent and len(self.field.deck)>0:
@@ -290,7 +299,7 @@ class Card2(Card):
             predCard = cards[predNumber-1]
             data = {'opponent':opponent,'pred_card':predCard}
             player.pred.append(data)
-            if inType(type=type(predCard),list=opponent.hands):
+            if inType(sample=predCard,list=opponent.hands):
                 self.kill(opponent=opponent)
 
 
@@ -422,8 +431,10 @@ class Card9(Card):
                 if card.number == choice_number:
                     choice_index = i
                     break
+            
+            turn_number = player.turn_number
             trush_card = opponent.hands.pop(choice_index)
-            self.field.played.append(trush_card)
+            self.field.played[turn_number-1].append(trush_card)
             if trush_card.number == 10:
                 self.kill(opponent=opponent)
 
