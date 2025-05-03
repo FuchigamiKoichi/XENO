@@ -241,9 +241,8 @@ class Card1(Card):
         choice = player.choice
         field = self.field
         played_cards = []
-        for played in field.played:
-            for i in range(len(played)):
-                played_cards.append(played[i])
+        for i in range(len(field.played)):
+            played_cards.append(field.played[i])
         if inType(type=Card1,list=played_cards):
             self.move(player=player)
             opponent = self.opponentChoice(me=player)
