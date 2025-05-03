@@ -107,18 +107,15 @@ def get_name_player(index:int):
 
 funcs = [{'get_name':get_name_cpu, 'choice':choice_cpu},{'get_name':get_name_cpu,'choice':choice_cpu}]
 # while True:
-for _ in range(10**4):
+for _ in range(10**3):
     game = x.Game(2, funcs=funcs)
     data = game.game()
     if data[0]:
         log = data[1]
-        if not (log[0][-1] == 'win' or log[0][-1] == 'lose') and (log[1][-1] == 'win' or log[1][-1] == 'lose'):
-            print('err：勝利判定が行われていません!')
-            with open('result/log.csv', 'a') as f:
-                writer = csv.writer(f)
-                for l in log:
-                    writer.writerow(l)
-            break
+        with open('result/log.csv', 'a') as f:
+            writer = csv.writer(f)
+            for l in log:
+                writer.writerow(l)
     else:
         log = data[2]
         err = data[1]

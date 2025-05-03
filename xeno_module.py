@@ -478,15 +478,17 @@ class Game:
                     player = players[i]
                     max = players[maxarg]
                     if player.hands[0].number > max.hands[0].number:
-                        eq = False
                         maxarg = i
+                    
+                    if player.hands[0].number != max.hands[0].number:
+                        eq = False
                 
                 if eq:
-                    for l in self.log:
-                        l.append('lose')
+                    for i in range(len(players)):
+                        self.log[i].append('lose')
                 else:
                     for i in range(len(players)):
-                        if i == maxarg:
+                        if players[i].hands[0].number == players[maxarg].hands[0].number:
                             self.log[i].append('win')
                             winners.append(players[i])
                         else:
@@ -531,7 +533,7 @@ class Game:
                 p = players[i]
                 choice_func = p.choice
                 self.field.draw(player=p)
-            while len(self.field.deck) > 0 and state[0]:
+            while state[0]:
                 for i in range(len(players)):
                     player = players[i]
                     state = self.isContinue() # ゲームがアクティブか
