@@ -16,84 +16,66 @@ def create_data(field,player):
     looked_hands = {}
     pred = {}
     state = {}
-    num = 0
     for i in range(len(players)):
-        if player != players[i]:
-            other_played[num] = []
-            look_hands[num] = []
-            looked_hands[num] = []
-            pred[num] = []
-            state[num] = True
-            num += 1
+        if i+1 != player.turn_number:
+            other_played[i+1] = []
+            look_hands[i+1] = []
+            looked_hands[i+1] = []
+            pred[i+1] = []
+            state[i+1] = True
         else:
-            pred[-1] = []
+            pred[i+1] = []
+
             
     my_played = []
     for i in range(len(field.played)):
         played = field.played[i]
         if i+1 == player.turn_number:
             my_played = played
+            for j in range(len(played)):
+                my_played.append(played[j])
         else:
-            other_played[i+1] = played
+            for j in range(len(played)):
+                other_played[i+1].append(played[j])
     
     my_hands = []
     for card in player.hands:
         my_hands.append(card.number)
-    
-    for card in player.look:
-        num = 0
-        for i in range(len(players)):
-            if players[i] != player:
-                if players[i] == player:
-                    look_hands[num].append(card.number)
-                num += 1
+
+    for look_data in player.look:
+        opponent = look_data['opponent']
+        card = look_data['card']
+        look_hands[opponent.turn_number].append(card.number)
     
     for looked_data in player.looked:
         card = looked_data['card']
         subject = looked_data['subject']
-        num = 0
-        for i in range(len(players)):
-            if players[i] != player:
-                if players[i] is subject:
-                    looked_hands[num].append(card.number)
-                num += 1
+        looked_hands[subject.turn_number].append(card.number)
     
     num = 0
     for i in range(len(players)):
         if players[i] != player:
             if not players[i].live:
-                state[num] = False
+                state[players[i].turn_number] = False
     
     num = 0
     for i in range(len(players)):
         if players[i] != player:
             stranger = players[i]
             for stranger_pred in stranger.pred:
-                subject_num = num
+                subject_num = stranger.turn_number
                 object = stranger_pred['opponent']
                 pred_card_num = stranger_pred['pred_card'].number
-                num_j = 0
-                for j in range(len(players)):
-                    if players[j] != player:
-                        if players[j] is object:
-                            break
-                        num_j += 1
-                object_num = num_j
+                object_num = object.turn_number
                 pred_data = {'subject':subject_num, 'object':object_num, 'pred_card':pred_card_num}
                 pred[subject_num].append(pred_data)
             num += 1
         else:
             for player_pred in player.pred:
-                subject_num = -1
+                subject_num = player.turn_number
                 object = player_pred['opponent']
                 pred_card_num = player_pred['pred_card'].number
-                num_j = 0
-                for j in range(len(players)):
-                    if players[j] != player:
-                        if players[j] is object:
-                            break
-                        num_j += 1
-                object_num = num_j
+                object_num = object.turn_number
                 pred_data = {'subject':subject_num, 'object':object_num, 'pred_card':pred_card_num}
                 pred[subject_num].append(pred_data)
 
@@ -257,7 +239,7 @@ class Card1(Card):
                 choices = []
                 for card in opponentHands:
                     choices.append(card.number)
-                    player.look.append(card)
+                    player.look.append({'opponent':opponent,'card':card})
                     opponent.looked.append({'subject':player,'card':card})
 
                 card_number = int(choice(now=create_data(field=field,player=player),choices=choices,kind='trush'))
@@ -307,7 +289,7 @@ class Card3(Card):
         opponent = self.opponentChoice(me=player)
         if opponent: # opponentの存在確認
             for card in opponent.hands:
-                player.look.append(card)
+                player.look.append({'opponent':opponent,'card':card})
                 opponent.looked.append({'subject':player,'card':card})
 
 
@@ -360,9 +342,9 @@ class Card6(Card):
             else:
                 self.kill(opponent=opponent)
             player.looked.append({'subject':opponent, 'card':player.hands[0]})
-            player.look.append(opponent.hands[0])
+            player.look.append({'opponent':opponent,'card':opponent.hands[0]})
             opponent.looked.append({'subject':player, 'card':opponent.hands[0]})
-            opponent.look.append(player.hands[0])
+            opponent.look.append({'opponent':player,'card':player.hands[0]})
 
 
 # カード7：賢者
@@ -391,8 +373,8 @@ class Card8(Card):
                 copy_opponent = opponent.hands.pop()
                 player.hands.append(copy_opponent)
                 opponent.hands.append(copy_self)
-                opponent.look.append(player.hands[0])
-                player.look.append(opponent.hands[0])
+                opponent.look.append({'opponent':player,'card':player.hands[0]})
+                player.look.append({'opponent':opponent,'card':opponent.hands[0]})
                 opponent.looked.append({'subject':player,'card':opponent.hands[0]})
                 player.looked.append({'subject':opponent,'card':player.hands[0]})
 
@@ -415,7 +397,7 @@ class Card9(Card):
             choices = []
             for card in opponentHands:
                 choices.append(card.number)
-                player.look.append(card)
+                player.look.append({'opponent':opponent,'card':card})
 
             choice_number = int(choice(now=create_data(field=self.field,player=player),choices=choices,kind='trush'))
             create_log(create_data(field=self.field,player=player),choices=choices,kind='trush',field=self.field,player=player,choice=choice_number)
