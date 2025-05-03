@@ -112,10 +112,16 @@ for _ in range(10**3):
     data = game.game()
     if data[0]:
         log = data[1]
+        result = log[-1]
         with open('result/log.csv', 'a') as f:
             writer = csv.writer(f)
             for l in log:
                 writer.writerow(l)
+                result = l[-1]
+                if (result != 'win') and (result != 'lose'):
+                    print('勝利判定がなされていません')
+                    break
+        
     else:
         log = data[2]
         err = data[1]
