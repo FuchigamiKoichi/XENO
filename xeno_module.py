@@ -22,17 +22,14 @@ def create_data(field,player):
     other_played = {}
     look_hands = {}
     looked_hands = {}
-    pred = {}
+    pred = []
     state = {}
     for i in range(len(players)):
         if i+1 != player.turn_number:
             other_played[i+1] = []
             look_hands[i+1] = []
             looked_hands[i+1] = []
-            pred[i+1] = []
             state[i+1] = True
-        else:
-            pred[i+1] = []
 
             
     my_played = []
@@ -75,7 +72,7 @@ def create_data(field,player):
                 pred_card_num = stranger_pred['pred_card'].number
                 object_num = object.turn_number
                 pred_data = {'subject':subject_num, 'object':object_num, 'pred_card':pred_card_num}
-                pred[subject_num].append(pred_data)
+                pred.append(pred_data)
             num += 1
         else:
             for player_pred in player.pred:
@@ -84,7 +81,7 @@ def create_data(field,player):
                 pred_card_num = player_pred['pred_card'].number
                 object_num = object.turn_number
                 pred_data = {'subject':subject_num, 'object':object_num, 'pred_card':pred_card_num}
-                pred[subject_num].append(pred_data)
+                pred.append(pred_data)
 
     data = {'players_length':len(players),'my_turn_number':player.turn_number ,'other_players':state, 'card_number':len(field.deck), 'my_hands':my_hands,'my_played':my_played, 'other_played':other_played, 'look_hands':look_hands,'looked_hands':looked_hands , 'pred':pred, 'reincarnation':True if(len(field.reincarnation)>0) else False}
     return data
