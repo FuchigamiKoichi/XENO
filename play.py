@@ -1,4 +1,4 @@
-import xeno_module as x
+import xeno as x
 import cpu
 import csv
 import random
@@ -112,7 +112,6 @@ for _ in range(10**3):
     data = game.game()
     if data[0]:
         log = data[1]
-        result = log[-1]
         with open('result/log.csv', 'a') as f:
             writer = csv.writer(f)
             for l in log:
