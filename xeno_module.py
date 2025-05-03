@@ -240,7 +240,11 @@ class Card1(Card):
     def play(self, player:Player):
         choice = player.choice
         field = self.field
-        if inType(type=Card1,list=field.played):
+        played_cards = []
+        for played in field.played:
+            for i in range(len(played)):
+                played_cards.append(played[i])
+        if inType(type=Card1,list=played_cards):
             self.move(player=player)
             opponent = self.opponentChoice(me=player)
             if opponent and len(self.field.deck)>0:
