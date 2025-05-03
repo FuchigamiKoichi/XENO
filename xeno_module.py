@@ -4,6 +4,14 @@ import traceback
 
 def create_log(now,choices,kind,field,player,choice):
     out = {'now':now,'kind':kind,'choices':choices,'choice':choice}
+    if kind == 'opponentChoice':
+        out_chocies = []
+        choices_copy = choices.copy()
+        for i in range(len(choices_copy)):
+            out_chocies.append(choices_copy[i]['player'].turn_number)
+            if choices_copy[i]['select_number'] == choice:
+                out['choice'] = choices_copy[i]['player'].turn_number
+        out['choices'] = out_chocies
     for i in range(len(field.players)):
         if field.players[i]is player:
             field.game.log[i].append(out) 
@@ -29,14 +37,13 @@ def create_data(field,player):
             
     my_played = []
     for i in range(len(field.played)):
-        played = field.played[i]
+        played = field.played[i].copy()
         if i+1 == player.turn_number:
-            my_played = played
             for j in range(len(played)):
-                my_played.append(played[j])
+                my_played.append(played[j].number)
         else:
             for j in range(len(played)):
-                other_played[i+1].append(played[j])
+                other_played[i+1].append(played[j].number)
     
     my_hands = []
     for card in player.hands:
