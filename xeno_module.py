@@ -242,16 +242,9 @@ class Card1(Card):
         field = self.field
         played = field.played.copy()
         played_cards = []
-        print()
-        print(played)
         for i in range(len(played)):
             for j in range(len(played[i])):
                 played_cards.append(played[i][j])
-        print()
-        print(played_cards)
-        print(inType(sample=Card1(field=field),list=played_cards))
-        print()
-        print()
         if inType(sample=Card1,list=played_cards):
             self.move(player=player)
             opponent = self.opponentChoice(me=player)
