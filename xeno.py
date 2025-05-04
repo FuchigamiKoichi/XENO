@@ -86,6 +86,18 @@ def create_data(field,player):
     data = {'players_length':len(players),'my_turn_number':player.turn_number ,'other_players':state, 'card_number':len(field.deck), 'my_hands':my_hands,'my_played':my_played, 'other_played':other_played, 'look_hands':look_hands,'looked_hands':looked_hands , 'pred':pred, 'reincarnation':True if(len(field.reincarnation)>0) else False}
     return data
 
+# リストをシャッフルする
+def shuffle(list:list):
+    list_copy = list.copy()
+    arange = []
+    for i in range(len(list)):
+        arange.append(i)
+    random.shuffle(arange)
+    
+    result = []
+    for i in arange:
+        result.append(list_copy[i])
+    return result
 
 # 配列の中に指定した型が存在するかを確認
 # 配列の中に指定した数字のカードがあるかを確認するため
@@ -111,19 +123,6 @@ class Player:
         self.affected = True # 効果を受けつける状態かどうか
         self.get = 1 # 山札から
         self.choice = func
-
-
-def shuffle(list:list):
-    list_copy = list.copy()
-    arange = []
-    for i in range(len(list)):
-        arange.append(i)
-    random.shuffle(arange)
-    
-    result = []
-    for i in arange:
-        result.append(list_copy[i])
-    return result
 
 
 # フィールドクラス

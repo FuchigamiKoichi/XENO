@@ -67,7 +67,7 @@ def bayes_objective(trial):
     val = scores.mean()
     return val
 
-generation_number = 10**0 * 5
+generation_number = 10**2 * 1
 for generation in range(generation_number):
     df = pd.DataFrame([])
     generation += 1
@@ -186,7 +186,7 @@ for generation in range(generation_number):
         
         funcs = [{'get_name':get_name_cpu, 'choice':choice_cpu},{'get_name':get_name_cpu,'choice':choice_cpu}]
     
-    play_time = 10**1 * 1
+    play_time = 10**5 * 1
     log_list = []
     for _ in range(play_time):
         game = x.Game(2,funcs=funcs)
