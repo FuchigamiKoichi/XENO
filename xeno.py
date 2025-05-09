@@ -254,7 +254,7 @@ class Card1(Card):
                 trush_card = opponent.hands.pop(trushNumber)
                 self.field.played[player.turn_number-1].append(trush_card)
                 if trush_card.number == 10:
-                    self.kill(opponent=opponent)
+                    self.kill10(opponent=opponent)
         else:
             self.move(player=player)
 
