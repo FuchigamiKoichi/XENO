@@ -253,6 +253,8 @@ class Card1(Card):
                         break
                 trush_card = opponent.hands.pop(trushNumber)
                 self.field.played[player.turn_number-1].append(trush_card)
+                if trush_card.number == 10:
+                    self.kill(opponent=opponent)
         else:
             self.move(player=player)
 
@@ -277,8 +279,10 @@ class Card2(Card):
             predCard = cards[predNumber-1]
             data = {'opponent':opponent,'pred_card':predCard}
             player.pred.append(data)
-            if inType(sample=predCard,list=opponent.hands):
+            if inType(sample=predCard,list=opponent.hands) and type(Card10(field=field))!=type(predCard):
                 self.kill(opponent=opponent)
+            else:
+                self.kill10(opponent=opponent)
 
 
 # カード3：占い師
