@@ -279,10 +279,11 @@ class Card2(Card):
             predCard = cards[predNumber-1]
             data = {'opponent':opponent,'pred_card':predCard}
             player.pred.append(data)
-            if inType(sample=predCard,list=opponent.hands) and type(Card10(field=field))!=type(predCard):
-                self.kill(opponent=opponent)
-            else:
-                self.kill10(opponent=opponent)
+            if inType(sample=predCard,list=opponent.hands):
+                if type(Card10(field=field))!=type(predCard):
+                    self.kill(opponent=opponent)
+                else:
+                    self.kill10(opponent=opponent)
 
 
 # カード3：占い師
