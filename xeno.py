@@ -321,7 +321,10 @@ class Card5(Card):
         self.move(player=player)
         opponent = self.opponentChoice(me=player)
         if opponent and len(self.field.deck)>0: # opponentの存在確認
+            get_number = opponent.get
+            opponent.get = 1
             self.field.draw(player=opponent)
+            opponent.get = get_number
         
             drop_card = opponent.hands.pop(random.randint(0,len(opponent.hands)-1))
             drop_card.player = opponent
