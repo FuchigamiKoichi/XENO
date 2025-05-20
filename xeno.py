@@ -56,13 +56,11 @@ def create_data(field,player):
         subject = looked_data['subject']
         looked_hands[subject.turn_number].append(card.number)
     
-    num = 0
     for i in range(len(players)):
         if players[i] != player:
             if not players[i].live:
                 state[players[i].turn_number] = False
     
-    num = 0
     for i in range(len(players)):
         if players[i] != player:
             stranger = players[i]
@@ -73,7 +71,6 @@ def create_data(field,player):
                 object_num = object.turn_number
                 pred_data = {'subject':subject_num, 'object':object_num, 'pred_card':pred_card_num}
                 pred.append(pred_data)
-            num += 1
         else:
             for player_pred in player.pred:
                 subject_num = player.turn_number
@@ -159,10 +156,10 @@ class Field:
                     get_card_index = i
                     break
             get_card = cards[get_card_index]
-            get_card.player = player
             player.hands.append(get_card)
             self.deck.pop(get_card_index)
             player.get = 1
+            self.deck = shuffle(self.deck)
 
 
 # カードのスーパークラス
@@ -366,7 +363,6 @@ class Card7(Card):
     def play(self, player:Player):
         self.move(player=player)
         player.get = 3
-        self.field.deck = shuffle(self.field.deck)
 
 
 # カード8：精霊

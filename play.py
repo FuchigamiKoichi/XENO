@@ -1,43 +1,9 @@
 import xeno as x
-import cpu
 import csv
 import random
 
 # cpuの行動を定義
 def choice_cpu(now,choices,kind):
-    # print()
-    # print()
-    # my_hands = now['my_hands']
-    # my_played = now['my_played']
-    # other_played = now['other_played']
-    # look_hands = now['look_hands']
-    # looked_hands = now['looked_hands']
-    # pred = now['pred']
-    # reincarnation = now['reincarnation']
-
-    # print(f'コンピュータの手札は{my_hands}')
-    # print(f'コンピュータの場：{my_played}')
-    # print(f'プレイヤーの場：{other_played}')
-    # print(f'コンピュータが得た情報：{look_hands}')
-    # print(f'プレイヤーが得た情報：{looked_hands}')
-    # print(f'予測：{pred}')
-    # print(f'転生札：{reincarnation}')
-    # if kind=='draw':
-    #     print('ドロー！\nカードを引いてください')
-    # elif kind=='opponentChoice':
-    #     print('相手を選択してください')
-    # elif kind=='trush':
-    #     print('捨てさせるカードを選択してください')
-    # elif kind=='play':
-    #     print('どのカードを場に出しますか？')
-    
-    # if kind=='opponentChoice':
-    #     for i in range(len(choices)):
-    #         print(choices[i]['select_number'],choices[i]['player'].name)
-    # else:
-    #     print(choices)
-
-    
     number = random.randint(0,len(choices)-1)
     if kind=='opponentChoice':
         choice = choices[number]
@@ -107,7 +73,7 @@ def get_name_player(index:int):
 
 funcs = [{'get_name':get_name_cpu, 'choice':choice_cpu},{'get_name':get_name_cpu,'choice':choice_cpu}]
 # while True:
-for _ in range(10**3):
+for _ in range(10**4):
     game = x.Game(2, funcs=funcs)
     data = game.game()
     if data[0]:

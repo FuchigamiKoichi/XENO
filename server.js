@@ -79,12 +79,13 @@ io.on('connection', (socket) => {
 
   // ゲーム開始を要求 (例)
   socket.on('startGame', (roomId) => {
+    console.log('startGame:',roomId);
     const room = rooms[roomId];
     if (!room) return;
 
     // ここでゲーム開始に必要な初期化を行う
     // 例: room.gameState = { ... };
-    io.to(roomId).emit('game.html');
+    io.to(roomId).emit('redirect','./game.html');
   });
 
   // ゲーム中のプレイヤー操作を受け取る例
