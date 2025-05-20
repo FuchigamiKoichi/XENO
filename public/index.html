@@ -16,7 +16,7 @@
 
   <div class="select_rooms", id="selectRooms">
     <div class="Rooms">
-      <ul id="rooms"></ul>
+      <div id="rooms"></div>
       <div class="room_buttons">
         <div>
           <input type="text" id="roomIdInput" placeholder="ルームID">
@@ -61,6 +61,16 @@
     const rooms = document.getElementById('rooms');
     const gameStart = document.getElementById('startGameBtn');
 
+    function joinRoom(roomId){
+      socket.emit('joinRoom', roomId, (response) => {
+        if (!response || !response.success) {
+          alert(response ? response.message : 'ルーム参加に失敗しました');
+        } else {
+          window.location.replace(`game.html?roomid=${roomId}`)
+        }
+      });
+    }
+
     // ルームを確認する
     showRoomsBtn.addEventListener('click', () => {
       socket.emit('showRooms', { maxPlayers: 4 }, (response) => {
@@ -68,8 +78,12 @@
           let room_list = Object.keys(response.rooms);
           rooms.innerHTML = "";
           for (let i=0; i<room_list.length; i++) {
-            let item = document.createElement('li');
+            let item = document.createElement('button');
+            item.value = room_list[i];
             item.textContent = room_list[i];
+            item.addEventListener('click', () => {
+              joinRoom(item.value)
+            });
             rooms.appendChild(item);
             window.scrollTo(0, document.body.scrollHeight);
           }
@@ -93,8 +107,7 @@
         if (!response || !response.success) {
           alert(response ? response.message : 'ルーム参加に失敗しました');
         } else {
-          roomInfo.innerText = `ルーム ${response.roomId} に参加しました。メンバー: ${response.players.length}人`;
-          socket.emit('startGame', roomId);
+          window.replace()
         }
       });
     });
@@ -108,6 +121,10 @@
     // ここではサンプルとして、参加後すぐに開始ボタンを出す例
     function startGame(roomId) {
       socket.emit('startGame', roomId);
+      socket.on('redirect', (url) => {
+        console.log('画面遷移:',url);
+        location.replace(url);
+      })
     }
 
     // ゲーム開始イベントを受け取る
