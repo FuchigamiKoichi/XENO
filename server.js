@@ -14,7 +14,7 @@ app.use(express.static('public'));
 const rooms = {}; 
 // 例: rooms[roomId] = { 
 //   id: roomId, 
-//   players: [], 
+//   players: {}, 
 //   maxPlayers: 4, 
 //   ...ゲーム状態など 
 // };
@@ -35,7 +35,7 @@ io.on('connection', (socket) => {
     const roomId = generateRoomId();
     rooms[roomId] = {
       id: roomId,
-      players: [],
+      players: {},
       maxPlayers: data.maxPlayers || 4,
       // 必要に応じて追加のゲーム状態
     };
@@ -73,9 +73,12 @@ io.on('connection', (socket) => {
     });
 
     if (callback) {
-      callback({ success: true, roomId, players: room.players });
+      callback({ success: true, roomId, players: room.players, playerId: `${socket.id}` });
     }
   });
+
+  //　プレイヤー情報の更新
+
 
   // ゲーム開始を要求 (例)
   socket.on('startGame', (roomId) => {

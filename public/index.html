@@ -20,12 +20,10 @@
       <div class="room_buttons">
         <div>
           <input type="text" id="roomIdInput" placeholder="ルームID">
-          <button id="joinRoomBtn">ルームに参加</button>
         </div>
         <div>
           <button id="createRoomBtn">ルームの作成</button>
           <button id="showRoomsBtn">ルームの確認</button>
-          <button id="startGameBtn">ゲームの開始</button>
         </div>
       </div>
     </div>
@@ -66,7 +64,7 @@
         if (!response || !response.success) {
           alert(response ? response.message : 'ルーム参加に失敗しました');
         } else {
-          window.location.replace(`game.html?roomid=${roomId}`)
+          window.location.replace(`room.html?roomid=${roomId}?playerid=${response.playerId}?players=${response.players}`)
         }
       });
     }

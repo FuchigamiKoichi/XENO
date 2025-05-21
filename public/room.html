@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>待機部屋</title>
+</head>
+<body>
+    <h1 id="title"></h1>
+    <script>
+        let title = document.getElementById("title")
+        let urls = String(window.location.href).split('?')
+        title.textContent = urls[1].substr(7,urls[1].length)
+    </script>
+</body>
+</html>
