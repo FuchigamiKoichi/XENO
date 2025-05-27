@@ -44,6 +44,7 @@
     select_room.style.display = 'none';
     regist_nameBtn.addEventListener('click', () => {
       const player_name = text_name.value;
+      socket.emit('registPlayer', {name:player_name})
       select_room.style.display = 'block';
       regist_name.style.display = 'none';
     });
