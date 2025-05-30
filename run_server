@@ -1,0 +1,4 @@
+#!/bin/bash
+
+cat origin.json > data.json
+npm run dev

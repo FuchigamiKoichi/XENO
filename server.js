@@ -2,13 +2,13 @@
 const fs = require('fs');
 const DATA_FILE = './data.json';
 
-let data = { rooms: {}, players: {}, matchLogs: [] };
+let jsonData = { rooms: {}, players: {}, matchLogs: [] };
 
 // ファイルから読み込み（起動時）
 function loadData() {
   if (fs.existsSync(DATA_FILE)) {
     const raw = fs.readFileSync(DATA_FILE);
-    data = JSON.parse(raw);
+    jsonData = JSON.parse(raw);
   }
 }
 
@@ -20,83 +20,74 @@ function saveData(data) {
 // プレイヤーの追加
 function addPlayer(playerData) {
     loadData();
-    if (!data.players[playerData.id]) {
-      console.log('jsonにプレイヤーを追加しました')
-      data.players[playerData.id] = { name: playerData.name, socketId: playerData.id };
-      saveData(data);
+    if (!jsonData.players[playerData.id]) {
+      jsonData.players[playerData.id] = { name: playerData.name, socketId: playerData.id };
+      saveData(jsonData);
     }
 }
 
 // プレイヤーのsocketidの更新
 function changeSocketId(playerData) {
     loadData();
-    if (data.players[playerData.id]) {
-        data.players[playerData.id] = { name: playerData.name, socketId: playerData.id };
-        saveData();
+    if (jsonData.players[playerData.id]) {
+        jsonData.players[playerData.id] = { name: playerData.name, socketId: playerData.id };
+        saveData(jsonData);
     }
 }
 
 // ルームの追加
 function addRoom(roomData) {
     loadData();
-    if (!data.rooms[roomData.id]) {
-        data.rooms[roomData.id] = { owner: roomData.owner, players: roomData.players };
-        saveData(data);
+    if (!jsonData.rooms[roomData.id]) {
+        jsonData.rooms[roomData.id] = { owner: roomData.owner, players: [] };
+        saveData(jsonData);
     }
 }
 
 // ルームの確認
 function showRooms() { 
     loadData();
-    let result = data.rooms;
+    let result = jsonData.rooms;
     return result;
 }
 
 // プレイヤーのルームの入室
 function addPlayerToRoom(addData){
     loadData();
-    if (data.rooms[addData.roomId]){
-        data.rooms[addData.roomId].players.push(addData.playerId);
-        saveData(data);
+    if (jsonData.rooms[addData.roomId]){
+        jsonData.rooms[addData.roomId].players.push(addData.playerId);
+        saveData(jsonData);
     }
 }
 
 // プレイヤーのルームの退室
 function removePlayerToRoom(removeData){
     loadData();
-    if (data.rooms[removeData.roomId]){
-        const index = data.rooms[removeData.roomId].players.indexOf(removeData.playerId);
+    if (jsonData.rooms[removeData.roomId]){
+        const index = jsonData.rooms[removeData.roomId].players.indexOf(removeData.playerId);
         if (index !== -1) {
-            data.rooms[removeData.roomId].players.splice(index, 1);
-            saveData(data);
+            jsonData.rooms[removeData.roomId].players.splice(index, 1);
+            saveData(jsonData);
         }
     }
 }
 
 function removePlayer(name) {
     loadData();
-    if (data.players[name]) {
-        delete data.players[name];
-        saveData(data);
-    }
-}
-
-function createRoom(name, players = []) {
-    loadData();
-    if (!data.rooms[name]) {
-        data.rooms[name] = { players, log: [] };
-        saveData(data);
+    if (jsonData.players[name]) {
+        delete jsonData.players[name];
+        saveData(jsonData);
     }
 }
 
 function logMatch(room, winner) {
-  data.matchLogs.push({
+  jsonData.matchLogs.push({
     room,
     winner,
     timestamp: new Date().toISOString(),
   });
-  data.players[winner].wins++;
-  saveData(data);
+  jsonData.players[winner].wins++;
+  saveData(jsonData);
 }
 
 
@@ -105,6 +96,7 @@ function logMatch(room, winner) {
 const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
+const { json } = require('stream/consumers');
 
 const app = express();
 const server = http.createServer(app);
@@ -136,6 +128,7 @@ io.on('connection', (socket) => {
 
   // ルームを確認する
   socket.on('showRooms', (data, callback) => {
+    rooms = showRooms();
     console.log(`roomsKeys: ${Object.keys(rooms)}`)
     if (callback) {
         callback({ rooms });
@@ -146,19 +139,14 @@ io.on('connection', (socket) => {
   socket.on('createRoom', (data, callback) => {
     // 任意の方法で一意の roomId を生成する（例: ソケット ID + 乱数など）
     const roomId = generateRoomId();
-    rooms[roomId] = {
-      id: roomId,
-      players: [],
-      maxPlayers: data.maxPlayers || 4,
-      // 必要に応じて追加のゲーム状態
-    };
-
+    let roomData = {id: roomId, owner: socket.id, players: [socket.id]}
+    addRoom(roomData)
     // ソケットをそのルームにジョインさせる
     // socket.join(roomId);
     // players 配列に登録
     // rooms[roomId].players.push(socket.id);
 
-    console.log(`ルーム作成: ${roomId}, オーナー: ${players[socket.id].name}`);
+    console.log(`ルーム作成: ${roomId}, オーナー: ${jsonData.players[socket.id].name}`);
     if (callback) {
       callback({ roomId });
     }
@@ -166,7 +154,8 @@ io.on('connection', (socket) => {
 
   // 既存ルームに参加する
   socket.on('joinRoom', (roomId, callback) => {
-    const room = rooms[roomId];
+    loadData();
+    const room = jsonData.rooms[roomId];
     if (!room) {
       if (callback) callback({ success: false, message: 'ルームが存在しません。' });
       return;
@@ -177,8 +166,9 @@ io.on('connection', (socket) => {
     }
 
     socket.join(roomId);
-    room.players.push(socket.id);
-    console.log(`ルーム参加: ${roomId} (メンバー数: ${room.players.length}), 参加者: ${players[socket.id].name}`);
+    jsonData.rooms[roomId].players.push(socket.id);
+    saveData(jsonData)
+    console.log(`ルーム参加: ${roomId} (メンバー数: ${room.players.length}), 参加者: ${jsonData.players[socket.id].name}`);
 
     // 新しいメンバーが参加したことをルーム内にブロードキャスト
     io.to(roomId).emit('updateRoomMembers', {
@@ -224,21 +214,21 @@ io.on('connection', (socket) => {
   socket.on('disconnect', () => {
     console.log('ユーザが切断しました:', socket.id);
 
-    // 参加していたルームからプレイヤーを取り除く
-    for (const [roomId, room] of Object.entries(rooms)) {
-      const index = room.players.indexOf(socket.id);
-      if (index !== -1) {
-        room.players.splice(index, 1);
-        // ルームメンバーにアナウンス
-        io.to(roomId).emit('updateRoomMembers', {
-          players: room.players,
-        });
-      }
-      // もし誰も居なくなったらルームを削除するなどのロジックを追加可能
-      if (room.players.length === 0) {
-        delete rooms[roomId];
-      }
-    }
+    // // 参加していたルームからプレイヤーを取り除く
+    // for (const [roomId, room] of Object.entries(rooms)) {
+    //   const index = room.players.indexOf(socket.id);
+    //   if (index !== -1) {
+    //     room.players.splice(index, 1);
+    //     // ルームメンバーにアナウンス
+    //     io.to(roomId).emit('updateRoomMembers', {
+    //       players: room.players,
+    //     });
+    //   }
+    //   // もし誰も居なくなったらルームを削除するなどのロジックを追加可能
+    //   if (room.players.length === 0) {
+    //     delete rooms[roomId];
+    //   }
+    // }
   });
 });
 
