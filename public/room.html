@@ -7,10 +7,28 @@
 </head>
 <body>
     <h1 id="title"></h1>
+    <h2 id="players"></h2>
+    <script src="/socket.io/socket.io.js"></script>
     <script>
+        const socket = io();
+
         let title = document.getElementById("title")
         let urls = String(window.location.href).split('?')
+        let players = urls[3].substr(8,urls[3].length).split(',')
+        const playerId = urls[2].substr(9,urls[1].length)
+
+        // console.log(`playerId: ${playerId}`)
+
+        // console.log(`players: ${players}`)
+
         title.textContent = urls[1].substr(7,urls[1].length)
+
+        socket.emit('changeSocketid', {id:playerId})
+
+        // ルームのメンバー更新を受け取る
+        socket.on('updateRoomMembers', (data) => {
+            console.log(data.players.join(', '))
+        });
     </script>
 </body>
 </html>
