@@ -1,17 +1,21 @@
 {
-  "rooms": {},
+  "rooms": {
+    "room-ugukmgyyq": {
+      "owner": "KPDZP29-uU8_QwExAAAB",
+      "players": [
+        "KPDZP29-uU8_QwExAAAB",
+        "6kEcCg8ScQsO7wPzAAAD"
+      ]
+    }
+  },
   "players": {
-    "s-w10EI9ZPpF4ijtAAAB": {
+    "KPDZP29-uU8_QwExAAAB": {
       "name": "liz",
-      "socketId": "s-w10EI9ZPpF4ijtAAAB"
+      "socketId": "KPDZP29-uU8_QwExAAAB"
     },
-    "_6p7fpsCE7gm_TAQAAAD": {
-      "name": "AK06Minecraft",
-      "socketId": "_6p7fpsCE7gm_TAQAAAD"
-    },
-    "-66OfWyLwVbVHtIqAAAD": {
-      "name": "hugkun",
-      "socketId": "-66OfWyLwVbVHtIqAAAD"
+    "6kEcCg8ScQsO7wPzAAAD": {
+      "name": "hitLiz",
+      "socketId": "6kEcCg8ScQsO7wPzAAAD"
     }
   },
   "matchLogs": []

@@ -94,7 +94,8 @@
     createRoomBtn.addEventListener('click', () => {
       socket.emit('createRoom', { maxPlayers: 4 }, (response) => {
         if (response && response.roomId) {
-          roomInfo.innerText = 'ルームが作成されました: ' + response.roomId;
+          joinRoom(response.roomId)
+          // roomInfo.innerText = 'ルームが作成されました: ' + response.roomId;
         }
       });
     });
