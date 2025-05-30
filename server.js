@@ -30,7 +30,7 @@ function addPlayer(playerData) {
 function changeSocketId(playerData) {
     loadData();
     if (jsonData.players[playerData.id]) {
-        jsonData.players[playerData.id] = { name: playerData.name, socketId: playerData.id };
+        jsonData.players[playerData.id] = { name: playerData.name, socketId: playerData.socketid };
         saveData(jsonData);
     }
 }
@@ -134,6 +134,14 @@ io.on('connection', (socket) => {
         callback({ rooms });
     }
   });
+
+  // socketidを変更する
+  socket.on('changeSocketid', (data) => {
+    loadData()
+    let playerData = {id: data.id, name: jsonData.players[data.id], socketid: socket.id}
+    console.log(`ユーザーのsocketidを変更しました: ${jsonData.players[data.id].name}, new: ${jsonData.players[data.id].socketId}`)
+    changeSocketId(playerData)
+  })
 
   // ルームを作成する
   socket.on('createRoom', (data, callback) => {

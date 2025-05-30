@@ -1,21 +1,19 @@
 {
   "rooms": {
-    "room-ugukmgyyq": {
-      "owner": "KPDZP29-uU8_QwExAAAB",
+    "room-2dga1t8er": {
+      "owner": "5dHMhMtZFkGZXm62AAAB",
       "players": [
-        "KPDZP29-uU8_QwExAAAB",
-        "6kEcCg8ScQsO7wPzAAAD"
+        "5dHMhMtZFkGZXm62AAAB"
       ]
     }
   },
   "players": {
-    "KPDZP29-uU8_QwExAAAB": {
-      "name": "liz",
-      "socketId": "KPDZP29-uU8_QwExAAAB"
-    },
-    "6kEcCg8ScQsO7wPzAAAD": {
-      "name": "hitLiz",
-      "socketId": "6kEcCg8ScQsO7wPzAAAD"
+    "5dHMhMtZFkGZXm62AAAB": {
+      "name": {
+        "name": "liz",
+        "socketId": "5dHMhMtZFkGZXm62AAAB"
+      },
+      "socketId": "8c4cyPsoAkCMoH1UAAAD"
     }
   },
   "matchLogs": []
