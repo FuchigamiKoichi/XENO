@@ -24,7 +24,7 @@
 
         title.textContent = roomId
 
-        socket.emit('joinRoomAndChangeSocketid', {id:playerId, roomId: roomId})
+        socket.emit('changeSocketid', {id:playerId, roomId: roomId})
 
         // ルームのメンバー更新を受け取る
         socket.on('updateRoomMembers', (data) => {

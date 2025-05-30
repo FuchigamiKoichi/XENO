@@ -136,7 +136,7 @@ io.on('connection', (socket) => {
   });
 
   // socketidを変更する
-  socket.on('joinRoomAndChangeSocketid', (data) => {
+  socket.on('changeSocketid', (data) => {
     loadData()
     let playerData = {id: data.id, name: jsonData.players[data.id], socketid: socket.id}
     console.log(`ユーザーのsocketidを変更しました: ${jsonData.players[data.id].name}, new: ${jsonData.players[data.id].socketId}`)
