@@ -16,14 +16,15 @@
         let urls = String(window.location.href).split('?')
         let players = urls[3].substr(8,urls[3].length).split(',')
         const playerId = urls[2].substr(9,urls[1].length)
+        const roomId = urls[1].substr(7,urls[1].length)
 
         // console.log(`playerId: ${playerId}`)
 
         // console.log(`players: ${players}`)
 
-        title.textContent = urls[1].substr(7,urls[1].length)
+        title.textContent = roomId
 
-        socket.emit('changeSocketid', {id:playerId})
+        socket.emit('joinRoomAndChangeSocketid', {id:playerId, roomId: roomId})
 
         // ルームのメンバー更新を受け取る
         socket.on('updateRoomMembers', (data) => {
