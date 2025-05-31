@@ -189,6 +189,21 @@ io.on('connection', (socket) => {
     }
   });
 
+  // プレイヤー情報を返す
+  socket.on('getPlayerNames', (players, callback) => {
+    loadData();
+    const playerDatas = jsonData.players;
+    let result = []
+    for(let i=0; i<players.length; i++){
+      playerName = playerDatas[players[i]].name
+      result.push(playerName)
+    }
+
+    if (callback) {
+      callback({ success: true, playerNames: result});
+    }
+  });
+
   //　プレイヤー情報の更新
 
 

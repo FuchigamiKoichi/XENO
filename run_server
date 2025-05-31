@@ -1,4 +1,7 @@
 #!/bin/bash
 
 cat origin.json > data.json
+# ローカルの開発環境として起動
 npm run dev
+# ホストとして起動
+# npm run dev -- --host
