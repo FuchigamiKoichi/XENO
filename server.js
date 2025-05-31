@@ -97,6 +97,7 @@ const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
 const { json } = require('stream/consumers');
+const { permission } = require('process');
 
 const app = express();
 const server = http.createServer(app);
@@ -190,17 +191,44 @@ io.on('connection', (socket) => {
   });
 
   // プレイヤー情報を返す
-  socket.on('getPlayerNames', (players, callback) => {
+  socket.on('getPlayerNames', (data, callback) => {
     loadData();
-    const playerDatas = jsonData.players;
-    let result = []
-    for(let i=0; i<players.length; i++){
-      playerName = playerDatas[players[i]].name
-      result.push(playerName)
+    let playerData = jsonData.players;
+    let roomData = jsonData.rooms[data.roomId];
+    let playerNames = []
+    let playerPermissionClasses = []
+    for(let i=0; i<data.players.length; i++){
+      playerName = playerData[data.players[i]].name
+      let playerPermissionClass = 'none'
+      if(roomData.owner == data.players[i]){
+        playerPermissionClass = 'owner'
+      }else{
+        playerPermissionClass = 'player'
+      }
+      playerNames.push(playerName)
+      playerPermissionClasses.push(playerPermissionClass)
     }
 
     if (callback) {
-      callback({ success: true, playerNames: result});
+      callback({ success: true, playerNames: playerNames, playerPermissionClasses: playerPermissionClasses});
+    }
+  });
+
+  // プレイヤー情報を返す
+  socket.on('getPermissionClass', (data, callback) => {
+    loadData();
+    let roomData = jsonData.rooms[data.roomId];
+    let permissionClass = 'none'
+    let inPlayers = 0
+    
+    if(roomData.owner == data.playerId){
+      permissionClass = 'owner'
+    }else if(roomData.players.includes(data.playerId)){
+      permissionClass = 'player'
+    }
+
+    if (callback) {
+      callback({ success: true, permissionClass: permissionClass});
     }
   });
 
