@@ -78,6 +78,15 @@
                 }
             }
         })
+
+        // ゲームを開始する
+        startBtn.addEventListener('click', () => {
+            socket.emit('startGame', roomId)
+        })
+
+        socket.on('start', (data) => { 
+            window.location.replace(`game.html?roomid=${roomId}?playerid=${playerId}?players=${data.players}`)
+        })
     </script>
 </body>
 </html>
