@@ -1,9 +1,9 @@
-import { Player } from './player.js';
-import { Field } from './field.js';
-import { shuffle } from './card.js';
-import { createData, createLog } from './card.js';
+const { Player } = require('./player.js');
+const { Field } = require('./field.js');
+const { shuffle } =  require('./card.js');
+const { createData, createLog } = require('./card.js');
 
-export class Game {
+class Game {
     constructor(playerNumber, funcs) {
         // プレイヤーの生成
         const players = [];
@@ -189,13 +189,14 @@ const funcs = [
 ];
 
 // ゲームの実行
-for(let i = 0; i < 10; i++) {
-    const game = new Game(2, funcs);
-    const result = game.game();
-    if(!(result[0])) {
-        console.log('ゲーム結果:', result);
-    }
-}
+// for(let i = 0; i < 10; i++) {
+//     const game = new Game(2, funcs);
+//     const result = game.game();
+//     if(!(result[0])) {
+//         console.log('ゲーム結果:', result);
+//     }
+// }
 
-// エクスポート
-export { choiceCpu, getNameCpu }; 
+module.exports = {
+  Game
+};

@@ -1,5 +1,5 @@
 // カードのスーパークラス
-export class Card {
+class Card {
     constructor(number, name, field) {
         this.number = number;
         this.name = name;
@@ -55,7 +55,7 @@ export class Card {
 }
 
 // カード1: 少年
-export class Card1 extends Card {
+class Card1 extends Card {
     constructor(field) {
         super(1, '少年', field);
     }
@@ -104,7 +104,7 @@ export class Card1 extends Card {
 }
 
 // カード2: 兵士
-export class Card2 extends Card {
+class Card2 extends Card {
     constructor(field) {
         super(2, '兵士', field);
     }
@@ -146,7 +146,7 @@ export class Card2 extends Card {
 }
 
 // カード3: 占い師
-export class Card3 extends Card {
+class Card3 extends Card {
     constructor(field) {
         super(3, '占い師', field);
     }
@@ -166,7 +166,7 @@ export class Card3 extends Card {
 }
 
 // カード4: 乙女
-export class Card4 extends Card {
+class Card4 extends Card {
     constructor(field) {
         super(4, '乙女', field);
     }
@@ -178,7 +178,7 @@ export class Card4 extends Card {
 }
 
 // カード5: 死神
-export class Card5 extends Card {
+class Card5 extends Card {
     constructor(field) {
         super(5, '死神', field);
     }
@@ -207,7 +207,7 @@ export class Card5 extends Card {
 }
 
 // カード6: 貴族
-export class Card6 extends Card {
+class Card6 extends Card {
     constructor(field) {
         super(6, '貴族', field);
     }
@@ -236,7 +236,7 @@ export class Card6 extends Card {
 }
 
 // カード7: 賢者
-export class Card7 extends Card {
+class Card7 extends Card {
     constructor(field) {
         super(7, '賢者', field);
     }
@@ -248,7 +248,7 @@ export class Card7 extends Card {
 }
 
 // カード8: 精霊
-export class Card8 extends Card {
+class Card8 extends Card {
     constructor(field) {
         super(8, '精霊', field);
     }
@@ -273,7 +273,7 @@ export class Card8 extends Card {
 }
 
 // カード9: 皇帝
-export class Card9 extends Card {
+class Card9 extends Card {
     constructor(field) {
         super(9, '皇帝', field);
     }
@@ -315,7 +315,7 @@ export class Card9 extends Card {
 }
 
 // カード10: 英雄
-export class Card10 extends Card {
+class Card10 extends Card {
     constructor(field) {
         super(10, '英雄', field);
     }
@@ -326,7 +326,7 @@ export class Card10 extends Card {
 }
 
 // ヘルパー関数
-export function createData(field, player) {
+function createData(field, player) {
     const players = field.players;
     const otherPlayed = {};
     const lookHands = {};
@@ -410,7 +410,7 @@ export function createData(field, player) {
     };
 }
 
-export function createLog(now, choices, kind, field, player, choice) {
+function createLog(now, choices, kind, field, player, choice) {
     const out = { now, kind, choices, choice };
     if (kind === 'opponentChoice') {
         const outChoices = choices.map(c => c.player.turnNumber);
@@ -428,7 +428,7 @@ export function createLog(now, choices, kind, field, player, choice) {
 }
 
 // シャッフル関数
-export function shuffle(list) {
+function shuffle(list) {
     const listCopy = [...list];
     const arange = Array.from({ length: list.length }, (_, i) => i);
     for (let i = arange.length - 1; i > 0; i--) {
@@ -439,6 +439,22 @@ export function shuffle(list) {
 }
 
 // 型チェック関数
-export function inType(sample, list) {
+function inType(sample, list) {
     return list.some(content => content instanceof sample.constructor);
 } 
+
+module.exports = {
+  Card1,
+  Card2,
+  Card3,
+  Card4,
+  Card5,
+  Card6,
+  Card7,
+  Card8,
+  Card9,
+  Card10,
+  createData,
+  createLog,
+  shuffle
+};

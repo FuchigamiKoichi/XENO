@@ -1,7 +1,7 @@
-import { Card1, Card2, Card3, Card4, Card5, Card6, Card7, Card8, Card9, Card10, shuffle } from './card.js';
-import { createData, createLog } from './card.js';
+const  { Card1, Card2, Card3, Card4, Card5, Card6, Card7, Card8, Card9, Card10, shuffle } = require('./card.js');
+const {  createData, createLog } = require('./card.js');
 
-export class Field {
+class Field {
     constructor(players, game) {
         this.game = game;
         this.played = Array(players.length).fill().map(() => []);
@@ -69,3 +69,6 @@ export class Field {
         }
     }
 } 
+module.exports = {
+  Field
+};

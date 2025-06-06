@@ -1,4 +1,4 @@
-export class Player {
+class Player {
     constructor(name, func) {
         this.name = name;
         this.turnNumber = -1;
@@ -13,3 +13,6 @@ export class Player {
         this.choice = func; // 選択関数
     }
 } 
+module.exports = {
+  Player
+};

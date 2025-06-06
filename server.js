@@ -1,8 +1,33 @@
+const { Game } = require('./public/src/game.js');
+const { Player } = require('./public/src/player.js');
+
+// 使用例
+// CPUプレイヤーの選択関数
+function choiceCpu(now, choices, kind) {
+    const number = Math.floor(Math.random() * choices.length);
+    if (kind === 'opponentChoice') {
+        const choice = choices[number];
+        return choice.selectNumber;
+    }
+    return choices[number];
+}
+
+// CPUプレイヤーの命名関数
+function getNameCpu(index) {
+    return `test_player${index}`;
+}
+
+// 使用例
+const funcs = [
+    { get_name: getNameCpu, choice: choiceCpu },
+    { get_name: getNameCpu, choice: choiceCpu }
+];
+
 // dataManager.js
 const fs = require('fs');
 const DATA_FILE = './data.json';
 
-let jsonData = { rooms: {}, players: {}, matchLogs: [] };
+let jsonData = { rooms: {}, players: {}, logs: [] };
 
 // ファイルから読み込み（起動時）
 function loadData() {
@@ -16,6 +41,22 @@ function loadData() {
 function saveData(data) {
   fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2));
 }
+
+loadData();
+// ゲームの実行
+for(let i = 0; i < 10; i++) {
+    const game = new Game(2, funcs);
+    const result = game.game();
+    if((result[0])) {
+        // console.log('ゲームログ:', result[1]);
+        for(let j=0; j<2; j++){
+          for(let k=0; k<result[1][j].length; k++){
+            jsonData.logs.push(result[1][j][k]);
+          }
+        }
+    }
+}
+saveData(jsonData);
 
 // プレイヤーの追加
 function addPlayer(playerData) {
@@ -242,7 +283,7 @@ io.on('connection', (socket) => {
     // ここでゲーム開始に必要な初期化を行う
     // 例: room.gameState = { ... };
     loadData()
-    io.to(roomId).emit('start',{players: jsonData.rooms[roomId].players});
+    io.to(roomId).emit('startGame',{players: jsonData.rooms[roomId].players});
   });
 
   // ゲーム中のプレイヤー操作を受け取る例
