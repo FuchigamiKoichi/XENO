@@ -84,7 +84,7 @@
             socket.emit('startGame', roomId)
         })
 
-        socket.on('start', (data) => { 
+        socket.on('startGame', (data) => { 
             window.location.replace(`game.html?roomid=${roomId}?playerid=${playerId}?players=${data.players}`)
         })
     </script>

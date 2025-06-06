@@ -518,7 +518,17 @@
             <div id="effectDescription" class="effect-text"></div>
         </div>
     </div>
+    <script src="/socket.io/socket.io.js"></script>
     <script>
+        const socket = io();
+
+        let urls = String(window.location.href).split('?')
+        const roomId = urls[1].substr(7,urls[1].length)
+        const playerId = urls[2].substr(9,urls[1].length)
+        let players = urls[3].substr(8,urls[3].length).split(',')
+
+        socket.emit('changeSocketid', {id:playerId, roomId: roomId})
+        
         // プレイヤーと相手の手札
         let playerHand = [];
         let opponentHand = [];  // 相手の手札（裏向き）
@@ -537,17 +547,73 @@
         let ruleModal = document.getElementById("ruleModal");
         let closeRule = document.getElementById("clothRule");
 
+
+
         function startGame() {
             document.getElementById("startScreen").style.display = "none";
             document.getElementById("gameScreen").style.display = "flex";
             // ゲーム開始時に手札を初期化
-            playerHand = [];
-            opponentHand = [];
-            dealInitialHands(); // 最初の手札を配る処理
+            // playerHand = [];
+            // opponentHand = [];
+            // dealInitialHands(); // 最初の手札を配る処理
         }
+
         function showRules() {
             alert("XENOのルール:\n1. カードを出して効果を発動！\n2. 相手を脱落させれば勝利！");
         }
+
+        function updateGameView(now) {
+
+            // 手札表示を更新
+            const playerHandZone = document.getElementById("player-hand");
+            playerHandZone.innerHTML = "";
+            now.myHands.forEach(card => {
+                const cardImg = document.createElement("img");
+                cardImg.src = card.name;
+                cardImg.classList.add("card");
+                // cardImg.addEventListener("click", () => playCard(cardImg));
+                playerHandZone.appendChild(cardImg);
+            });
+
+            // 自分の場に出されたカード表示
+            const playArea = document.getElementById("playArea");
+            playArea.innerHTML = "";
+            now.myPlayed.forEach(card => {
+                const playedImg = document.createElement("img");
+                playedImg.src = card.name;
+                playedImg.classList.add("played-card");
+                playArea.appendChild(playedImg);
+            });
+
+            // 相手の場に出されたカード
+            const opponentArea = document.getElementById("opponent-playArea");
+            opponentArea.innerHTML = "";
+            now.otherPlayed.forEach(card => {
+                const playedImg = document.createElement("img");
+                playedImg.src = card.name;
+                playedImg.classList.add("played-card");
+                opponentArea.appendChild(playedImg);
+            });
+
+            // 相手の手札（裏向き）
+            const opponentHandZone = document.getElementById("opponent-hand");
+            opponentHandZone.innerHTML = "";
+            for (let i = 0; i < now.otherPlayers[0].handLength; i++) {
+                const backCard = document.createElement("img");
+                backCard.src = "0.jpg";
+                backCard.classList.add("card");
+                opponentHandZone.appendChild(backCard);
+            }
+
+            // 山札の残り枚数
+            const deckCount = document.getElementById("deck-count");
+            deckCount.textContent = `残り枚数: ${now.cardNumber}`;
+
+            // 使用済みカードの表示（ログ更新）
+            updateUsedCardsDisplay();
+        }
+
+
 
         // ルール説明ボタンがクリックされたらモーダルを表示
         ruleButton.onclick = function() {
@@ -661,6 +727,7 @@
         
         //場に出したキャラクターの名前を取得(例：皇帝)
         function getCharacterName(filename) {
+
             // 結果を入れる変数を用意
             let characterConsoleName = "不明なキャラクター";
             let ofCard;

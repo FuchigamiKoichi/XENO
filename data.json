@@ -1,22 +1,9150 @@
 {
-  "rooms": {
-    "room-ccxyzqd3l": {
-      "owner": "on3stPm024sepz-tAAAB",
-      "players": [
-        "on3stPm024sepz-tAAAB",
-        "39zpG9h0wkUVUBRjAAAF"
-      ]
-    }
-  },
-  "players": {
-    "on3stPm024sepz-tAAAB": {
-      "name": "liz",
-      "socketId": "HqC7Bd-oCSYEMJ9vAAAI"
+  "rooms": {},
+  "players": {},
+  "logs": [
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 1,
+        "otherPlayers": {
+          "2": true
+        },
+        "cardNumber": 17,
+        "myHands": [],
+        "myPlayed": [],
+        "otherPlayed": {
+          "2": []
+        },
+        "lookHands": {
+          "2": []
+        },
+        "lookedHands": {
+          "2": []
+        },
+        "pred": [],
+        "reincarnation": true
+      },
+      "kind": "draw",
+      "choices": [
+        7
+      ],
+      "choice": 7
     },
-    "39zpG9h0wkUVUBRjAAAF": {
-      "name": "AK06Minecraft",
-      "socketId": "OaoB1MphhxFGBDSLAAAJ"
-    }
-  },
-  "matchLogs": []
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 1,
+        "otherPlayers": {
+          "2": true
+        },
+        "cardNumber": 15,
+        "myHands": [
+          7
+        ],
+        "myPlayed": [],
+        "otherPlayed": {
+          "2": []
+        },
+        "lookHands": {
+          "2": []
+        },
+        "lookedHands": {
+          "2": []
+        },
+        "pred": [],
+        "reincarnation": true
+      },
+      "kind": "draw",
+      "choices": [
+        6
+      ],
+      "choice": 6
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 1,
+        "otherPlayers": {
+          "2": true
+        },
+        "cardNumber": 14,
+        "myHands": [
+          7,
+          6
+        ],
+        "myPlayed": [],
+        "otherPlayed": {
+          "2": []
+        },
+        "lookHands": {
+          "2": []
+        },
+        "lookedHands": {
+          "2": []
+        },
+        "pred": [],
+        "reincarnation": true
+      },
+      "kind": "play_card",
+      "choices": [
+        7,
+        6
+      ],
+      "choice": 7
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 1,
+        "otherPlayers": {
+          "2": true
+        },
+        "cardNumber": 13,
+        "myHands": [
+          6
+        ],
+        "myPlayed": [
+          7
+        ],
+        "otherPlayed": {
+          "2": [
+            2
+          ]
+        },
+        "lookHands": {
+          "2": []
+        },
+        "lookedHands": {
+          "2": []
+        },
+        "pred": [
+          {
+            "subject": 2,
+            "object": 1,
+            "predCard": 8
+          }
+        ],
+        "reincarnation": true
+      },
+      "kind": "draw",
+      "choices": [
+        1,
+        4,
+        8
+      ],
+      "choice": 1
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 1,
+        "otherPlayers": {
+          "2": true
+        },
+        "cardNumber": 12,
+        "myHands": [
+          6,
+          1
+        ],
+        "myPlayed": [
+          7
+        ],
+        "otherPlayed": {
+          "2": [
+            2
+          ]
+        },
+        "lookHands": {
+          "2": []
+        },
+        "lookedHands": {
+          "2": []
+        },
+        "pred": [
+          {
+            "subject": 2,
+            "object": 1,
+            "predCard": 8
+          }
+        ],
+        "reincarnation": true
+      },
+      "kind": "play_card",
+      "choices": [
+        6,
+        1
+      ],
+      "choice": 6
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 1,
+        "otherPlayers": {
+          "2": true
+        },
+        "cardNumber": 12,
+        "myHands": [
+          1
+        ],
+        "myPlayed": [
+          7,
+          6
+        ],
+        "otherPlayed": {
+          "2": [
+            2
+          ]
+        },
+        "lookHands": {
+          "2": []
+        },
+        "lookedHands": {
+          "2": []
+        },
+        "pred": [
+          {
+            "subject": 2,
+            "object": 1,
+            "predCard": 8
+          }
+        ],
+        "reincarnation": true
+      },
+      "kind": "opponentChoice",
+      "choices": [
+        2
+      ],
+      "choice": 2
+    },
+    "lose",
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 2,
+        "otherPlayers": {
+          "1": true
+        },
+        "cardNumber": 16,
+        "myHands": [],
+        "myPlayed": [],
+        "otherPlayed": {
+          "1": []
+        },
+        "lookHands": {
+          "1": []
+        },
+        "lookedHands": {
+          "1": []
+        },
+        "pred": [],
+        "reincarnation": true
+      },
+      "kind": "draw",
+      "choices": [
+        10
+      ],
+      "choice": 10
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 2,
+        "otherPlayers": {
+          "1": true
+        },
+        "cardNumber": 14,
+        "myHands": [
+          10
+        ],
+        "myPlayed": [],
+        "otherPlayed": {
+          "1": [
+            7
+          ]
+        },
+        "lookHands": {
+          "1": []
+        },
+        "lookedHands": {
+          "1": []
+        },
+        "pred": [],
+        "reincarnation": true
+      },
+      "kind": "draw",
+      "choices": [
+        2
+      ],
+      "choice": 2
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 2,
+        "otherPlayers": {
+          "1": true
+        },
+        "cardNumber": 13,
+        "myHands": [
+          10,
+          2
+        ],
+        "myPlayed": [],
+        "otherPlayed": {
+          "1": [
+            7
+          ]
+        },
+        "lookHands": {
+          "1": []
+        },
+        "lookedHands": {
+          "1": []
+        },
+        "pred": [],
+        "reincarnation": true
+      },
+      "kind": "play_card",
+      "choices": [
+        2
+      ],
+      "choice": 2
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 2,
+        "otherPlayers": {
+          "1": true
+        },
+        "cardNumber": 13,
+        "myHands": [
+          10
+        ],
+        "myPlayed": [
+          2
+        ],
+        "otherPlayed": {
+          "1": [
+            7
+          ]
+        },
+        "lookHands": {
+          "1": []
+        },
+        "lookedHands": {
+          "1": []
+        },
+        "pred": [],
+        "reincarnation": true
+      },
+      "kind": "opponentChoice",
+      "choices": [
+        1
+      ],
+      "choice": 1
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 2,
+        "otherPlayers": {
+          "1": true
+        },
+        "cardNumber": 13,
+        "myHands": [
+          10
+        ],
+        "myPlayed": [
+          2
+        ],
+        "otherPlayed": {
+          "1": [
+            7
+          ]
+        },
+        "lookHands": {
+          "1": []
+        },
+        "lookedHands": {
+          "1": []
+        },
+        "pred": [],
+        "reincarnation": true
+      },
+      "kind": "pred",
+      "choices": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10
+      ],
+      "choice": 8
+    },
+    "win",
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 1,
+        "otherPlayers": {
+          "2": true
+        },
+        "cardNumber": 17,
+        "myHands": [],
+        "myPlayed": [],
+        "otherPlayed": {
+          "2": []
+        },
+        "lookHands": {
+          "2": []
+        },
+        "lookedHands": {
+          "2": []
+        },
+        "pred": [],
+        "reincarnation": true
+      },
+      "kind": "draw",
+      "choices": [
+        2
+      ],
+      "choice": 2
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 1,
+        "otherPlayers": {
+          "2": true
+        },
+        "cardNumber": 15,
+        "myHands": [
+          2
+        ],
+        "myPlayed": [],
+        "otherPlayed": {
+          "2": []
+        },
+        "lookHands": {
+          "2": []
+        },
+        "lookedHands": {
+          "2": []
+        },
+        "pred": [],
+        "reincarnation": true
+      },
+      "kind": "draw",
+      "choices": [
+        10
+      ],
+      "choice": 10
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 1,
+        "otherPlayers": {
+          "2": true
+        },
+        "cardNumber": 14,
+        "myHands": [
+          2,
+          10
+        ],
+        "myPlayed": [],
+        "otherPlayed": {
+          "2": []
+        },
+        "lookHands": {
+          "2": []
+        },
+        "lookedHands": {
+          "2": []
+        },
+        "pred": [],
+        "reincarnation": true
+      },
+      "kind": "play_card",
+      "choices": [
+        2
+      ],
+      "choice": 2
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 1,
+        "otherPlayers": {
+          "2": true
+        },
+        "cardNumber": 14,
+        "myHands": [
+          10
+        ],
+        "myPlayed": [
+          2
+        ],
+        "otherPlayed": {
+          "2": []
+        },
+        "lookHands": {
+          "2": []
+        },
+        "lookedHands": {
+          "2": []
+        },
+        "pred": [],
+        "reincarnation": true
+      },
+      "kind": "opponentChoice",
+      "choices": [
+        2
+      ],
+      "choice": 2
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 1,
+        "otherPlayers": {
+          "2": true
+        },
+        "cardNumber": 14,
+        "myHands": [
+          10
+        ],
+        "myPlayed": [
+          2
+        ],
+        "otherPlayed": {
+          "2": []
+        },
+        "lookHands": {
+          "2": []
+        },
+        "lookedHands": {
+          "2": []
+        },
+        "pred": [],
+        "reincarnation": true
+      },
+      "kind": "pred",
+      "choices": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10
+      ],
+      "choice": 7
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 1,
+        "otherPlayers": {
+          "2": true
+        },
+        "cardNumber": 13,
+        "myHands": [
+          10
+        ],
+        "myPlayed": [
+          2
+        ],
+        "otherPlayed": {
+          "2": [
+            2
+          ]
+        },
+        "lookHands": {
+          "2": []
+        },
+        "lookedHands": {
+          "2": []
+        },
+        "pred": [
+          {
+            "subject": 1,
+            "object": 2,
+            "predCard": 7
+          },
+          {
+            "subject": 2,
+            "object": 1,
+            "predCard": 1
+          }
+        ],
+        "reincarnation": true
+      },
+      "kind": "draw",
+      "choices": [
+        6
+      ],
+      "choice": 6
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 1,
+        "otherPlayers": {
+          "2": true
+        },
+        "cardNumber": 12,
+        "myHands": [
+          10,
+          6
+        ],
+        "myPlayed": [
+          2
+        ],
+        "otherPlayed": {
+          "2": [
+            2
+          ]
+        },
+        "lookHands": {
+          "2": []
+        },
+        "lookedHands": {
+          "2": []
+        },
+        "pred": [
+          {
+            "subject": 1,
+            "object": 2,
+            "predCard": 7
+          },
+          {
+            "subject": 2,
+            "object": 1,
+            "predCard": 1
+          }
+        ],
+        "reincarnation": true
+      },
+      "kind": "play_card",
+      "choices": [
+        6
+      ],
+      "choice": 6
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 1,
+        "otherPlayers": {
+          "2": true
+        },
+        "cardNumber": 12,
+        "myHands": [
+          10
+        ],
+        "myPlayed": [
+          2,
+          6
+        ],
+        "otherPlayed": {
+          "2": [
+            2
+          ]
+        },
+        "lookHands": {
+          "2": []
+        },
+        "lookedHands": {
+          "2": []
+        },
+        "pred": [
+          {
+            "subject": 1,
+            "object": 2,
+            "predCard": 7
+          },
+          {
+            "subject": 2,
+            "object": 1,
+            "predCard": 1
+          }
+        ],
+        "reincarnation": true
+      },
+      "kind": "opponentChoice",
+      "choices": [
+        2
+      ],
+      "choice": 2
+    },
+    "win",
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 2,
+        "otherPlayers": {
+          "1": true
+        },
+        "cardNumber": 16,
+        "myHands": [],
+        "myPlayed": [],
+        "otherPlayed": {
+          "1": []
+        },
+        "lookHands": {
+          "1": []
+        },
+        "lookedHands": {
+          "1": []
+        },
+        "pred": [],
+        "reincarnation": true
+      },
+      "kind": "draw",
+      "choices": [
+        5
+      ],
+      "choice": 5
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 2,
+        "otherPlayers": {
+          "1": true
+        },
+        "cardNumber": 14,
+        "myHands": [
+          5
+        ],
+        "myPlayed": [],
+        "otherPlayed": {
+          "1": [
+            2
+          ]
+        },
+        "lookHands": {
+          "1": []
+        },
+        "lookedHands": {
+          "1": []
+        },
+        "pred": [
+          {
+            "subject": 1,
+            "object": 2,
+            "predCard": 7
+          }
+        ],
+        "reincarnation": true
+      },
+      "kind": "draw",
+      "choices": [
+        2
+      ],
+      "choice": 2
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 2,
+        "otherPlayers": {
+          "1": true
+        },
+        "cardNumber": 13,
+        "myHands": [
+          5,
+          2
+        ],
+        "myPlayed": [],
+        "otherPlayed": {
+          "1": [
+            2
+          ]
+        },
+        "lookHands": {
+          "1": []
+        },
+        "lookedHands": {
+          "1": []
+        },
+        "pred": [
+          {
+            "subject": 1,
+            "object": 2,
+            "predCard": 7
+          }
+        ],
+        "reincarnation": true
+      },
+      "kind": "play_card",
+      "choices": [
+        5,
+        2
+      ],
+      "choice": 2
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 2,
+        "otherPlayers": {
+          "1": true
+        },
+        "cardNumber": 13,
+        "myHands": [
+          5
+        ],
+        "myPlayed": [
+          2
+        ],
+        "otherPlayed": {
+          "1": [
+            2
+          ]
+        },
+        "lookHands": {
+          "1": []
+        },
+        "lookedHands": {
+          "1": []
+        },
+        "pred": [
+          {
+            "subject": 1,
+            "object": 2,
+            "predCard": 7
+          }
+        ],
+        "reincarnation": true
+      },
+      "kind": "opponentChoice",
+      "choices": [
+        1
+      ],
+      "choice": 1
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 2,
+        "otherPlayers": {
+          "1": true
+        },
+        "cardNumber": 13,
+        "myHands": [
+          5
+        ],
+        "myPlayed": [
+          2
+        ],
+        "otherPlayed": {
+          "1": [
+            2
+          ]
+        },
+        "lookHands": {
+          "1": []
+        },
+        "lookedHands": {
+          "1": []
+        },
+        "pred": [
+          {
+            "subject": 1,
+            "object": 2,
+            "predCard": 7
+          }
+        ],
+        "reincarnation": true
+      },
+      "kind": "pred",
+      "choices": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10
+      ],
+      "choice": 1
+    },
+    "lose",
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 1,
+        "otherPlayers": {
+          "2": true
+        },
+        "cardNumber": 17,
+        "myHands": [],
+        "myPlayed": [],
+        "otherPlayed": {
+          "2": []
+        },
+        "lookHands": {
+          "2": []
+        },
+        "lookedHands": {
+          "2": []
+        },
+        "pred": [],
+        "reincarnation": true
+      },
+      "kind": "draw",
+      "choices": [
+        4
+      ],
+      "choice": 4
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 1,
+        "otherPlayers": {
+          "2": true
+        },
+        "cardNumber": 15,
+        "myHands": [
+          4
+        ],
+        "myPlayed": [],
+        "otherPlayed": {
+          "2": []
+        },
+        "lookHands": {
+          "2": []
+        },
+        "lookedHands": {
+          "2": []
+        },
+        "pred": [],
+        "reincarnation": true
+      },
+      "kind": "draw",
+      "choices": [
+        1
+      ],
+      "choice": 1
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 1,
+        "otherPlayers": {
+          "2": true
+        },
+        "cardNumber": 14,
+        "myHands": [
+          4,
+          1
+        ],
+        "myPlayed": [],
+        "otherPlayed": {
+          "2": []
+        },
+        "lookHands": {
+          "2": []
+        },
+        "lookedHands": {
+          "2": []
+        },
+        "pred": [],
+        "reincarnation": true
+      },
+      "kind": "play_card",
+      "choices": [
+        4,
+        1
+      ],
+      "choice": 1
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 1,
+        "otherPlayers": {
+          "2": true
+        },
+        "cardNumber": 13,
+        "myHands": [
+          4
+        ],
+        "myPlayed": [
+          1
+        ],
+        "otherPlayed": {
+          "2": [
+            3
+          ]
+        },
+        "lookHands": {
+          "2": []
+        },
+        "lookedHands": {
+          "2": [
+            4
+          ]
+        },
+        "pred": [],
+        "reincarnation": true
+      },
+      "kind": "draw",
+      "choices": [
+        9
+      ],
+      "choice": 9
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 1,
+        "otherPlayers": {
+          "2": true
+        },
+        "cardNumber": 12,
+        "myHands": [
+          4,
+          9
+        ],
+        "myPlayed": [
+          1
+        ],
+        "otherPlayed": {
+          "2": [
+            3
+          ]
+        },
+        "lookHands": {
+          "2": []
+        },
+        "lookedHands": {
+          "2": [
+            4
+          ]
+        },
+        "pred": [],
+        "reincarnation": true
+      },
+      "kind": "play_card",
+      "choices": [
+        4,
+        9
+      ],
+      "choice": 4
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 1,
+        "otherPlayers": {
+          "2": true
+        },
+        "cardNumber": 11,
+        "myHands": [
+          9
+        ],
+        "myPlayed": [
+          1,
+          4
+        ],
+        "otherPlayed": {
+          "2": [
+            3,
+            1
+          ]
+        },
+        "lookHands": {
+          "2": []
+        },
+        "lookedHands": {
+          "2": [
+            4
+          ]
+        },
+        "pred": [],
+        "reincarnation": true
+      },
+      "kind": "draw",
+      "choices": [
+        2
+      ],
+      "choice": 2
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 1,
+        "otherPlayers": {
+          "2": true
+        },
+        "cardNumber": 10,
+        "myHands": [
+          9,
+          2
+        ],
+        "myPlayed": [
+          1,
+          4
+        ],
+        "otherPlayed": {
+          "2": [
+            3,
+            1
+          ]
+        },
+        "lookHands": {
+          "2": []
+        },
+        "lookedHands": {
+          "2": [
+            4
+          ]
+        },
+        "pred": [],
+        "reincarnation": true
+      },
+      "kind": "play_card",
+      "choices": [
+        9,
+        2
+      ],
+      "choice": 2
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 1,
+        "otherPlayers": {
+          "2": true
+        },
+        "cardNumber": 10,
+        "myHands": [
+          9
+        ],
+        "myPlayed": [
+          1,
+          4,
+          2
+        ],
+        "otherPlayed": {
+          "2": [
+            3,
+            1
+          ]
+        },
+        "lookHands": {
+          "2": []
+        },
+        "lookedHands": {
+          "2": [
+            4
+          ]
+        },
+        "pred": [],
+        "reincarnation": true
+      },
+      "kind": "opponentChoice",
+      "choices": [
+        2
+      ],
+      "choice": 2
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 1,
+        "otherPlayers": {
+          "2": true
+        },
+        "cardNumber": 10,
+        "myHands": [
+          9
+        ],
+        "myPlayed": [
+          1,
+          4,
+          2
+        ],
+        "otherPlayed": {
+          "2": [
+            3,
+            1
+          ]
+        },
+        "lookHands": {
+          "2": []
+        },
+        "lookedHands": {
+          "2": [
+            4
+          ]
+        },
+        "pred": [],
+        "reincarnation": true
+      },
+      "kind": "pred",
+      "choices": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10
+      ],
+      "choice": 2
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 1,
+        "otherPlayers": {
+          "2": true
+        },
+        "cardNumber": 9,
+        "myHands": [
+          8
+        ],
+        "myPlayed": [
+          1,
+          4,
+          2
+        ],
+        "otherPlayed": {
+          "2": [
+            3,
+            1,
+            8
+          ]
+        },
+        "lookHands": {
+          "2": [
+            9
+          ]
+        },
+        "lookedHands": {
+          "2": [
+            4,
+            8
+          ]
+        },
+        "pred": [
+          {
+            "subject": 1,
+            "object": 2,
+            "predCard": 2
+          }
+        ],
+        "reincarnation": true
+      },
+      "kind": "draw",
+      "choices": [
+        5
+      ],
+      "choice": 5
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 1,
+        "otherPlayers": {
+          "2": true
+        },
+        "cardNumber": 8,
+        "myHands": [
+          8,
+          5
+        ],
+        "myPlayed": [
+          1,
+          4,
+          2
+        ],
+        "otherPlayed": {
+          "2": [
+            3,
+            1,
+            8
+          ]
+        },
+        "lookHands": {
+          "2": [
+            9
+          ]
+        },
+        "lookedHands": {
+          "2": [
+            4,
+            8
+          ]
+        },
+        "pred": [
+          {
+            "subject": 1,
+            "object": 2,
+            "predCard": 2
+          }
+        ],
+        "reincarnation": true
+      },
+      "kind": "play_card",
+      "choices": [
+        8,
+        5
+      ],
+      "choice": 8
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 1,
+        "otherPlayers": {
+          "2": true
+        },
+        "cardNumber": 8,
+        "myHands": [
+          5
+        ],
+        "myPlayed": [
+          1,
+          4,
+          2,
+          8
+        ],
+        "otherPlayed": {
+          "2": [
+            3,
+            1,
+            8
+          ]
+        },
+        "lookHands": {
+          "2": [
+            9
+          ]
+        },
+        "lookedHands": {
+          "2": [
+            4,
+            8
+          ]
+        },
+        "pred": [
+          {
+            "subject": 1,
+            "object": 2,
+            "predCard": 2
+          }
+        ],
+        "reincarnation": true
+      },
+      "kind": "opponentChoice",
+      "choices": [
+        2
+      ],
+      "choice": 2
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 1,
+        "otherPlayers": {
+          "2": true
+        },
+        "cardNumber": 6,
+        "myHands": [],
+        "myPlayed": [
+          1,
+          4,
+          2,
+          8,
+          9
+        ],
+        "otherPlayed": {
+          "2": [
+            3,
+            1,
+            8,
+            5
+          ]
+        },
+        "lookHands": {
+          "2": [
+            9,
+            5
+          ]
+        },
+        "lookedHands": {
+          "2": [
+            4,
+            8,
+            9,
+            9
+          ]
+        },
+        "pred": [
+          {
+            "subject": 1,
+            "object": 2,
+            "predCard": 2
+          }
+        ],
+        "reincarnation": true
+      },
+      "kind": "draw",
+      "choices": [
+        5
+      ],
+      "choice": 5
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 1,
+        "otherPlayers": {
+          "2": true
+        },
+        "cardNumber": 4,
+        "myHands": [
+          5
+        ],
+        "myPlayed": [
+          1,
+          4,
+          2,
+          8,
+          9
+        ],
+        "otherPlayed": {
+          "2": [
+            3,
+            1,
+            8,
+            5,
+            7
+          ]
+        },
+        "lookHands": {
+          "2": [
+            9,
+            5
+          ]
+        },
+        "lookedHands": {
+          "2": [
+            4,
+            8,
+            9,
+            9
+          ]
+        },
+        "pred": [
+          {
+            "subject": 1,
+            "object": 2,
+            "predCard": 2
+          }
+        ],
+        "reincarnation": true
+      },
+      "kind": "draw",
+      "choices": [
+        10
+      ],
+      "choice": 10
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 1,
+        "otherPlayers": {
+          "2": true
+        },
+        "cardNumber": 3,
+        "myHands": [
+          5,
+          10
+        ],
+        "myPlayed": [
+          1,
+          4,
+          2,
+          8,
+          9
+        ],
+        "otherPlayed": {
+          "2": [
+            3,
+            1,
+            8,
+            5,
+            7
+          ]
+        },
+        "lookHands": {
+          "2": [
+            9,
+            5
+          ]
+        },
+        "lookedHands": {
+          "2": [
+            4,
+            8,
+            9,
+            9
+          ]
+        },
+        "pred": [
+          {
+            "subject": 1,
+            "object": 2,
+            "predCard": 2
+          }
+        ],
+        "reincarnation": true
+      },
+      "kind": "play_card",
+      "choices": [
+        5
+      ],
+      "choice": 5
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 1,
+        "otherPlayers": {
+          "2": true
+        },
+        "cardNumber": 3,
+        "myHands": [
+          10
+        ],
+        "myPlayed": [
+          1,
+          4,
+          2,
+          8,
+          9,
+          5
+        ],
+        "otherPlayed": {
+          "2": [
+            3,
+            1,
+            8,
+            5,
+            7
+          ]
+        },
+        "lookHands": {
+          "2": [
+            9,
+            5
+          ]
+        },
+        "lookedHands": {
+          "2": [
+            4,
+            8,
+            9,
+            9
+          ]
+        },
+        "pred": [
+          {
+            "subject": 1,
+            "object": 2,
+            "predCard": 2
+          }
+        ],
+        "reincarnation": true
+      },
+      "kind": "opponentChoice",
+      "choices": [
+        2
+      ],
+      "choice": 2
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 1,
+        "otherPlayers": {
+          "2": true
+        },
+        "cardNumber": 3,
+        "myHands": [
+          10
+        ],
+        "myPlayed": [
+          1,
+          4,
+          2,
+          8,
+          9,
+          5
+        ],
+        "otherPlayed": {
+          "2": [
+            3,
+            1,
+            8,
+            5,
+            7
+          ]
+        },
+        "lookHands": {
+          "2": [
+            9,
+            5
+          ]
+        },
+        "lookedHands": {
+          "2": [
+            4,
+            8,
+            9,
+            9
+          ]
+        },
+        "pred": [
+          {
+            "subject": 1,
+            "object": 2,
+            "predCard": 2
+          }
+        ],
+        "reincarnation": true
+      },
+      "kind": "draw",
+      "choices": [
+        6
+      ],
+      "choice": 6
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 1,
+        "otherPlayers": {
+          "2": true
+        },
+        "cardNumber": 1,
+        "myHands": [
+          10,
+          6
+        ],
+        "myPlayed": [
+          1,
+          4,
+          2,
+          8,
+          9,
+          5
+        ],
+        "otherPlayed": {
+          "2": [
+            3,
+            1,
+            8,
+            5,
+            7,
+            3,
+            4
+          ]
+        },
+        "lookHands": {
+          "2": [
+            9,
+            5
+          ]
+        },
+        "lookedHands": {
+          "2": [
+            4,
+            8,
+            9,
+            9
+          ]
+        },
+        "pred": [
+          {
+            "subject": 1,
+            "object": 2,
+            "predCard": 2
+          }
+        ],
+        "reincarnation": true
+      },
+      "kind": "draw",
+      "choices": [
+        6
+      ],
+      "choice": 6
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 1,
+        "otherPlayers": {
+          "2": true
+        },
+        "cardNumber": 0,
+        "myHands": [
+          10,
+          6,
+          6
+        ],
+        "myPlayed": [
+          1,
+          4,
+          2,
+          8,
+          9,
+          5
+        ],
+        "otherPlayed": {
+          "2": [
+            3,
+            1,
+            8,
+            5,
+            7,
+            3,
+            4
+          ]
+        },
+        "lookHands": {
+          "2": [
+            9,
+            5
+          ]
+        },
+        "lookedHands": {
+          "2": [
+            4,
+            8,
+            9,
+            9
+          ]
+        },
+        "pred": [
+          {
+            "subject": 1,
+            "object": 2,
+            "predCard": 2
+          }
+        ],
+        "reincarnation": true
+      },
+      "kind": "play_card",
+      "choices": [
+        6,
+        6
+      ],
+      "choice": 6
+    },
+    "win",
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 2,
+        "otherPlayers": {
+          "1": true
+        },
+        "cardNumber": 16,
+        "myHands": [],
+        "myPlayed": [],
+        "otherPlayed": {
+          "1": []
+        },
+        "lookHands": {
+          "1": []
+        },
+        "lookedHands": {
+          "1": []
+        },
+        "pred": [],
+        "reincarnation": true
+      },
+      "kind": "draw",
+      "choices": [
+        1
+      ],
+      "choice": 1
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 2,
+        "otherPlayers": {
+          "1": true
+        },
+        "cardNumber": 14,
+        "myHands": [
+          1
+        ],
+        "myPlayed": [],
+        "otherPlayed": {
+          "1": [
+            1
+          ]
+        },
+        "lookHands": {
+          "1": []
+        },
+        "lookedHands": {
+          "1": []
+        },
+        "pred": [],
+        "reincarnation": true
+      },
+      "kind": "draw",
+      "choices": [
+        3
+      ],
+      "choice": 3
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 2,
+        "otherPlayers": {
+          "1": true
+        },
+        "cardNumber": 13,
+        "myHands": [
+          1,
+          3
+        ],
+        "myPlayed": [],
+        "otherPlayed": {
+          "1": [
+            1
+          ]
+        },
+        "lookHands": {
+          "1": []
+        },
+        "lookedHands": {
+          "1": []
+        },
+        "pred": [],
+        "reincarnation": true
+      },
+      "kind": "play_card",
+      "choices": [
+        1,
+        3
+      ],
+      "choice": 3
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 2,
+        "otherPlayers": {
+          "1": true
+        },
+        "cardNumber": 13,
+        "myHands": [
+          1
+        ],
+        "myPlayed": [
+          3
+        ],
+        "otherPlayed": {
+          "1": [
+            1
+          ]
+        },
+        "lookHands": {
+          "1": []
+        },
+        "lookedHands": {
+          "1": []
+        },
+        "pred": [],
+        "reincarnation": true
+      },
+      "kind": "opponentChoice",
+      "choices": [
+        1
+      ],
+      "choice": 1
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 2,
+        "otherPlayers": {
+          "1": true
+        },
+        "cardNumber": 12,
+        "myHands": [
+          1
+        ],
+        "myPlayed": [
+          3
+        ],
+        "otherPlayed": {
+          "1": [
+            1,
+            4
+          ]
+        },
+        "lookHands": {
+          "1": [
+            4
+          ]
+        },
+        "lookedHands": {
+          "1": []
+        },
+        "pred": [],
+        "reincarnation": true
+      },
+      "kind": "draw",
+      "choices": [
+        8
+      ],
+      "choice": 8
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 2,
+        "otherPlayers": {
+          "1": true
+        },
+        "cardNumber": 11,
+        "myHands": [
+          1,
+          8
+        ],
+        "myPlayed": [
+          3
+        ],
+        "otherPlayed": {
+          "1": [
+            1,
+            4
+          ]
+        },
+        "lookHands": {
+          "1": [
+            4
+          ]
+        },
+        "lookedHands": {
+          "1": []
+        },
+        "pred": [],
+        "reincarnation": true
+      },
+      "kind": "play_card",
+      "choices": [
+        1,
+        8
+      ],
+      "choice": 1
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 2,
+        "otherPlayers": {
+          "1": true
+        },
+        "cardNumber": 10,
+        "myHands": [
+          8
+        ],
+        "myPlayed": [
+          3,
+          1
+        ],
+        "otherPlayed": {
+          "1": [
+            1,
+            4,
+            2
+          ]
+        },
+        "lookHands": {
+          "1": [
+            4
+          ]
+        },
+        "lookedHands": {
+          "1": []
+        },
+        "pred": [
+          {
+            "subject": 1,
+            "object": 2,
+            "predCard": 2
+          }
+        ],
+        "reincarnation": true
+      },
+      "kind": "draw",
+      "choices": [
+        8
+      ],
+      "choice": 8
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 2,
+        "otherPlayers": {
+          "1": true
+        },
+        "cardNumber": 9,
+        "myHands": [
+          8,
+          8
+        ],
+        "myPlayed": [
+          3,
+          1
+        ],
+        "otherPlayed": {
+          "1": [
+            1,
+            4,
+            2
+          ]
+        },
+        "lookHands": {
+          "1": [
+            4
+          ]
+        },
+        "lookedHands": {
+          "1": []
+        },
+        "pred": [
+          {
+            "subject": 1,
+            "object": 2,
+            "predCard": 2
+          }
+        ],
+        "reincarnation": true
+      },
+      "kind": "play_card",
+      "choices": [
+        8,
+        8
+      ],
+      "choice": 8
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 2,
+        "otherPlayers": {
+          "1": true
+        },
+        "cardNumber": 9,
+        "myHands": [
+          8
+        ],
+        "myPlayed": [
+          3,
+          1,
+          8
+        ],
+        "otherPlayed": {
+          "1": [
+            1,
+            4,
+            2
+          ]
+        },
+        "lookHands": {
+          "1": [
+            4
+          ]
+        },
+        "lookedHands": {
+          "1": []
+        },
+        "pred": [
+          {
+            "subject": 1,
+            "object": 2,
+            "predCard": 2
+          }
+        ],
+        "reincarnation": true
+      },
+      "kind": "opponentChoice",
+      "choices": [
+        1
+      ],
+      "choice": 1
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 2,
+        "otherPlayers": {
+          "1": true
+        },
+        "cardNumber": 8,
+        "myHands": [
+          5
+        ],
+        "myPlayed": [
+          3,
+          1,
+          8
+        ],
+        "otherPlayed": {
+          "1": [
+            1,
+            4,
+            2,
+            8
+          ]
+        },
+        "lookHands": {
+          "1": [
+            4,
+            8,
+            9
+          ]
+        },
+        "lookedHands": {
+          "1": [
+            9,
+            5
+          ]
+        },
+        "pred": [
+          {
+            "subject": 1,
+            "object": 2,
+            "predCard": 2
+          }
+        ],
+        "reincarnation": true
+      },
+      "kind": "draw",
+      "choices": [
+        3
+      ],
+      "choice": 3
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 2,
+        "otherPlayers": {
+          "1": true
+        },
+        "cardNumber": 7,
+        "myHands": [
+          5,
+          3
+        ],
+        "myPlayed": [
+          3,
+          1,
+          8
+        ],
+        "otherPlayed": {
+          "1": [
+            1,
+            4,
+            2,
+            8
+          ]
+        },
+        "lookHands": {
+          "1": [
+            4,
+            8,
+            9
+          ]
+        },
+        "lookedHands": {
+          "1": [
+            9,
+            5
+          ]
+        },
+        "pred": [
+          {
+            "subject": 1,
+            "object": 2,
+            "predCard": 2
+          }
+        ],
+        "reincarnation": true
+      },
+      "kind": "play_card",
+      "choices": [
+        5,
+        3
+      ],
+      "choice": 5
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 2,
+        "otherPlayers": {
+          "1": true
+        },
+        "cardNumber": 7,
+        "myHands": [
+          3
+        ],
+        "myPlayed": [
+          3,
+          1,
+          8,
+          5
+        ],
+        "otherPlayed": {
+          "1": [
+            1,
+            4,
+            2,
+            8
+          ]
+        },
+        "lookHands": {
+          "1": [
+            4,
+            8,
+            9
+          ]
+        },
+        "lookedHands": {
+          "1": [
+            9,
+            5
+          ]
+        },
+        "pred": [
+          {
+            "subject": 1,
+            "object": 2,
+            "predCard": 2
+          }
+        ],
+        "reincarnation": true
+      },
+      "kind": "opponentChoice",
+      "choices": [
+        1
+      ],
+      "choice": 1
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 2,
+        "otherPlayers": {
+          "1": true
+        },
+        "cardNumber": 7,
+        "myHands": [
+          3
+        ],
+        "myPlayed": [
+          3,
+          1,
+          8,
+          5
+        ],
+        "otherPlayed": {
+          "1": [
+            1,
+            4,
+            2,
+            8
+          ]
+        },
+        "lookHands": {
+          "1": [
+            4,
+            8,
+            9
+          ]
+        },
+        "lookedHands": {
+          "1": [
+            9,
+            5
+          ]
+        },
+        "pred": [
+          {
+            "subject": 1,
+            "object": 2,
+            "predCard": 2
+          }
+        ],
+        "reincarnation": true
+      },
+      "kind": "draw",
+      "choices": [
+        2
+      ],
+      "choice": 2
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 2,
+        "otherPlayers": {
+          "1": true
+        },
+        "cardNumber": 5,
+        "myHands": [
+          3,
+          2
+        ],
+        "myPlayed": [
+          3,
+          1,
+          8,
+          5
+        ],
+        "otherPlayed": {
+          "1": [
+            1,
+            4,
+            2,
+            8,
+            9
+          ]
+        },
+        "lookHands": {
+          "1": [
+            4,
+            8,
+            9
+          ]
+        },
+        "lookedHands": {
+          "1": [
+            9,
+            5
+          ]
+        },
+        "pred": [
+          {
+            "subject": 1,
+            "object": 2,
+            "predCard": 2
+          }
+        ],
+        "reincarnation": true
+      },
+      "kind": "draw",
+      "choices": [
+        7
+      ],
+      "choice": 7
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 2,
+        "otherPlayers": {
+          "1": true
+        },
+        "cardNumber": 4,
+        "myHands": [
+          3,
+          2,
+          7
+        ],
+        "myPlayed": [
+          3,
+          1,
+          8,
+          5
+        ],
+        "otherPlayed": {
+          "1": [
+            1,
+            4,
+            2,
+            8,
+            9
+          ]
+        },
+        "lookHands": {
+          "1": [
+            4,
+            8,
+            9
+          ]
+        },
+        "lookedHands": {
+          "1": [
+            9,
+            5
+          ]
+        },
+        "pred": [
+          {
+            "subject": 1,
+            "object": 2,
+            "predCard": 2
+          }
+        ],
+        "reincarnation": true
+      },
+      "kind": "play_card",
+      "choices": [
+        3,
+        2,
+        7
+      ],
+      "choice": 7
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 2,
+        "otherPlayers": {
+          "1": true
+        },
+        "cardNumber": 2,
+        "myHands": [
+          2
+        ],
+        "myPlayed": [
+          3,
+          1,
+          8,
+          5,
+          7,
+          3
+        ],
+        "otherPlayed": {
+          "1": [
+            1,
+            4,
+            2,
+            8,
+            9,
+            5
+          ]
+        },
+        "lookHands": {
+          "1": [
+            4,
+            8,
+            9
+          ]
+        },
+        "lookedHands": {
+          "1": [
+            9,
+            5,
+            3
+          ]
+        },
+        "pred": [
+          {
+            "subject": 1,
+            "object": 2,
+            "predCard": 2
+          }
+        ],
+        "reincarnation": true
+      },
+      "kind": "draw",
+      "choices": [
+        6,
+        4
+      ],
+      "choice": 4
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 2,
+        "otherPlayers": {
+          "1": true
+        },
+        "cardNumber": 1,
+        "myHands": [
+          2,
+          4
+        ],
+        "myPlayed": [
+          3,
+          1,
+          8,
+          5,
+          7,
+          3
+        ],
+        "otherPlayed": {
+          "1": [
+            1,
+            4,
+            2,
+            8,
+            9,
+            5
+          ]
+        },
+        "lookHands": {
+          "1": [
+            4,
+            8,
+            9
+          ]
+        },
+        "lookedHands": {
+          "1": [
+            9,
+            5,
+            3
+          ]
+        },
+        "pred": [
+          {
+            "subject": 1,
+            "object": 2,
+            "predCard": 2
+          }
+        ],
+        "reincarnation": true
+      },
+      "kind": "play_card",
+      "choices": [
+        2,
+        4
+      ],
+      "choice": 4
+    },
+    "lose",
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 1,
+        "otherPlayers": {
+          "2": true
+        },
+        "cardNumber": 17,
+        "myHands": [],
+        "myPlayed": [],
+        "otherPlayed": {
+          "2": []
+        },
+        "lookHands": {
+          "2": []
+        },
+        "lookedHands": {
+          "2": []
+        },
+        "pred": [],
+        "reincarnation": true
+      },
+      "kind": "draw",
+      "choices": [
+        2
+      ],
+      "choice": 2
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 1,
+        "otherPlayers": {
+          "2": true
+        },
+        "cardNumber": 15,
+        "myHands": [
+          2
+        ],
+        "myPlayed": [],
+        "otherPlayed": {
+          "2": []
+        },
+        "lookHands": {
+          "2": []
+        },
+        "lookedHands": {
+          "2": []
+        },
+        "pred": [],
+        "reincarnation": true
+      },
+      "kind": "draw",
+      "choices": [
+        6
+      ],
+      "choice": 6
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 1,
+        "otherPlayers": {
+          "2": true
+        },
+        "cardNumber": 14,
+        "myHands": [
+          2,
+          6
+        ],
+        "myPlayed": [],
+        "otherPlayed": {
+          "2": []
+        },
+        "lookHands": {
+          "2": []
+        },
+        "lookedHands": {
+          "2": []
+        },
+        "pred": [],
+        "reincarnation": true
+      },
+      "kind": "play_card",
+      "choices": [
+        2,
+        6
+      ],
+      "choice": 2
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 1,
+        "otherPlayers": {
+          "2": true
+        },
+        "cardNumber": 14,
+        "myHands": [
+          6
+        ],
+        "myPlayed": [
+          2
+        ],
+        "otherPlayed": {
+          "2": []
+        },
+        "lookHands": {
+          "2": []
+        },
+        "lookedHands": {
+          "2": []
+        },
+        "pred": [],
+        "reincarnation": true
+      },
+      "kind": "opponentChoice",
+      "choices": [
+        2
+      ],
+      "choice": 2
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 1,
+        "otherPlayers": {
+          "2": true
+        },
+        "cardNumber": 14,
+        "myHands": [
+          6
+        ],
+        "myPlayed": [
+          2
+        ],
+        "otherPlayed": {
+          "2": []
+        },
+        "lookHands": {
+          "2": []
+        },
+        "lookedHands": {
+          "2": []
+        },
+        "pred": [],
+        "reincarnation": true
+      },
+      "kind": "pred",
+      "choices": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10
+      ],
+      "choice": 3
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 1,
+        "otherPlayers": {
+          "2": true
+        },
+        "cardNumber": 13,
+        "myHands": [
+          6
+        ],
+        "myPlayed": [
+          2
+        ],
+        "otherPlayed": {
+          "2": [
+            7
+          ]
+        },
+        "lookHands": {
+          "2": []
+        },
+        "lookedHands": {
+          "2": []
+        },
+        "pred": [
+          {
+            "subject": 1,
+            "object": 2,
+            "predCard": 3
+          }
+        ],
+        "reincarnation": true
+      },
+      "kind": "draw",
+      "choices": [
+        3
+      ],
+      "choice": 3
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 1,
+        "otherPlayers": {
+          "2": true
+        },
+        "cardNumber": 12,
+        "myHands": [
+          6,
+          3
+        ],
+        "myPlayed": [
+          2
+        ],
+        "otherPlayed": {
+          "2": [
+            7
+          ]
+        },
+        "lookHands": {
+          "2": []
+        },
+        "lookedHands": {
+          "2": []
+        },
+        "pred": [
+          {
+            "subject": 1,
+            "object": 2,
+            "predCard": 3
+          }
+        ],
+        "reincarnation": true
+      },
+      "kind": "play_card",
+      "choices": [
+        6,
+        3
+      ],
+      "choice": 3
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 1,
+        "otherPlayers": {
+          "2": true
+        },
+        "cardNumber": 12,
+        "myHands": [
+          6
+        ],
+        "myPlayed": [
+          2,
+          3
+        ],
+        "otherPlayed": {
+          "2": [
+            7
+          ]
+        },
+        "lookHands": {
+          "2": []
+        },
+        "lookedHands": {
+          "2": []
+        },
+        "pred": [
+          {
+            "subject": 1,
+            "object": 2,
+            "predCard": 3
+          }
+        ],
+        "reincarnation": true
+      },
+      "kind": "opponentChoice",
+      "choices": [
+        2
+      ],
+      "choice": 2
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 1,
+        "otherPlayers": {
+          "2": true
+        },
+        "cardNumber": 11,
+        "myHands": [
+          6
+        ],
+        "myPlayed": [
+          2,
+          3
+        ],
+        "otherPlayed": {
+          "2": [
+            7,
+            8
+          ]
+        },
+        "lookHands": {
+          "2": [
+            8,
+            6
+          ]
+        },
+        "lookedHands": {
+          "2": [
+            6
+          ]
+        },
+        "pred": [
+          {
+            "subject": 1,
+            "object": 2,
+            "predCard": 3
+          }
+        ],
+        "reincarnation": true
+      },
+      "kind": "draw",
+      "choices": [
+        8
+      ],
+      "choice": 8
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 1,
+        "otherPlayers": {
+          "2": true
+        },
+        "cardNumber": 10,
+        "myHands": [
+          6,
+          8
+        ],
+        "myPlayed": [
+          2,
+          3
+        ],
+        "otherPlayed": {
+          "2": [
+            7,
+            8
+          ]
+        },
+        "lookHands": {
+          "2": [
+            8,
+            6
+          ]
+        },
+        "lookedHands": {
+          "2": [
+            6
+          ]
+        },
+        "pred": [
+          {
+            "subject": 1,
+            "object": 2,
+            "predCard": 3
+          }
+        ],
+        "reincarnation": true
+      },
+      "kind": "play_card",
+      "choices": [
+        6,
+        8
+      ],
+      "choice": 8
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 1,
+        "otherPlayers": {
+          "2": true
+        },
+        "cardNumber": 10,
+        "myHands": [
+          6
+        ],
+        "myPlayed": [
+          2,
+          3,
+          8
+        ],
+        "otherPlayed": {
+          "2": [
+            7,
+            8
+          ]
+        },
+        "lookHands": {
+          "2": [
+            8,
+            6
+          ]
+        },
+        "lookedHands": {
+          "2": [
+            6
+          ]
+        },
+        "pred": [
+          {
+            "subject": 1,
+            "object": 2,
+            "predCard": 3
+          }
+        ],
+        "reincarnation": true
+      },
+      "kind": "opponentChoice",
+      "choices": [
+        2
+      ],
+      "choice": 2
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 1,
+        "otherPlayers": {
+          "2": true
+        },
+        "cardNumber": 9,
+        "myHands": [
+          6
+        ],
+        "myPlayed": [
+          2,
+          3,
+          8
+        ],
+        "otherPlayed": {
+          "2": [
+            7,
+            8,
+            2
+          ]
+        },
+        "lookHands": {
+          "2": [
+            8,
+            6,
+            6
+          ]
+        },
+        "lookedHands": {
+          "2": [
+            6,
+            6
+          ]
+        },
+        "pred": [
+          {
+            "subject": 1,
+            "object": 2,
+            "predCard": 3
+          },
+          {
+            "subject": 2,
+            "object": 1,
+            "predCard": 3
+          }
+        ],
+        "reincarnation": true
+      },
+      "kind": "draw",
+      "choices": [
+        10
+      ],
+      "choice": 10
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 1,
+        "otherPlayers": {
+          "2": true
+        },
+        "cardNumber": 8,
+        "myHands": [
+          6,
+          10
+        ],
+        "myPlayed": [
+          2,
+          3,
+          8
+        ],
+        "otherPlayed": {
+          "2": [
+            7,
+            8,
+            2
+          ]
+        },
+        "lookHands": {
+          "2": [
+            8,
+            6,
+            6
+          ]
+        },
+        "lookedHands": {
+          "2": [
+            6,
+            6
+          ]
+        },
+        "pred": [
+          {
+            "subject": 1,
+            "object": 2,
+            "predCard": 3
+          },
+          {
+            "subject": 2,
+            "object": 1,
+            "predCard": 3
+          }
+        ],
+        "reincarnation": true
+      },
+      "kind": "play_card",
+      "choices": [
+        6
+      ],
+      "choice": 6
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 1,
+        "otherPlayers": {
+          "2": true
+        },
+        "cardNumber": 8,
+        "myHands": [
+          10
+        ],
+        "myPlayed": [
+          2,
+          3,
+          8,
+          6
+        ],
+        "otherPlayed": {
+          "2": [
+            7,
+            8,
+            2
+          ]
+        },
+        "lookHands": {
+          "2": [
+            8,
+            6,
+            6
+          ]
+        },
+        "lookedHands": {
+          "2": [
+            6,
+            6
+          ]
+        },
+        "pred": [
+          {
+            "subject": 1,
+            "object": 2,
+            "predCard": 3
+          },
+          {
+            "subject": 2,
+            "object": 1,
+            "predCard": 3
+          }
+        ],
+        "reincarnation": true
+      },
+      "kind": "opponentChoice",
+      "choices": [
+        2
+      ],
+      "choice": 2
+    },
+    "win",
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 2,
+        "otherPlayers": {
+          "1": true
+        },
+        "cardNumber": 16,
+        "myHands": [],
+        "myPlayed": [],
+        "otherPlayed": {
+          "1": []
+        },
+        "lookHands": {
+          "1": []
+        },
+        "lookedHands": {
+          "1": []
+        },
+        "pred": [],
+        "reincarnation": true
+      },
+      "kind": "draw",
+      "choices": [
+        7
+      ],
+      "choice": 7
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 2,
+        "otherPlayers": {
+          "1": true
+        },
+        "cardNumber": 14,
+        "myHands": [
+          7
+        ],
+        "myPlayed": [],
+        "otherPlayed": {
+          "1": [
+            2
+          ]
+        },
+        "lookHands": {
+          "1": []
+        },
+        "lookedHands": {
+          "1": []
+        },
+        "pred": [
+          {
+            "subject": 1,
+            "object": 2,
+            "predCard": 3
+          }
+        ],
+        "reincarnation": true
+      },
+      "kind": "draw",
+      "choices": [
+        8
+      ],
+      "choice": 8
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 2,
+        "otherPlayers": {
+          "1": true
+        },
+        "cardNumber": 13,
+        "myHands": [
+          7,
+          8
+        ],
+        "myPlayed": [],
+        "otherPlayed": {
+          "1": [
+            2
+          ]
+        },
+        "lookHands": {
+          "1": []
+        },
+        "lookedHands": {
+          "1": []
+        },
+        "pred": [
+          {
+            "subject": 1,
+            "object": 2,
+            "predCard": 3
+          }
+        ],
+        "reincarnation": true
+      },
+      "kind": "play_card",
+      "choices": [
+        7,
+        8
+      ],
+      "choice": 7
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 2,
+        "otherPlayers": {
+          "1": true
+        },
+        "cardNumber": 12,
+        "myHands": [
+          8
+        ],
+        "myPlayed": [
+          7
+        ],
+        "otherPlayed": {
+          "1": [
+            2,
+            3
+          ]
+        },
+        "lookHands": {
+          "1": []
+        },
+        "lookedHands": {
+          "1": [
+            8
+          ]
+        },
+        "pred": [
+          {
+            "subject": 1,
+            "object": 2,
+            "predCard": 3
+          }
+        ],
+        "reincarnation": true
+      },
+      "kind": "draw",
+      "choices": [
+        6,
+        5,
+        1
+      ],
+      "choice": 6
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 2,
+        "otherPlayers": {
+          "1": true
+        },
+        "cardNumber": 11,
+        "myHands": [
+          8,
+          6
+        ],
+        "myPlayed": [
+          7
+        ],
+        "otherPlayed": {
+          "1": [
+            2,
+            3
+          ]
+        },
+        "lookHands": {
+          "1": []
+        },
+        "lookedHands": {
+          "1": [
+            8
+          ]
+        },
+        "pred": [
+          {
+            "subject": 1,
+            "object": 2,
+            "predCard": 3
+          }
+        ],
+        "reincarnation": true
+      },
+      "kind": "play_card",
+      "choices": [
+        8,
+        6
+      ],
+      "choice": 8
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 2,
+        "otherPlayers": {
+          "1": true
+        },
+        "cardNumber": 11,
+        "myHands": [
+          6
+        ],
+        "myPlayed": [
+          7,
+          8
+        ],
+        "otherPlayed": {
+          "1": [
+            2,
+            3
+          ]
+        },
+        "lookHands": {
+          "1": []
+        },
+        "lookedHands": {
+          "1": [
+            8
+          ]
+        },
+        "pred": [
+          {
+            "subject": 1,
+            "object": 2,
+            "predCard": 3
+          }
+        ],
+        "reincarnation": true
+      },
+      "kind": "opponentChoice",
+      "choices": [
+        1
+      ],
+      "choice": 1
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 2,
+        "otherPlayers": {
+          "1": true
+        },
+        "cardNumber": 10,
+        "myHands": [
+          6
+        ],
+        "myPlayed": [
+          7,
+          8
+        ],
+        "otherPlayed": {
+          "1": [
+            2,
+            3,
+            8
+          ]
+        },
+        "lookHands": {
+          "1": [
+            6,
+            6
+          ]
+        },
+        "lookedHands": {
+          "1": [
+            8,
+            6,
+            6
+          ]
+        },
+        "pred": [
+          {
+            "subject": 1,
+            "object": 2,
+            "predCard": 3
+          }
+        ],
+        "reincarnation": true
+      },
+      "kind": "draw",
+      "choices": [
+        2
+      ],
+      "choice": 2
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 2,
+        "otherPlayers": {
+          "1": true
+        },
+        "cardNumber": 9,
+        "myHands": [
+          6,
+          2
+        ],
+        "myPlayed": [
+          7,
+          8
+        ],
+        "otherPlayed": {
+          "1": [
+            2,
+            3,
+            8
+          ]
+        },
+        "lookHands": {
+          "1": [
+            6,
+            6
+          ]
+        },
+        "lookedHands": {
+          "1": [
+            8,
+            6,
+            6
+          ]
+        },
+        "pred": [
+          {
+            "subject": 1,
+            "object": 2,
+            "predCard": 3
+          }
+        ],
+        "reincarnation": true
+      },
+      "kind": "play_card",
+      "choices": [
+        6,
+        2
+      ],
+      "choice": 2
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 2,
+        "otherPlayers": {
+          "1": true
+        },
+        "cardNumber": 9,
+        "myHands": [
+          6
+        ],
+        "myPlayed": [
+          7,
+          8,
+          2
+        ],
+        "otherPlayed": {
+          "1": [
+            2,
+            3,
+            8
+          ]
+        },
+        "lookHands": {
+          "1": [
+            6,
+            6
+          ]
+        },
+        "lookedHands": {
+          "1": [
+            8,
+            6,
+            6
+          ]
+        },
+        "pred": [
+          {
+            "subject": 1,
+            "object": 2,
+            "predCard": 3
+          }
+        ],
+        "reincarnation": true
+      },
+      "kind": "opponentChoice",
+      "choices": [
+        1
+      ],
+      "choice": 1
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 2,
+        "otherPlayers": {
+          "1": true
+        },
+        "cardNumber": 9,
+        "myHands": [
+          6
+        ],
+        "myPlayed": [
+          7,
+          8,
+          2
+        ],
+        "otherPlayed": {
+          "1": [
+            2,
+            3,
+            8
+          ]
+        },
+        "lookHands": {
+          "1": [
+            6,
+            6
+          ]
+        },
+        "lookedHands": {
+          "1": [
+            8,
+            6,
+            6
+          ]
+        },
+        "pred": [
+          {
+            "subject": 1,
+            "object": 2,
+            "predCard": 3
+          }
+        ],
+        "reincarnation": true
+      },
+      "kind": "pred",
+      "choices": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10
+      ],
+      "choice": 3
+    },
+    "lose",
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 1,
+        "otherPlayers": {
+          "2": true
+        },
+        "cardNumber": 17,
+        "myHands": [],
+        "myPlayed": [],
+        "otherPlayed": {
+          "2": []
+        },
+        "lookHands": {
+          "2": []
+        },
+        "lookedHands": {
+          "2": []
+        },
+        "pred": [],
+        "reincarnation": true
+      },
+      "kind": "draw",
+      "choices": [
+        9
+      ],
+      "choice": 9
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 1,
+        "otherPlayers": {
+          "2": true
+        },
+        "cardNumber": 15,
+        "myHands": [
+          9
+        ],
+        "myPlayed": [],
+        "otherPlayed": {
+          "2": []
+        },
+        "lookHands": {
+          "2": []
+        },
+        "lookedHands": {
+          "2": []
+        },
+        "pred": [],
+        "reincarnation": true
+      },
+      "kind": "draw",
+      "choices": [
+        10
+      ],
+      "choice": 10
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 1,
+        "otherPlayers": {
+          "2": true
+        },
+        "cardNumber": 14,
+        "myHands": [
+          9,
+          10
+        ],
+        "myPlayed": [],
+        "otherPlayed": {
+          "2": []
+        },
+        "lookHands": {
+          "2": []
+        },
+        "lookedHands": {
+          "2": []
+        },
+        "pred": [],
+        "reincarnation": true
+      },
+      "kind": "play_card",
+      "choices": [
+        9
+      ],
+      "choice": 9
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 1,
+        "otherPlayers": {
+          "2": true
+        },
+        "cardNumber": 14,
+        "myHands": [
+          10
+        ],
+        "myPlayed": [
+          9
+        ],
+        "otherPlayed": {
+          "2": []
+        },
+        "lookHands": {
+          "2": []
+        },
+        "lookedHands": {
+          "2": []
+        },
+        "pred": [],
+        "reincarnation": true
+      },
+      "kind": "opponentChoice",
+      "choices": [
+        2
+      ],
+      "choice": 2
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 1,
+        "otherPlayers": {
+          "2": true
+        },
+        "cardNumber": 14,
+        "myHands": [
+          10
+        ],
+        "myPlayed": [
+          9
+        ],
+        "otherPlayed": {
+          "2": []
+        },
+        "lookHands": {
+          "2": []
+        },
+        "lookedHands": {
+          "2": []
+        },
+        "pred": [],
+        "reincarnation": true
+      },
+      "kind": "draw",
+      "choices": [
+        2
+      ],
+      "choice": 2
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 1,
+        "otherPlayers": {
+          "2": true
+        },
+        "cardNumber": 13,
+        "myHands": [
+          10,
+          2
+        ],
+        "myPlayed": [
+          9
+        ],
+        "otherPlayed": {
+          "2": []
+        },
+        "lookHands": {
+          "2": [
+            4
+          ]
+        },
+        "lookedHands": {
+          "2": []
+        },
+        "pred": [],
+        "reincarnation": true
+      },
+      "kind": "trush",
+      "choices": [
+        4
+      ],
+      "choice": 4
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 1,
+        "otherPlayers": {
+          "2": true
+        },
+        "cardNumber": 12,
+        "myHands": [
+          10,
+          2
+        ],
+        "myPlayed": [
+          9,
+          4
+        ],
+        "otherPlayed": {
+          "2": []
+        },
+        "lookHands": {
+          "2": [
+            4
+          ]
+        },
+        "lookedHands": {
+          "2": []
+        },
+        "pred": [],
+        "reincarnation": true
+      },
+      "kind": "draw",
+      "choices": [
+        5
+      ],
+      "choice": 5
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 1,
+        "otherPlayers": {
+          "2": true
+        },
+        "cardNumber": 11,
+        "myHands": [
+          10,
+          2,
+          5
+        ],
+        "myPlayed": [
+          9,
+          4
+        ],
+        "otherPlayed": {
+          "2": []
+        },
+        "lookHands": {
+          "2": [
+            4
+          ]
+        },
+        "lookedHands": {
+          "2": []
+        },
+        "pred": [],
+        "reincarnation": true
+      },
+      "kind": "play_card",
+      "choices": [
+        2,
+        5
+      ],
+      "choice": 2
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 1,
+        "otherPlayers": {
+          "2": true
+        },
+        "cardNumber": 11,
+        "myHands": [
+          10,
+          5
+        ],
+        "myPlayed": [
+          9,
+          4,
+          2
+        ],
+        "otherPlayed": {
+          "2": []
+        },
+        "lookHands": {
+          "2": [
+            4
+          ]
+        },
+        "lookedHands": {
+          "2": []
+        },
+        "pred": [],
+        "reincarnation": true
+      },
+      "kind": "opponentChoice",
+      "choices": [
+        2
+      ],
+      "choice": 2
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 1,
+        "otherPlayers": {
+          "2": true
+        },
+        "cardNumber": 11,
+        "myHands": [
+          10,
+          5
+        ],
+        "myPlayed": [
+          9,
+          4,
+          2
+        ],
+        "otherPlayed": {
+          "2": []
+        },
+        "lookHands": {
+          "2": [
+            4
+          ]
+        },
+        "lookedHands": {
+          "2": []
+        },
+        "pred": [],
+        "reincarnation": true
+      },
+      "kind": "pred",
+      "choices": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10
+      ],
+      "choice": 7
+    },
+    "win",
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 2,
+        "otherPlayers": {
+          "1": true
+        },
+        "cardNumber": 16,
+        "myHands": [],
+        "myPlayed": [],
+        "otherPlayed": {
+          "1": []
+        },
+        "lookHands": {
+          "1": []
+        },
+        "lookedHands": {
+          "1": []
+        },
+        "pred": [],
+        "reincarnation": true
+      },
+      "kind": "draw",
+      "choices": [
+        4
+      ],
+      "choice": 4
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 2,
+        "otherPlayers": {
+          "1": true
+        },
+        "cardNumber": 13,
+        "myHands": [],
+        "myPlayed": [],
+        "otherPlayed": {
+          "1": [
+            9,
+            4
+          ]
+        },
+        "lookHands": {
+          "1": []
+        },
+        "lookedHands": {
+          "1": []
+        },
+        "pred": [],
+        "reincarnation": true
+      },
+      "kind": "draw",
+      "choices": [
+        1
+      ],
+      "choice": 1
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 2,
+        "otherPlayers": {
+          "1": true
+        },
+        "cardNumber": 11,
+        "myHands": [
+          1
+        ],
+        "myPlayed": [],
+        "otherPlayed": {
+          "1": [
+            9,
+            4,
+            2
+          ]
+        },
+        "lookHands": {
+          "1": []
+        },
+        "lookedHands": {
+          "1": []
+        },
+        "pred": [
+          {
+            "subject": 1,
+            "object": 2,
+            "predCard": 7
+          }
+        ],
+        "reincarnation": true
+      },
+      "kind": "draw",
+      "choices": [
+        6
+      ],
+      "choice": 6
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 2,
+        "otherPlayers": {
+          "1": true
+        },
+        "cardNumber": 10,
+        "myHands": [
+          1,
+          6
+        ],
+        "myPlayed": [],
+        "otherPlayed": {
+          "1": [
+            9,
+            4,
+            2
+          ]
+        },
+        "lookHands": {
+          "1": []
+        },
+        "lookedHands": {
+          "1": []
+        },
+        "pred": [
+          {
+            "subject": 1,
+            "object": 2,
+            "predCard": 7
+          }
+        ],
+        "reincarnation": true
+      },
+      "kind": "play_card",
+      "choices": [
+        1,
+        6
+      ],
+      "choice": 6
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 2,
+        "otherPlayers": {
+          "1": true
+        },
+        "cardNumber": 10,
+        "myHands": [
+          1
+        ],
+        "myPlayed": [
+          6
+        ],
+        "otherPlayed": {
+          "1": [
+            9,
+            4,
+            2
+          ]
+        },
+        "lookHands": {
+          "1": []
+        },
+        "lookedHands": {
+          "1": []
+        },
+        "pred": [
+          {
+            "subject": 1,
+            "object": 2,
+            "predCard": 7
+          }
+        ],
+        "reincarnation": true
+      },
+      "kind": "opponentChoice",
+      "choices": [
+        1
+      ],
+      "choice": 1
+    },
+    "lose",
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 1,
+        "otherPlayers": {
+          "2": true
+        },
+        "cardNumber": 17,
+        "myHands": [],
+        "myPlayed": [],
+        "otherPlayed": {
+          "2": []
+        },
+        "lookHands": {
+          "2": []
+        },
+        "lookedHands": {
+          "2": []
+        },
+        "pred": [],
+        "reincarnation": true
+      },
+      "kind": "draw",
+      "choices": [
+        6
+      ],
+      "choice": 6
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 1,
+        "otherPlayers": {
+          "2": true
+        },
+        "cardNumber": 15,
+        "myHands": [
+          6
+        ],
+        "myPlayed": [],
+        "otherPlayed": {
+          "2": []
+        },
+        "lookHands": {
+          "2": []
+        },
+        "lookedHands": {
+          "2": []
+        },
+        "pred": [],
+        "reincarnation": true
+      },
+      "kind": "draw",
+      "choices": [
+        4
+      ],
+      "choice": 4
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 1,
+        "otherPlayers": {
+          "2": true
+        },
+        "cardNumber": 14,
+        "myHands": [
+          6,
+          4
+        ],
+        "myPlayed": [],
+        "otherPlayed": {
+          "2": []
+        },
+        "lookHands": {
+          "2": []
+        },
+        "lookedHands": {
+          "2": []
+        },
+        "pred": [],
+        "reincarnation": true
+      },
+      "kind": "play_card",
+      "choices": [
+        6,
+        4
+      ],
+      "choice": 6
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 1,
+        "otherPlayers": {
+          "2": true
+        },
+        "cardNumber": 14,
+        "myHands": [
+          4
+        ],
+        "myPlayed": [
+          6
+        ],
+        "otherPlayed": {
+          "2": []
+        },
+        "lookHands": {
+          "2": []
+        },
+        "lookedHands": {
+          "2": []
+        },
+        "pred": [],
+        "reincarnation": true
+      },
+      "kind": "opponentChoice",
+      "choices": [
+        2
+      ],
+      "choice": 2
+    },
+    "lose",
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 2,
+        "otherPlayers": {
+          "1": true
+        },
+        "cardNumber": 16,
+        "myHands": [],
+        "myPlayed": [],
+        "otherPlayed": {
+          "1": []
+        },
+        "lookHands": {
+          "1": []
+        },
+        "lookedHands": {
+          "1": []
+        },
+        "pred": [],
+        "reincarnation": true
+      },
+      "kind": "draw",
+      "choices": [
+        7
+      ],
+      "choice": 7
+    },
+    "win",
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 1,
+        "otherPlayers": {
+          "2": true
+        },
+        "cardNumber": 17,
+        "myHands": [],
+        "myPlayed": [],
+        "otherPlayed": {
+          "2": []
+        },
+        "lookHands": {
+          "2": []
+        },
+        "lookedHands": {
+          "2": []
+        },
+        "pred": [],
+        "reincarnation": true
+      },
+      "kind": "draw",
+      "choices": [
+        6
+      ],
+      "choice": 6
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 1,
+        "otherPlayers": {
+          "2": true
+        },
+        "cardNumber": 15,
+        "myHands": [
+          6
+        ],
+        "myPlayed": [],
+        "otherPlayed": {
+          "2": []
+        },
+        "lookHands": {
+          "2": []
+        },
+        "lookedHands": {
+          "2": []
+        },
+        "pred": [],
+        "reincarnation": true
+      },
+      "kind": "draw",
+      "choices": [
+        8
+      ],
+      "choice": 8
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 1,
+        "otherPlayers": {
+          "2": true
+        },
+        "cardNumber": 14,
+        "myHands": [
+          6,
+          8
+        ],
+        "myPlayed": [],
+        "otherPlayed": {
+          "2": []
+        },
+        "lookHands": {
+          "2": []
+        },
+        "lookedHands": {
+          "2": []
+        },
+        "pred": [],
+        "reincarnation": true
+      },
+      "kind": "play_card",
+      "choices": [
+        6,
+        8
+      ],
+      "choice": 6
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 1,
+        "otherPlayers": {
+          "2": true
+        },
+        "cardNumber": 14,
+        "myHands": [
+          8
+        ],
+        "myPlayed": [
+          6
+        ],
+        "otherPlayed": {
+          "2": []
+        },
+        "lookHands": {
+          "2": []
+        },
+        "lookedHands": {
+          "2": []
+        },
+        "pred": [],
+        "reincarnation": true
+      },
+      "kind": "opponentChoice",
+      "choices": [
+        2
+      ],
+      "choice": 2
+    },
+    "win",
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 2,
+        "otherPlayers": {
+          "1": true
+        },
+        "cardNumber": 16,
+        "myHands": [],
+        "myPlayed": [],
+        "otherPlayed": {
+          "1": []
+        },
+        "lookHands": {
+          "1": []
+        },
+        "lookedHands": {
+          "1": []
+        },
+        "pred": [],
+        "reincarnation": true
+      },
+      "kind": "draw",
+      "choices": [
+        7
+      ],
+      "choice": 7
+    },
+    "lose",
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 1,
+        "otherPlayers": {
+          "2": true
+        },
+        "cardNumber": 17,
+        "myHands": [],
+        "myPlayed": [],
+        "otherPlayed": {
+          "2": []
+        },
+        "lookHands": {
+          "2": []
+        },
+        "lookedHands": {
+          "2": []
+        },
+        "pred": [],
+        "reincarnation": true
+      },
+      "kind": "draw",
+      "choices": [
+        8
+      ],
+      "choice": 8
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 1,
+        "otherPlayers": {
+          "2": true
+        },
+        "cardNumber": 15,
+        "myHands": [
+          8
+        ],
+        "myPlayed": [],
+        "otherPlayed": {
+          "2": []
+        },
+        "lookHands": {
+          "2": []
+        },
+        "lookedHands": {
+          "2": []
+        },
+        "pred": [],
+        "reincarnation": true
+      },
+      "kind": "draw",
+      "choices": [
+        9
+      ],
+      "choice": 9
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 1,
+        "otherPlayers": {
+          "2": true
+        },
+        "cardNumber": 14,
+        "myHands": [
+          8,
+          9
+        ],
+        "myPlayed": [],
+        "otherPlayed": {
+          "2": []
+        },
+        "lookHands": {
+          "2": []
+        },
+        "lookedHands": {
+          "2": []
+        },
+        "pred": [],
+        "reincarnation": true
+      },
+      "kind": "play_card",
+      "choices": [
+        8,
+        9
+      ],
+      "choice": 8
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 1,
+        "otherPlayers": {
+          "2": true
+        },
+        "cardNumber": 14,
+        "myHands": [
+          9
+        ],
+        "myPlayed": [
+          8
+        ],
+        "otherPlayed": {
+          "2": []
+        },
+        "lookHands": {
+          "2": []
+        },
+        "lookedHands": {
+          "2": []
+        },
+        "pred": [],
+        "reincarnation": true
+      },
+      "kind": "opponentChoice",
+      "choices": [
+        2
+      ],
+      "choice": 2
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 1,
+        "otherPlayers": {
+          "2": true
+        },
+        "cardNumber": 13,
+        "myHands": [
+          3
+        ],
+        "myPlayed": [
+          8
+        ],
+        "otherPlayed": {
+          "2": [
+            2
+          ]
+        },
+        "lookHands": {
+          "2": [
+            9
+          ]
+        },
+        "lookedHands": {
+          "2": [
+            3
+          ]
+        },
+        "pred": [
+          {
+            "subject": 2,
+            "object": 1,
+            "predCard": 6
+          }
+        ],
+        "reincarnation": true
+      },
+      "kind": "draw",
+      "choices": [
+        6
+      ],
+      "choice": 6
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 1,
+        "otherPlayers": {
+          "2": true
+        },
+        "cardNumber": 12,
+        "myHands": [
+          3,
+          6
+        ],
+        "myPlayed": [
+          8
+        ],
+        "otherPlayed": {
+          "2": [
+            2
+          ]
+        },
+        "lookHands": {
+          "2": [
+            9
+          ]
+        },
+        "lookedHands": {
+          "2": [
+            3
+          ]
+        },
+        "pred": [
+          {
+            "subject": 2,
+            "object": 1,
+            "predCard": 6
+          }
+        ],
+        "reincarnation": true
+      },
+      "kind": "play_card",
+      "choices": [
+        3,
+        6
+      ],
+      "choice": 3
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 1,
+        "otherPlayers": {
+          "2": true
+        },
+        "cardNumber": 12,
+        "myHands": [
+          6
+        ],
+        "myPlayed": [
+          8,
+          3
+        ],
+        "otherPlayed": {
+          "2": [
+            2
+          ]
+        },
+        "lookHands": {
+          "2": [
+            9
+          ]
+        },
+        "lookedHands": {
+          "2": [
+            3
+          ]
+        },
+        "pred": [
+          {
+            "subject": 2,
+            "object": 1,
+            "predCard": 6
+          }
+        ],
+        "reincarnation": true
+      },
+      "kind": "opponentChoice",
+      "choices": [
+        2
+      ],
+      "choice": 2
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 1,
+        "otherPlayers": {
+          "2": true
+        },
+        "cardNumber": 10,
+        "myHands": [],
+        "myPlayed": [
+          8,
+          3
+        ],
+        "otherPlayed": {
+          "2": [
+            2,
+            9,
+            6
+          ]
+        },
+        "lookHands": {
+          "2": [
+            9,
+            9
+          ]
+        },
+        "lookedHands": {
+          "2": [
+            3
+          ]
+        },
+        "pred": [
+          {
+            "subject": 2,
+            "object": 1,
+            "predCard": 6
+          }
+        ],
+        "reincarnation": true
+      },
+      "kind": "draw",
+      "choices": [
+        2
+      ],
+      "choice": 2
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 1,
+        "otherPlayers": {
+          "2": true
+        },
+        "cardNumber": 8,
+        "myHands": [
+          2
+        ],
+        "myPlayed": [
+          8,
+          3
+        ],
+        "otherPlayed": {
+          "2": [
+            2,
+            9,
+            6,
+            4
+          ]
+        },
+        "lookHands": {
+          "2": [
+            9,
+            9
+          ]
+        },
+        "lookedHands": {
+          "2": [
+            3
+          ]
+        },
+        "pred": [
+          {
+            "subject": 2,
+            "object": 1,
+            "predCard": 6
+          }
+        ],
+        "reincarnation": true
+      },
+      "kind": "draw",
+      "choices": [
+        4
+      ],
+      "choice": 4
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 1,
+        "otherPlayers": {
+          "2": true
+        },
+        "cardNumber": 7,
+        "myHands": [
+          2,
+          4
+        ],
+        "myPlayed": [
+          8,
+          3
+        ],
+        "otherPlayed": {
+          "2": [
+            2,
+            9,
+            6,
+            4
+          ]
+        },
+        "lookHands": {
+          "2": [
+            9,
+            9
+          ]
+        },
+        "lookedHands": {
+          "2": [
+            3
+          ]
+        },
+        "pred": [
+          {
+            "subject": 2,
+            "object": 1,
+            "predCard": 6
+          }
+        ],
+        "reincarnation": true
+      },
+      "kind": "play_card",
+      "choices": [
+        2,
+        4
+      ],
+      "choice": 4
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 1,
+        "otherPlayers": {
+          "2": true
+        },
+        "cardNumber": 6,
+        "myHands": [
+          2
+        ],
+        "myPlayed": [
+          8,
+          3,
+          4
+        ],
+        "otherPlayed": {
+          "2": [
+            2,
+            9,
+            6,
+            4,
+            1
+          ]
+        },
+        "lookHands": {
+          "2": [
+            9,
+            9
+          ]
+        },
+        "lookedHands": {
+          "2": [
+            3
+          ]
+        },
+        "pred": [
+          {
+            "subject": 2,
+            "object": 1,
+            "predCard": 6
+          }
+        ],
+        "reincarnation": true
+      },
+      "kind": "draw",
+      "choices": [
+        6
+      ],
+      "choice": 6
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 1,
+        "otherPlayers": {
+          "2": true
+        },
+        "cardNumber": 5,
+        "myHands": [
+          2,
+          6
+        ],
+        "myPlayed": [
+          8,
+          3,
+          4
+        ],
+        "otherPlayed": {
+          "2": [
+            2,
+            9,
+            6,
+            4,
+            1
+          ]
+        },
+        "lookHands": {
+          "2": [
+            9,
+            9
+          ]
+        },
+        "lookedHands": {
+          "2": [
+            3
+          ]
+        },
+        "pred": [
+          {
+            "subject": 2,
+            "object": 1,
+            "predCard": 6
+          }
+        ],
+        "reincarnation": true
+      },
+      "kind": "play_card",
+      "choices": [
+        2,
+        6
+      ],
+      "choice": 2
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 1,
+        "otherPlayers": {
+          "2": true
+        },
+        "cardNumber": 5,
+        "myHands": [
+          6
+        ],
+        "myPlayed": [
+          8,
+          3,
+          4,
+          2
+        ],
+        "otherPlayed": {
+          "2": [
+            2,
+            9,
+            6,
+            4,
+            1
+          ]
+        },
+        "lookHands": {
+          "2": [
+            9,
+            9
+          ]
+        },
+        "lookedHands": {
+          "2": [
+            3
+          ]
+        },
+        "pred": [
+          {
+            "subject": 2,
+            "object": 1,
+            "predCard": 6
+          }
+        ],
+        "reincarnation": true
+      },
+      "kind": "opponentChoice",
+      "choices": [
+        2
+      ],
+      "choice": 2
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 1,
+        "otherPlayers": {
+          "2": true
+        },
+        "cardNumber": 5,
+        "myHands": [
+          6
+        ],
+        "myPlayed": [
+          8,
+          3,
+          4,
+          2
+        ],
+        "otherPlayed": {
+          "2": [
+            2,
+            9,
+            6,
+            4,
+            1
+          ]
+        },
+        "lookHands": {
+          "2": [
+            9,
+            9
+          ]
+        },
+        "lookedHands": {
+          "2": [
+            3
+          ]
+        },
+        "pred": [
+          {
+            "subject": 2,
+            "object": 1,
+            "predCard": 6
+          }
+        ],
+        "reincarnation": true
+      },
+      "kind": "pred",
+      "choices": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10
+      ],
+      "choice": 2
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 1,
+        "otherPlayers": {
+          "2": true
+        },
+        "cardNumber": 3,
+        "myHands": [],
+        "myPlayed": [
+          8,
+          3,
+          4,
+          2,
+          6
+        ],
+        "otherPlayed": {
+          "2": [
+            2,
+            9,
+            6,
+            4,
+            1,
+            5
+          ]
+        },
+        "lookHands": {
+          "2": [
+            9,
+            9
+          ]
+        },
+        "lookedHands": {
+          "2": [
+            3,
+            6
+          ]
+        },
+        "pred": [
+          {
+            "subject": 1,
+            "object": 2,
+            "predCard": 2
+          },
+          {
+            "subject": 2,
+            "object": 1,
+            "predCard": 6
+          }
+        ],
+        "reincarnation": true
+      },
+      "kind": "draw",
+      "choices": [
+        1
+      ],
+      "choice": 1
+    },
+    "lose",
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 2,
+        "otherPlayers": {
+          "1": true
+        },
+        "cardNumber": 16,
+        "myHands": [],
+        "myPlayed": [],
+        "otherPlayed": {
+          "1": []
+        },
+        "lookHands": {
+          "1": []
+        },
+        "lookedHands": {
+          "1": []
+        },
+        "pred": [],
+        "reincarnation": true
+      },
+      "kind": "draw",
+      "choices": [
+        3
+      ],
+      "choice": 3
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 2,
+        "otherPlayers": {
+          "1": true
+        },
+        "cardNumber": 14,
+        "myHands": [
+          9
+        ],
+        "myPlayed": [],
+        "otherPlayed": {
+          "1": [
+            8
+          ]
+        },
+        "lookHands": {
+          "1": [
+            3
+          ]
+        },
+        "lookedHands": {
+          "1": [
+            9
+          ]
+        },
+        "pred": [],
+        "reincarnation": true
+      },
+      "kind": "draw",
+      "choices": [
+        2
+      ],
+      "choice": 2
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 2,
+        "otherPlayers": {
+          "1": true
+        },
+        "cardNumber": 13,
+        "myHands": [
+          9,
+          2
+        ],
+        "myPlayed": [],
+        "otherPlayed": {
+          "1": [
+            8
+          ]
+        },
+        "lookHands": {
+          "1": [
+            3
+          ]
+        },
+        "lookedHands": {
+          "1": [
+            9
+          ]
+        },
+        "pred": [],
+        "reincarnation": true
+      },
+      "kind": "play_card",
+      "choices": [
+        9,
+        2
+      ],
+      "choice": 2
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 2,
+        "otherPlayers": {
+          "1": true
+        },
+        "cardNumber": 13,
+        "myHands": [
+          9
+        ],
+        "myPlayed": [
+          2
+        ],
+        "otherPlayed": {
+          "1": [
+            8
+          ]
+        },
+        "lookHands": {
+          "1": [
+            3
+          ]
+        },
+        "lookedHands": {
+          "1": [
+            9
+          ]
+        },
+        "pred": [],
+        "reincarnation": true
+      },
+      "kind": "opponentChoice",
+      "choices": [
+        1
+      ],
+      "choice": 1
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 2,
+        "otherPlayers": {
+          "1": true
+        },
+        "cardNumber": 13,
+        "myHands": [
+          9
+        ],
+        "myPlayed": [
+          2
+        ],
+        "otherPlayed": {
+          "1": [
+            8
+          ]
+        },
+        "lookHands": {
+          "1": [
+            3
+          ]
+        },
+        "lookedHands": {
+          "1": [
+            9
+          ]
+        },
+        "pred": [],
+        "reincarnation": true
+      },
+      "kind": "pred",
+      "choices": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10
+      ],
+      "choice": 6
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 2,
+        "otherPlayers": {
+          "1": true
+        },
+        "cardNumber": 12,
+        "myHands": [
+          9
+        ],
+        "myPlayed": [
+          2
+        ],
+        "otherPlayed": {
+          "1": [
+            8,
+            3
+          ]
+        },
+        "lookHands": {
+          "1": [
+            3
+          ]
+        },
+        "lookedHands": {
+          "1": [
+            9,
+            9
+          ]
+        },
+        "pred": [
+          {
+            "subject": 2,
+            "object": 1,
+            "predCard": 6
+          }
+        ],
+        "reincarnation": true
+      },
+      "kind": "draw",
+      "choices": [
+        8
+      ],
+      "choice": 8
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 2,
+        "otherPlayers": {
+          "1": true
+        },
+        "cardNumber": 11,
+        "myHands": [
+          9,
+          8
+        ],
+        "myPlayed": [
+          2
+        ],
+        "otherPlayed": {
+          "1": [
+            8,
+            3
+          ]
+        },
+        "lookHands": {
+          "1": [
+            3
+          ]
+        },
+        "lookedHands": {
+          "1": [
+            9,
+            9
+          ]
+        },
+        "pred": [
+          {
+            "subject": 2,
+            "object": 1,
+            "predCard": 6
+          }
+        ],
+        "reincarnation": true
+      },
+      "kind": "play_card",
+      "choices": [
+        9,
+        8
+      ],
+      "choice": 9
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 2,
+        "otherPlayers": {
+          "1": true
+        },
+        "cardNumber": 11,
+        "myHands": [
+          8
+        ],
+        "myPlayed": [
+          2,
+          9
+        ],
+        "otherPlayed": {
+          "1": [
+            8,
+            3
+          ]
+        },
+        "lookHands": {
+          "1": [
+            3
+          ]
+        },
+        "lookedHands": {
+          "1": [
+            9,
+            9
+          ]
+        },
+        "pred": [
+          {
+            "subject": 2,
+            "object": 1,
+            "predCard": 6
+          }
+        ],
+        "reincarnation": true
+      },
+      "kind": "opponentChoice",
+      "choices": [
+        1
+      ],
+      "choice": 1
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 2,
+        "otherPlayers": {
+          "1": true
+        },
+        "cardNumber": 11,
+        "myHands": [
+          8
+        ],
+        "myPlayed": [
+          2,
+          9
+        ],
+        "otherPlayed": {
+          "1": [
+            8,
+            3
+          ]
+        },
+        "lookHands": {
+          "1": [
+            3
+          ]
+        },
+        "lookedHands": {
+          "1": [
+            9,
+            9
+          ]
+        },
+        "pred": [
+          {
+            "subject": 2,
+            "object": 1,
+            "predCard": 6
+          }
+        ],
+        "reincarnation": true
+      },
+      "kind": "draw",
+      "choices": [
+        4
+      ],
+      "choice": 4
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 2,
+        "otherPlayers": {
+          "1": true
+        },
+        "cardNumber": 10,
+        "myHands": [
+          8,
+          4
+        ],
+        "myPlayed": [
+          2,
+          9
+        ],
+        "otherPlayed": {
+          "1": [
+            8,
+            3
+          ]
+        },
+        "lookHands": {
+          "1": [
+            3,
+            6
+          ]
+        },
+        "lookedHands": {
+          "1": [
+            9,
+            9
+          ]
+        },
+        "pred": [
+          {
+            "subject": 2,
+            "object": 1,
+            "predCard": 6
+          }
+        ],
+        "reincarnation": true
+      },
+      "kind": "trush",
+      "choices": [
+        6
+      ],
+      "choice": 6
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 2,
+        "otherPlayers": {
+          "1": true
+        },
+        "cardNumber": 9,
+        "myHands": [
+          8,
+          4
+        ],
+        "myPlayed": [
+          2,
+          9,
+          6
+        ],
+        "otherPlayed": {
+          "1": [
+            8,
+            3
+          ]
+        },
+        "lookHands": {
+          "1": [
+            3,
+            6
+          ]
+        },
+        "lookedHands": {
+          "1": [
+            9,
+            9
+          ]
+        },
+        "pred": [
+          {
+            "subject": 2,
+            "object": 1,
+            "predCard": 6
+          }
+        ],
+        "reincarnation": true
+      },
+      "kind": "draw",
+      "choices": [
+        1
+      ],
+      "choice": 1
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 2,
+        "otherPlayers": {
+          "1": true
+        },
+        "cardNumber": 8,
+        "myHands": [
+          8,
+          4,
+          1
+        ],
+        "myPlayed": [
+          2,
+          9,
+          6
+        ],
+        "otherPlayed": {
+          "1": [
+            8,
+            3
+          ]
+        },
+        "lookHands": {
+          "1": [
+            3,
+            6
+          ]
+        },
+        "lookedHands": {
+          "1": [
+            9,
+            9
+          ]
+        },
+        "pred": [
+          {
+            "subject": 2,
+            "object": 1,
+            "predCard": 6
+          }
+        ],
+        "reincarnation": true
+      },
+      "kind": "play_card",
+      "choices": [
+        8,
+        4,
+        1
+      ],
+      "choice": 4
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 2,
+        "otherPlayers": {
+          "1": true
+        },
+        "cardNumber": 7,
+        "myHands": [
+          8,
+          1
+        ],
+        "myPlayed": [
+          2,
+          9,
+          6,
+          4
+        ],
+        "otherPlayed": {
+          "1": [
+            8,
+            3,
+            4
+          ]
+        },
+        "lookHands": {
+          "1": [
+            3,
+            6
+          ]
+        },
+        "lookedHands": {
+          "1": [
+            9,
+            9
+          ]
+        },
+        "pred": [
+          {
+            "subject": 2,
+            "object": 1,
+            "predCard": 6
+          }
+        ],
+        "reincarnation": true
+      },
+      "kind": "draw",
+      "choices": [
+        5
+      ],
+      "choice": 5
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 2,
+        "otherPlayers": {
+          "1": true
+        },
+        "cardNumber": 6,
+        "myHands": [
+          8,
+          1,
+          5
+        ],
+        "myPlayed": [
+          2,
+          9,
+          6,
+          4
+        ],
+        "otherPlayed": {
+          "1": [
+            8,
+            3,
+            4
+          ]
+        },
+        "lookHands": {
+          "1": [
+            3,
+            6
+          ]
+        },
+        "lookedHands": {
+          "1": [
+            9,
+            9
+          ]
+        },
+        "pred": [
+          {
+            "subject": 2,
+            "object": 1,
+            "predCard": 6
+          }
+        ],
+        "reincarnation": true
+      },
+      "kind": "play_card",
+      "choices": [
+        8,
+        1,
+        5
+      ],
+      "choice": 1
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 2,
+        "otherPlayers": {
+          "1": true
+        },
+        "cardNumber": 5,
+        "myHands": [
+          8,
+          5
+        ],
+        "myPlayed": [
+          2,
+          9,
+          6,
+          4,
+          1
+        ],
+        "otherPlayed": {
+          "1": [
+            8,
+            3,
+            4,
+            2
+          ]
+        },
+        "lookHands": {
+          "1": [
+            3,
+            6
+          ]
+        },
+        "lookedHands": {
+          "1": [
+            9,
+            9
+          ]
+        },
+        "pred": [
+          {
+            "subject": 1,
+            "object": 2,
+            "predCard": 2
+          },
+          {
+            "subject": 2,
+            "object": 1,
+            "predCard": 6
+          }
+        ],
+        "reincarnation": true
+      },
+      "kind": "draw",
+      "choices": [
+        10
+      ],
+      "choice": 10
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 2,
+        "otherPlayers": {
+          "1": true
+        },
+        "cardNumber": 4,
+        "myHands": [
+          8,
+          5,
+          10
+        ],
+        "myPlayed": [
+          2,
+          9,
+          6,
+          4,
+          1
+        ],
+        "otherPlayed": {
+          "1": [
+            8,
+            3,
+            4,
+            2
+          ]
+        },
+        "lookHands": {
+          "1": [
+            3,
+            6
+          ]
+        },
+        "lookedHands": {
+          "1": [
+            9,
+            9
+          ]
+        },
+        "pred": [
+          {
+            "subject": 1,
+            "object": 2,
+            "predCard": 2
+          },
+          {
+            "subject": 2,
+            "object": 1,
+            "predCard": 6
+          }
+        ],
+        "reincarnation": true
+      },
+      "kind": "play_card",
+      "choices": [
+        8,
+        5
+      ],
+      "choice": 5
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 2,
+        "otherPlayers": {
+          "1": true
+        },
+        "cardNumber": 4,
+        "myHands": [
+          8,
+          10
+        ],
+        "myPlayed": [
+          2,
+          9,
+          6,
+          4,
+          1,
+          5
+        ],
+        "otherPlayed": {
+          "1": [
+            8,
+            3,
+            4,
+            2
+          ]
+        },
+        "lookHands": {
+          "1": [
+            3,
+            6
+          ]
+        },
+        "lookedHands": {
+          "1": [
+            9,
+            9
+          ]
+        },
+        "pred": [
+          {
+            "subject": 1,
+            "object": 2,
+            "predCard": 2
+          },
+          {
+            "subject": 2,
+            "object": 1,
+            "predCard": 6
+          }
+        ],
+        "reincarnation": true
+      },
+      "kind": "opponentChoice",
+      "choices": [
+        1
+      ],
+      "choice": 1
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 2,
+        "otherPlayers": {
+          "1": true
+        },
+        "cardNumber": 4,
+        "myHands": [
+          8,
+          10
+        ],
+        "myPlayed": [
+          2,
+          9,
+          6,
+          4,
+          1,
+          5
+        ],
+        "otherPlayed": {
+          "1": [
+            8,
+            3,
+            4,
+            2
+          ]
+        },
+        "lookHands": {
+          "1": [
+            3,
+            6
+          ]
+        },
+        "lookedHands": {
+          "1": [
+            9,
+            9
+          ]
+        },
+        "pred": [
+          {
+            "subject": 1,
+            "object": 2,
+            "predCard": 2
+          },
+          {
+            "subject": 2,
+            "object": 1,
+            "predCard": 6
+          }
+        ],
+        "reincarnation": true
+      },
+      "kind": "draw",
+      "choices": [
+        7
+      ],
+      "choice": 7
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 2,
+        "otherPlayers": {
+          "1": true
+        },
+        "cardNumber": 2,
+        "myHands": [
+          8,
+          10,
+          7
+        ],
+        "myPlayed": [
+          2,
+          9,
+          6,
+          4,
+          1,
+          5
+        ],
+        "otherPlayed": {
+          "1": [
+            8,
+            3,
+            4,
+            2,
+            6
+          ]
+        },
+        "lookHands": {
+          "1": [
+            3,
+            6
+          ]
+        },
+        "lookedHands": {
+          "1": [
+            9,
+            9
+          ]
+        },
+        "pred": [
+          {
+            "subject": 1,
+            "object": 2,
+            "predCard": 2
+          },
+          {
+            "subject": 2,
+            "object": 1,
+            "predCard": 6
+          }
+        ],
+        "reincarnation": true
+      },
+      "kind": "draw",
+      "choices": [
+        5
+      ],
+      "choice": 5
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 2,
+        "otherPlayers": {
+          "1": true
+        },
+        "cardNumber": 1,
+        "myHands": [
+          8,
+          10,
+          7,
+          5
+        ],
+        "myPlayed": [
+          2,
+          9,
+          6,
+          4,
+          1,
+          5
+        ],
+        "otherPlayed": {
+          "1": [
+            8,
+            3,
+            4,
+            2,
+            6
+          ]
+        },
+        "lookHands": {
+          "1": [
+            3,
+            6
+          ]
+        },
+        "lookedHands": {
+          "1": [
+            9,
+            9
+          ]
+        },
+        "pred": [
+          {
+            "subject": 1,
+            "object": 2,
+            "predCard": 2
+          },
+          {
+            "subject": 2,
+            "object": 1,
+            "predCard": 6
+          }
+        ],
+        "reincarnation": true
+      },
+      "kind": "play_card",
+      "choices": [
+        8,
+        7,
+        5
+      ],
+      "choice": 5
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 2,
+        "otherPlayers": {
+          "1": true
+        },
+        "cardNumber": 1,
+        "myHands": [
+          8,
+          10,
+          7
+        ],
+        "myPlayed": [
+          2,
+          9,
+          6,
+          4,
+          1,
+          5,
+          5
+        ],
+        "otherPlayed": {
+          "1": [
+            8,
+            3,
+            4,
+            2,
+            6
+          ]
+        },
+        "lookHands": {
+          "1": [
+            3,
+            6
+          ]
+        },
+        "lookedHands": {
+          "1": [
+            9,
+            9
+          ]
+        },
+        "pred": [
+          {
+            "subject": 1,
+            "object": 2,
+            "predCard": 2
+          },
+          {
+            "subject": 2,
+            "object": 1,
+            "predCard": 6
+          }
+        ],
+        "reincarnation": true
+      },
+      "kind": "opponentChoice",
+      "choices": [
+        1
+      ],
+      "choice": 1
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 2,
+        "otherPlayers": {
+          "1": true
+        },
+        "cardNumber": 1,
+        "myHands": [
+          8,
+          10,
+          7
+        ],
+        "myPlayed": [
+          2,
+          9,
+          6,
+          4,
+          1,
+          5,
+          5
+        ],
+        "otherPlayed": {
+          "1": [
+            8,
+            3,
+            4,
+            2,
+            6
+          ]
+        },
+        "lookHands": {
+          "1": [
+            3,
+            6
+          ]
+        },
+        "lookedHands": {
+          "1": [
+            9,
+            9
+          ]
+        },
+        "pred": [
+          {
+            "subject": 1,
+            "object": 2,
+            "predCard": 2
+          },
+          {
+            "subject": 2,
+            "object": 1,
+            "predCard": 6
+          }
+        ],
+        "reincarnation": true
+      },
+      "kind": "draw",
+      "choices": [
+        7
+      ],
+      "choice": 7
+    },
+    "lose",
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 1,
+        "otherPlayers": {
+          "2": true
+        },
+        "cardNumber": 17,
+        "myHands": [],
+        "myPlayed": [],
+        "otherPlayed": {
+          "2": []
+        },
+        "lookHands": {
+          "2": []
+        },
+        "lookedHands": {
+          "2": []
+        },
+        "pred": [],
+        "reincarnation": true
+      },
+      "kind": "draw",
+      "choices": [
+        1
+      ],
+      "choice": 1
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 1,
+        "otherPlayers": {
+          "2": true
+        },
+        "cardNumber": 15,
+        "myHands": [
+          1
+        ],
+        "myPlayed": [],
+        "otherPlayed": {
+          "2": []
+        },
+        "lookHands": {
+          "2": []
+        },
+        "lookedHands": {
+          "2": []
+        },
+        "pred": [],
+        "reincarnation": true
+      },
+      "kind": "draw",
+      "choices": [
+        10
+      ],
+      "choice": 10
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 1,
+        "otherPlayers": {
+          "2": true
+        },
+        "cardNumber": 14,
+        "myHands": [
+          1,
+          10
+        ],
+        "myPlayed": [],
+        "otherPlayed": {
+          "2": []
+        },
+        "lookHands": {
+          "2": []
+        },
+        "lookedHands": {
+          "2": []
+        },
+        "pred": [],
+        "reincarnation": true
+      },
+      "kind": "play_card",
+      "choices": [
+        1
+      ],
+      "choice": 1
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 1,
+        "otherPlayers": {
+          "2": true
+        },
+        "cardNumber": 13,
+        "myHands": [
+          10
+        ],
+        "myPlayed": [
+          1
+        ],
+        "otherPlayed": {
+          "2": [
+            1
+          ]
+        },
+        "lookHands": {
+          "2": []
+        },
+        "lookedHands": {
+          "2": []
+        },
+        "pred": [],
+        "reincarnation": true
+      },
+      "kind": "draw",
+      "choices": [
+        4
+      ],
+      "choice": 4
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 1,
+        "otherPlayers": {
+          "2": true
+        },
+        "cardNumber": 12,
+        "myHands": [
+          10
+        ],
+        "myPlayed": [
+          1
+        ],
+        "otherPlayed": {
+          "2": [
+            1,
+            4
+          ]
+        },
+        "lookHands": {
+          "2": []
+        },
+        "lookedHands": {
+          "2": [
+            10,
+            4
+          ]
+        },
+        "pred": [],
+        "reincarnation": true
+      },
+      "kind": "draw",
+      "choices": [
+        3
+      ],
+      "choice": 3
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 1,
+        "otherPlayers": {
+          "2": true
+        },
+        "cardNumber": 11,
+        "myHands": [
+          10,
+          3
+        ],
+        "myPlayed": [
+          1
+        ],
+        "otherPlayed": {
+          "2": [
+            1,
+            4
+          ]
+        },
+        "lookHands": {
+          "2": []
+        },
+        "lookedHands": {
+          "2": [
+            10,
+            4
+          ]
+        },
+        "pred": [],
+        "reincarnation": true
+      },
+      "kind": "play_card",
+      "choices": [
+        3
+      ],
+      "choice": 3
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 1,
+        "otherPlayers": {
+          "2": true
+        },
+        "cardNumber": 11,
+        "myHands": [
+          10
+        ],
+        "myPlayed": [
+          1,
+          3
+        ],
+        "otherPlayed": {
+          "2": [
+            1,
+            4
+          ]
+        },
+        "lookHands": {
+          "2": []
+        },
+        "lookedHands": {
+          "2": [
+            10,
+            4
+          ]
+        },
+        "pred": [],
+        "reincarnation": true
+      },
+      "kind": "opponentChoice",
+      "choices": [
+        2
+      ],
+      "choice": 2
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 1,
+        "otherPlayers": {
+          "2": true
+        },
+        "cardNumber": 10,
+        "myHands": [
+          10
+        ],
+        "myPlayed": [
+          1,
+          3
+        ],
+        "otherPlayed": {
+          "2": [
+            1,
+            4,
+            7
+          ]
+        },
+        "lookHands": {
+          "2": [
+            7
+          ]
+        },
+        "lookedHands": {
+          "2": [
+            10,
+            4
+          ]
+        },
+        "pred": [],
+        "reincarnation": true
+      },
+      "kind": "draw",
+      "choices": [
+        5
+      ],
+      "choice": 5
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 1,
+        "otherPlayers": {
+          "2": true
+        },
+        "cardNumber": 9,
+        "myHands": [
+          10,
+          5
+        ],
+        "myPlayed": [
+          1,
+          3
+        ],
+        "otherPlayed": {
+          "2": [
+            1,
+            4,
+            7
+          ]
+        },
+        "lookHands": {
+          "2": [
+            7
+          ]
+        },
+        "lookedHands": {
+          "2": [
+            10,
+            4
+          ]
+        },
+        "pred": [],
+        "reincarnation": true
+      },
+      "kind": "play_card",
+      "choices": [
+        5
+      ],
+      "choice": 5
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 1,
+        "otherPlayers": {
+          "2": true
+        },
+        "cardNumber": 9,
+        "myHands": [
+          10
+        ],
+        "myPlayed": [
+          1,
+          3,
+          5
+        ],
+        "otherPlayed": {
+          "2": [
+            1,
+            4,
+            7
+          ]
+        },
+        "lookHands": {
+          "2": [
+            7
+          ]
+        },
+        "lookedHands": {
+          "2": [
+            10,
+            4
+          ]
+        },
+        "pred": [],
+        "reincarnation": true
+      },
+      "kind": "opponentChoice",
+      "choices": [
+        2
+      ],
+      "choice": 2
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 1,
+        "otherPlayers": {
+          "2": true
+        },
+        "cardNumber": 9,
+        "myHands": [
+          10
+        ],
+        "myPlayed": [
+          1,
+          3,
+          5
+        ],
+        "otherPlayed": {
+          "2": [
+            1,
+            4,
+            7
+          ]
+        },
+        "lookHands": {
+          "2": [
+            7
+          ]
+        },
+        "lookedHands": {
+          "2": [
+            10,
+            4
+          ]
+        },
+        "pred": [],
+        "reincarnation": true
+      },
+      "kind": "draw",
+      "choices": [
+        6
+      ],
+      "choice": 6
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 1,
+        "otherPlayers": {
+          "2": true
+        },
+        "cardNumber": 7,
+        "myHands": [
+          10,
+          6
+        ],
+        "myPlayed": [
+          1,
+          3,
+          5
+        ],
+        "otherPlayed": {
+          "2": [
+            1,
+            4,
+            7,
+            6
+          ]
+        },
+        "lookHands": {
+          "2": [
+            7
+          ]
+        },
+        "lookedHands": {
+          "2": [
+            10,
+            4
+          ]
+        },
+        "pred": [],
+        "reincarnation": true
+      },
+      "kind": "draw",
+      "choices": [
+        8
+      ],
+      "choice": 8
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 1,
+        "otherPlayers": {
+          "2": true
+        },
+        "cardNumber": 6,
+        "myHands": [
+          10,
+          6,
+          8
+        ],
+        "myPlayed": [
+          1,
+          3,
+          5
+        ],
+        "otherPlayed": {
+          "2": [
+            1,
+            4,
+            7,
+            6
+          ]
+        },
+        "lookHands": {
+          "2": [
+            7
+          ]
+        },
+        "lookedHands": {
+          "2": [
+            10,
+            4
+          ]
+        },
+        "pred": [],
+        "reincarnation": true
+      },
+      "kind": "play_card",
+      "choices": [
+        6,
+        8
+      ],
+      "choice": 8
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 1,
+        "otherPlayers": {
+          "2": true
+        },
+        "cardNumber": 6,
+        "myHands": [
+          10,
+          6
+        ],
+        "myPlayed": [
+          1,
+          3,
+          5,
+          8
+        ],
+        "otherPlayed": {
+          "2": [
+            1,
+            4,
+            7,
+            6
+          ]
+        },
+        "lookHands": {
+          "2": [
+            7
+          ]
+        },
+        "lookedHands": {
+          "2": [
+            10,
+            4
+          ]
+        },
+        "pred": [],
+        "reincarnation": true
+      },
+      "kind": "opponentChoice",
+      "choices": [
+        2
+      ],
+      "choice": 2
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 1,
+        "otherPlayers": {
+          "2": true
+        },
+        "cardNumber": 5,
+        "myHands": [
+          10,
+          5
+        ],
+        "myPlayed": [
+          1,
+          3,
+          5,
+          8
+        ],
+        "otherPlayed": {
+          "2": [
+            1,
+            4,
+            7,
+            6,
+            4
+          ]
+        },
+        "lookHands": {
+          "2": [
+            7,
+            6
+          ]
+        },
+        "lookedHands": {
+          "2": [
+            10,
+            4,
+            10
+          ]
+        },
+        "pred": [],
+        "reincarnation": true
+      },
+      "kind": "draw",
+      "choices": [
+        3
+      ],
+      "choice": 3
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 1,
+        "otherPlayers": {
+          "2": true
+        },
+        "cardNumber": 4,
+        "myHands": [
+          10,
+          5,
+          3
+        ],
+        "myPlayed": [
+          1,
+          3,
+          5,
+          8
+        ],
+        "otherPlayed": {
+          "2": [
+            1,
+            4,
+            7,
+            6,
+            4
+          ]
+        },
+        "lookHands": {
+          "2": [
+            7,
+            6
+          ]
+        },
+        "lookedHands": {
+          "2": [
+            10,
+            4,
+            10
+          ]
+        },
+        "pred": [],
+        "reincarnation": true
+      },
+      "kind": "play_card",
+      "choices": [
+        5,
+        3
+      ],
+      "choice": 3
+    },
+    "win",
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 2,
+        "otherPlayers": {
+          "1": true
+        },
+        "cardNumber": 16,
+        "myHands": [],
+        "myPlayed": [],
+        "otherPlayed": {
+          "1": []
+        },
+        "lookHands": {
+          "1": []
+        },
+        "lookedHands": {
+          "1": []
+        },
+        "pred": [],
+        "reincarnation": true
+      },
+      "kind": "draw",
+      "choices": [
+        1
+      ],
+      "choice": 1
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 2,
+        "otherPlayers": {
+          "1": true
+        },
+        "cardNumber": 14,
+        "myHands": [
+          1
+        ],
+        "myPlayed": [],
+        "otherPlayed": {
+          "1": [
+            1
+          ]
+        },
+        "lookHands": {
+          "1": []
+        },
+        "lookedHands": {
+          "1": []
+        },
+        "pred": [],
+        "reincarnation": true
+      },
+      "kind": "draw",
+      "choices": [
+        7
+      ],
+      "choice": 7
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 2,
+        "otherPlayers": {
+          "1": true
+        },
+        "cardNumber": 13,
+        "myHands": [
+          1,
+          7
+        ],
+        "myPlayed": [],
+        "otherPlayed": {
+          "1": [
+            1
+          ]
+        },
+        "lookHands": {
+          "1": []
+        },
+        "lookedHands": {
+          "1": []
+        },
+        "pred": [],
+        "reincarnation": true
+      },
+      "kind": "play_card",
+      "choices": [
+        1,
+        7
+      ],
+      "choice": 1
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 2,
+        "otherPlayers": {
+          "1": true
+        },
+        "cardNumber": 13,
+        "myHands": [
+          7
+        ],
+        "myPlayed": [
+          1
+        ],
+        "otherPlayed": {
+          "1": [
+            1
+          ]
+        },
+        "lookHands": {
+          "1": []
+        },
+        "lookedHands": {
+          "1": []
+        },
+        "pred": [],
+        "reincarnation": true
+      },
+      "kind": "opponentChoice",
+      "choices": [
+        1
+      ],
+      "choice": 1
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 2,
+        "otherPlayers": {
+          "1": true
+        },
+        "cardNumber": 12,
+        "myHands": [
+          7
+        ],
+        "myPlayed": [
+          1
+        ],
+        "otherPlayed": {
+          "1": [
+            1
+          ]
+        },
+        "lookHands": {
+          "1": [
+            10,
+            4
+          ]
+        },
+        "lookedHands": {
+          "1": []
+        },
+        "pred": [],
+        "reincarnation": true
+      },
+      "kind": "trush",
+      "choices": [
+        10,
+        4
+      ],
+      "choice": 4
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 2,
+        "otherPlayers": {
+          "1": true
+        },
+        "cardNumber": 11,
+        "myHands": [
+          7
+        ],
+        "myPlayed": [
+          1,
+          4
+        ],
+        "otherPlayed": {
+          "1": [
+            1,
+            3
+          ]
+        },
+        "lookHands": {
+          "1": [
+            10,
+            4
+          ]
+        },
+        "lookedHands": {
+          "1": [
+            7
+          ]
+        },
+        "pred": [],
+        "reincarnation": true
+      },
+      "kind": "draw",
+      "choices": [
+        6
+      ],
+      "choice": 6
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 2,
+        "otherPlayers": {
+          "1": true
+        },
+        "cardNumber": 10,
+        "myHands": [
+          7,
+          6
+        ],
+        "myPlayed": [
+          1,
+          4
+        ],
+        "otherPlayed": {
+          "1": [
+            1,
+            3
+          ]
+        },
+        "lookHands": {
+          "1": [
+            10,
+            4
+          ]
+        },
+        "lookedHands": {
+          "1": [
+            7
+          ]
+        },
+        "pred": [],
+        "reincarnation": true
+      },
+      "kind": "play_card",
+      "choices": [
+        7,
+        6
+      ],
+      "choice": 7
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 2,
+        "otherPlayers": {
+          "1": true
+        },
+        "cardNumber": 8,
+        "myHands": [],
+        "myPlayed": [
+          1,
+          4,
+          7,
+          6
+        ],
+        "otherPlayed": {
+          "1": [
+            1,
+            3,
+            5
+          ]
+        },
+        "lookHands": {
+          "1": [
+            10,
+            4
+          ]
+        },
+        "lookedHands": {
+          "1": [
+            7,
+            6
+          ]
+        },
+        "pred": [],
+        "reincarnation": true
+      },
+      "kind": "draw",
+      "choices": [
+        5,
+        3,
+        4
+      ],
+      "choice": 5
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 2,
+        "otherPlayers": {
+          "1": true
+        },
+        "cardNumber": 6,
+        "myHands": [
+          6
+        ],
+        "myPlayed": [
+          1,
+          4,
+          7,
+          6
+        ],
+        "otherPlayed": {
+          "1": [
+            1,
+            3,
+            5,
+            8
+          ]
+        },
+        "lookHands": {
+          "1": [
+            10,
+            4,
+            10
+          ]
+        },
+        "lookedHands": {
+          "1": [
+            7,
+            6,
+            6
+          ]
+        },
+        "pred": [],
+        "reincarnation": true
+      },
+      "kind": "draw",
+      "choices": [
+        4
+      ],
+      "choice": 4
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 2,
+        "otherPlayers": {
+          "1": true
+        },
+        "cardNumber": 5,
+        "myHands": [
+          6,
+          4
+        ],
+        "myPlayed": [
+          1,
+          4,
+          7,
+          6
+        ],
+        "otherPlayed": {
+          "1": [
+            1,
+            3,
+            5,
+            8
+          ]
+        },
+        "lookHands": {
+          "1": [
+            10,
+            4,
+            10
+          ]
+        },
+        "lookedHands": {
+          "1": [
+            7,
+            6,
+            6
+          ]
+        },
+        "pred": [],
+        "reincarnation": true
+      },
+      "kind": "play_card",
+      "choices": [
+        6,
+        4
+      ],
+      "choice": 4
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 2,
+        "otherPlayers": {
+          "1": true
+        },
+        "cardNumber": 4,
+        "myHands": [
+          6
+        ],
+        "myPlayed": [
+          1,
+          4,
+          7,
+          6,
+          4
+        ],
+        "otherPlayed": {
+          "1": [
+            1,
+            3,
+            5,
+            8,
+            3
+          ]
+        },
+        "lookHands": {
+          "1": [
+            10,
+            4,
+            10
+          ]
+        },
+        "lookedHands": {
+          "1": [
+            7,
+            6,
+            6
+          ]
+        },
+        "pred": [],
+        "reincarnation": true
+      },
+      "kind": "draw",
+      "choices": [
+        2
+      ],
+      "choice": 2
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 2,
+        "otherPlayers": {
+          "1": true
+        },
+        "cardNumber": 3,
+        "myHands": [
+          6,
+          2
+        ],
+        "myPlayed": [
+          1,
+          4,
+          7,
+          6,
+          4
+        ],
+        "otherPlayed": {
+          "1": [
+            1,
+            3,
+            5,
+            8,
+            3
+          ]
+        },
+        "lookHands": {
+          "1": [
+            10,
+            4,
+            10
+          ]
+        },
+        "lookedHands": {
+          "1": [
+            7,
+            6,
+            6
+          ]
+        },
+        "pred": [],
+        "reincarnation": true
+      },
+      "kind": "play_card",
+      "choices": [
+        6,
+        2
+      ],
+      "choice": 6
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 2,
+        "otherPlayers": {
+          "1": true
+        },
+        "cardNumber": 3,
+        "myHands": [
+          2
+        ],
+        "myPlayed": [
+          1,
+          4,
+          7,
+          6,
+          4,
+          6
+        ],
+        "otherPlayed": {
+          "1": [
+            1,
+            3,
+            5,
+            8,
+            3
+          ]
+        },
+        "lookHands": {
+          "1": [
+            10,
+            4,
+            10
+          ]
+        },
+        "lookedHands": {
+          "1": [
+            7,
+            6,
+            6
+          ]
+        },
+        "pred": [],
+        "reincarnation": true
+      },
+      "kind": "opponentChoice",
+      "choices": [
+        1
+      ],
+      "choice": 1
+    },
+    "lose",
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 1,
+        "otherPlayers": {
+          "2": true
+        },
+        "cardNumber": 17,
+        "myHands": [],
+        "myPlayed": [],
+        "otherPlayed": {
+          "2": []
+        },
+        "lookHands": {
+          "2": []
+        },
+        "lookedHands": {
+          "2": []
+        },
+        "pred": [],
+        "reincarnation": true
+      },
+      "kind": "draw",
+      "choices": [
+        2
+      ],
+      "choice": 2
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 1,
+        "otherPlayers": {
+          "2": true
+        },
+        "cardNumber": 15,
+        "myHands": [
+          2
+        ],
+        "myPlayed": [],
+        "otherPlayed": {
+          "2": []
+        },
+        "lookHands": {
+          "2": []
+        },
+        "lookedHands": {
+          "2": []
+        },
+        "pred": [],
+        "reincarnation": true
+      },
+      "kind": "draw",
+      "choices": [
+        1
+      ],
+      "choice": 1
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 1,
+        "otherPlayers": {
+          "2": true
+        },
+        "cardNumber": 14,
+        "myHands": [
+          2,
+          1
+        ],
+        "myPlayed": [],
+        "otherPlayed": {
+          "2": []
+        },
+        "lookHands": {
+          "2": []
+        },
+        "lookedHands": {
+          "2": []
+        },
+        "pred": [],
+        "reincarnation": true
+      },
+      "kind": "play_card",
+      "choices": [
+        2,
+        1
+      ],
+      "choice": 2
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 1,
+        "otherPlayers": {
+          "2": true
+        },
+        "cardNumber": 14,
+        "myHands": [
+          1
+        ],
+        "myPlayed": [
+          2
+        ],
+        "otherPlayed": {
+          "2": []
+        },
+        "lookHands": {
+          "2": []
+        },
+        "lookedHands": {
+          "2": []
+        },
+        "pred": [],
+        "reincarnation": true
+      },
+      "kind": "opponentChoice",
+      "choices": [
+        2
+      ],
+      "choice": 2
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 1,
+        "otherPlayers": {
+          "2": true
+        },
+        "cardNumber": 14,
+        "myHands": [
+          1
+        ],
+        "myPlayed": [
+          2
+        ],
+        "otherPlayed": {
+          "2": []
+        },
+        "lookHands": {
+          "2": []
+        },
+        "lookedHands": {
+          "2": []
+        },
+        "pred": [],
+        "reincarnation": true
+      },
+      "kind": "pred",
+      "choices": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10
+      ],
+      "choice": 9
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 1,
+        "otherPlayers": {
+          "2": true
+        },
+        "cardNumber": 13,
+        "myHands": [
+          1
+        ],
+        "myPlayed": [
+          2
+        ],
+        "otherPlayed": {
+          "2": [
+            7
+          ]
+        },
+        "lookHands": {
+          "2": []
+        },
+        "lookedHands": {
+          "2": []
+        },
+        "pred": [
+          {
+            "subject": 1,
+            "object": 2,
+            "predCard": 9
+          }
+        ],
+        "reincarnation": true
+      },
+      "kind": "draw",
+      "choices": [
+        8
+      ],
+      "choice": 8
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 1,
+        "otherPlayers": {
+          "2": true
+        },
+        "cardNumber": 12,
+        "myHands": [
+          1,
+          8
+        ],
+        "myPlayed": [
+          2
+        ],
+        "otherPlayed": {
+          "2": [
+            7
+          ]
+        },
+        "lookHands": {
+          "2": []
+        },
+        "lookedHands": {
+          "2": []
+        },
+        "pred": [
+          {
+            "subject": 1,
+            "object": 2,
+            "predCard": 9
+          }
+        ],
+        "reincarnation": true
+      },
+      "kind": "play_card",
+      "choices": [
+        1,
+        8
+      ],
+      "choice": 1
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 1,
+        "otherPlayers": {
+          "2": true
+        },
+        "cardNumber": 10,
+        "myHands": [],
+        "myPlayed": [
+          2,
+          1
+        ],
+        "otherPlayed": {
+          "2": [
+            7,
+            9,
+            8
+          ]
+        },
+        "lookHands": {
+          "2": []
+        },
+        "lookedHands": {
+          "2": []
+        },
+        "pred": [
+          {
+            "subject": 1,
+            "object": 2,
+            "predCard": 9
+          }
+        ],
+        "reincarnation": true
+      },
+      "kind": "draw",
+      "choices": [
+        10
+      ],
+      "choice": 10
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 1,
+        "otherPlayers": {
+          "2": true
+        },
+        "cardNumber": 7,
+        "myHands": [
+          2
+        ],
+        "myPlayed": [
+          2,
+          1,
+          10
+        ],
+        "otherPlayed": {
+          "2": [
+            7,
+            9,
+            8,
+            5
+          ]
+        },
+        "lookHands": {
+          "2": []
+        },
+        "lookedHands": {
+          "2": [
+            10
+          ]
+        },
+        "pred": [
+          {
+            "subject": 1,
+            "object": 2,
+            "predCard": 9
+          }
+        ],
+        "reincarnation": false
+      },
+      "kind": "draw",
+      "choices": [
+        4
+      ],
+      "choice": 4
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 1,
+        "otherPlayers": {
+          "2": true
+        },
+        "cardNumber": 6,
+        "myHands": [
+          2,
+          4
+        ],
+        "myPlayed": [
+          2,
+          1,
+          10
+        ],
+        "otherPlayed": {
+          "2": [
+            7,
+            9,
+            8,
+            5
+          ]
+        },
+        "lookHands": {
+          "2": []
+        },
+        "lookedHands": {
+          "2": [
+            10
+          ]
+        },
+        "pred": [
+          {
+            "subject": 1,
+            "object": 2,
+            "predCard": 9
+          }
+        ],
+        "reincarnation": false
+      },
+      "kind": "play_card",
+      "choices": [
+        2,
+        4
+      ],
+      "choice": 2
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 1,
+        "otherPlayers": {
+          "2": true
+        },
+        "cardNumber": 6,
+        "myHands": [
+          4
+        ],
+        "myPlayed": [
+          2,
+          1,
+          10,
+          2
+        ],
+        "otherPlayed": {
+          "2": [
+            7,
+            9,
+            8,
+            5
+          ]
+        },
+        "lookHands": {
+          "2": []
+        },
+        "lookedHands": {
+          "2": [
+            10
+          ]
+        },
+        "pred": [
+          {
+            "subject": 1,
+            "object": 2,
+            "predCard": 9
+          }
+        ],
+        "reincarnation": false
+      },
+      "kind": "opponentChoice",
+      "choices": [
+        2
+      ],
+      "choice": 2
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 1,
+        "otherPlayers": {
+          "2": true
+        },
+        "cardNumber": 6,
+        "myHands": [
+          4
+        ],
+        "myPlayed": [
+          2,
+          1,
+          10,
+          2
+        ],
+        "otherPlayed": {
+          "2": [
+            7,
+            9,
+            8,
+            5
+          ]
+        },
+        "lookHands": {
+          "2": []
+        },
+        "lookedHands": {
+          "2": [
+            10
+          ]
+        },
+        "pred": [
+          {
+            "subject": 1,
+            "object": 2,
+            "predCard": 9
+          }
+        ],
+        "reincarnation": false
+      },
+      "kind": "pred",
+      "choices": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10
+      ],
+      "choice": 10
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 1,
+        "otherPlayers": {
+          "2": true
+        },
+        "cardNumber": 4,
+        "myHands": [],
+        "myPlayed": [
+          2,
+          1,
+          10,
+          2,
+          4
+        ],
+        "otherPlayed": {
+          "2": [
+            7,
+            9,
+            8,
+            5,
+            5
+          ]
+        },
+        "lookHands": {
+          "2": []
+        },
+        "lookedHands": {
+          "2": [
+            10,
+            4
+          ]
+        },
+        "pred": [
+          {
+            "subject": 1,
+            "object": 2,
+            "predCard": 9
+          },
+          {
+            "subject": 1,
+            "object": 2,
+            "predCard": 10
+          }
+        ],
+        "reincarnation": false
+      },
+      "kind": "draw",
+      "choices": [
+        4
+      ],
+      "choice": 4
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 1,
+        "otherPlayers": {
+          "2": true
+        },
+        "cardNumber": 2,
+        "myHands": [
+          4
+        ],
+        "myPlayed": [
+          2,
+          1,
+          10,
+          2,
+          4
+        ],
+        "otherPlayed": {
+          "2": [
+            7,
+            9,
+            8,
+            5,
+            5,
+            1
+          ]
+        },
+        "lookHands": {
+          "2": []
+        },
+        "lookedHands": {
+          "2": [
+            10,
+            4
+          ]
+        },
+        "pred": [
+          {
+            "subject": 1,
+            "object": 2,
+            "predCard": 9
+          },
+          {
+            "subject": 1,
+            "object": 2,
+            "predCard": 10
+          }
+        ],
+        "reincarnation": false
+      },
+      "kind": "draw",
+      "choices": [
+        7
+      ],
+      "choice": 7
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 1,
+        "otherPlayers": {
+          "2": true
+        },
+        "cardNumber": 1,
+        "myHands": [
+          4
+        ],
+        "myPlayed": [
+          2,
+          1,
+          10,
+          2,
+          4
+        ],
+        "otherPlayed": {
+          "2": [
+            7,
+            9,
+            8,
+            5,
+            5,
+            1,
+            7
+          ]
+        },
+        "lookHands": {
+          "2": []
+        },
+        "lookedHands": {
+          "2": [
+            10,
+            4,
+            4,
+            7
+          ]
+        },
+        "pred": [
+          {
+            "subject": 1,
+            "object": 2,
+            "predCard": 9
+          },
+          {
+            "subject": 1,
+            "object": 2,
+            "predCard": 10
+          }
+        ],
+        "reincarnation": false
+      },
+      "kind": "draw",
+      "choices": [
+        8
+      ],
+      "choice": 8
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 1,
+        "otherPlayers": {
+          "2": true
+        },
+        "cardNumber": 0,
+        "myHands": [
+          4,
+          8
+        ],
+        "myPlayed": [
+          2,
+          1,
+          10,
+          2,
+          4
+        ],
+        "otherPlayed": {
+          "2": [
+            7,
+            9,
+            8,
+            5,
+            5,
+            1,
+            7
+          ]
+        },
+        "lookHands": {
+          "2": []
+        },
+        "lookedHands": {
+          "2": [
+            10,
+            4,
+            4,
+            7
+          ]
+        },
+        "pred": [
+          {
+            "subject": 1,
+            "object": 2,
+            "predCard": 9
+          },
+          {
+            "subject": 1,
+            "object": 2,
+            "predCard": 10
+          }
+        ],
+        "reincarnation": false
+      },
+      "kind": "play_card",
+      "choices": [
+        4,
+        8
+      ],
+      "choice": 4
+    },
+    "win",
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 2,
+        "otherPlayers": {
+          "1": true
+        },
+        "cardNumber": 16,
+        "myHands": [],
+        "myPlayed": [],
+        "otherPlayed": {
+          "1": []
+        },
+        "lookHands": {
+          "1": []
+        },
+        "lookedHands": {
+          "1": []
+        },
+        "pred": [],
+        "reincarnation": true
+      },
+      "kind": "draw",
+      "choices": [
+        7
+      ],
+      "choice": 7
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 2,
+        "otherPlayers": {
+          "1": true
+        },
+        "cardNumber": 14,
+        "myHands": [
+          7
+        ],
+        "myPlayed": [],
+        "otherPlayed": {
+          "1": [
+            2
+          ]
+        },
+        "lookHands": {
+          "1": []
+        },
+        "lookedHands": {
+          "1": []
+        },
+        "pred": [
+          {
+            "subject": 1,
+            "object": 2,
+            "predCard": 9
+          }
+        ],
+        "reincarnation": true
+      },
+      "kind": "draw",
+      "choices": [
+        6
+      ],
+      "choice": 6
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 2,
+        "otherPlayers": {
+          "1": true
+        },
+        "cardNumber": 13,
+        "myHands": [
+          7,
+          6
+        ],
+        "myPlayed": [],
+        "otherPlayed": {
+          "1": [
+            2
+          ]
+        },
+        "lookHands": {
+          "1": []
+        },
+        "lookedHands": {
+          "1": []
+        },
+        "pred": [
+          {
+            "subject": 1,
+            "object": 2,
+            "predCard": 9
+          }
+        ],
+        "reincarnation": true
+      },
+      "kind": "play_card",
+      "choices": [
+        7,
+        6
+      ],
+      "choice": 7
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 2,
+        "otherPlayers": {
+          "1": true
+        },
+        "cardNumber": 12,
+        "myHands": [
+          6
+        ],
+        "myPlayed": [
+          7
+        ],
+        "otherPlayed": {
+          "1": [
+            2,
+            1
+          ]
+        },
+        "lookHands": {
+          "1": []
+        },
+        "lookedHands": {
+          "1": []
+        },
+        "pred": [
+          {
+            "subject": 1,
+            "object": 2,
+            "predCard": 9
+          }
+        ],
+        "reincarnation": true
+      },
+      "kind": "draw",
+      "choices": [
+        5,
+        6,
+        9
+      ],
+      "choice": 9
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 2,
+        "otherPlayers": {
+          "1": true
+        },
+        "cardNumber": 11,
+        "myHands": [
+          6,
+          9
+        ],
+        "myPlayed": [
+          7
+        ],
+        "otherPlayed": {
+          "1": [
+            2,
+            1
+          ]
+        },
+        "lookHands": {
+          "1": []
+        },
+        "lookedHands": {
+          "1": []
+        },
+        "pred": [
+          {
+            "subject": 1,
+            "object": 2,
+            "predCard": 9
+          }
+        ],
+        "reincarnation": true
+      },
+      "kind": "play_card",
+      "choices": [
+        6,
+        9
+      ],
+      "choice": 9
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 2,
+        "otherPlayers": {
+          "1": true
+        },
+        "cardNumber": 11,
+        "myHands": [
+          6
+        ],
+        "myPlayed": [
+          7,
+          9
+        ],
+        "otherPlayed": {
+          "1": [
+            2,
+            1
+          ]
+        },
+        "lookHands": {
+          "1": []
+        },
+        "lookedHands": {
+          "1": []
+        },
+        "pred": [
+          {
+            "subject": 1,
+            "object": 2,
+            "predCard": 9
+          }
+        ],
+        "reincarnation": true
+      },
+      "kind": "opponentChoice",
+      "choices": [
+        1
+      ],
+      "choice": 1
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 2,
+        "otherPlayers": {
+          "1": true
+        },
+        "cardNumber": 11,
+        "myHands": [
+          6
+        ],
+        "myPlayed": [
+          7,
+          9
+        ],
+        "otherPlayed": {
+          "1": [
+            2,
+            1
+          ]
+        },
+        "lookHands": {
+          "1": []
+        },
+        "lookedHands": {
+          "1": []
+        },
+        "pred": [
+          {
+            "subject": 1,
+            "object": 2,
+            "predCard": 9
+          }
+        ],
+        "reincarnation": true
+      },
+      "kind": "draw",
+      "choices": [
+        5
+      ],
+      "choice": 5
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 2,
+        "otherPlayers": {
+          "1": true
+        },
+        "cardNumber": 10,
+        "myHands": [
+          6,
+          5
+        ],
+        "myPlayed": [
+          7,
+          9
+        ],
+        "otherPlayed": {
+          "1": [
+            2,
+            1
+          ]
+        },
+        "lookHands": {
+          "1": [
+            8
+          ]
+        },
+        "lookedHands": {
+          "1": []
+        },
+        "pred": [
+          {
+            "subject": 1,
+            "object": 2,
+            "predCard": 9
+          }
+        ],
+        "reincarnation": true
+      },
+      "kind": "trush",
+      "choices": [
+        8
+      ],
+      "choice": 8
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 2,
+        "otherPlayers": {
+          "1": true
+        },
+        "cardNumber": 9,
+        "myHands": [
+          6,
+          5
+        ],
+        "myPlayed": [
+          7,
+          9,
+          8
+        ],
+        "otherPlayed": {
+          "1": [
+            2,
+            1
+          ]
+        },
+        "lookHands": {
+          "1": [
+            8
+          ]
+        },
+        "lookedHands": {
+          "1": []
+        },
+        "pred": [
+          {
+            "subject": 1,
+            "object": 2,
+            "predCard": 9
+          }
+        ],
+        "reincarnation": true
+      },
+      "kind": "draw",
+      "choices": [
+        5
+      ],
+      "choice": 5
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 2,
+        "otherPlayers": {
+          "1": true
+        },
+        "cardNumber": 8,
+        "myHands": [
+          6,
+          5,
+          5
+        ],
+        "myPlayed": [
+          7,
+          9,
+          8
+        ],
+        "otherPlayed": {
+          "1": [
+            2,
+            1
+          ]
+        },
+        "lookHands": {
+          "1": [
+            8
+          ]
+        },
+        "lookedHands": {
+          "1": []
+        },
+        "pred": [
+          {
+            "subject": 1,
+            "object": 2,
+            "predCard": 9
+          }
+        ],
+        "reincarnation": true
+      },
+      "kind": "play_card",
+      "choices": [
+        6,
+        5,
+        5
+      ],
+      "choice": 5
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 2,
+        "otherPlayers": {
+          "1": true
+        },
+        "cardNumber": 8,
+        "myHands": [
+          6,
+          5
+        ],
+        "myPlayed": [
+          7,
+          9,
+          8,
+          5
+        ],
+        "otherPlayed": {
+          "1": [
+            2,
+            1
+          ]
+        },
+        "lookHands": {
+          "1": [
+            8
+          ]
+        },
+        "lookedHands": {
+          "1": []
+        },
+        "pred": [
+          {
+            "subject": 1,
+            "object": 2,
+            "predCard": 9
+          }
+        ],
+        "reincarnation": true
+      },
+      "kind": "opponentChoice",
+      "choices": [
+        1
+      ],
+      "choice": 1
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 2,
+        "otherPlayers": {
+          "1": true
+        },
+        "cardNumber": 8,
+        "myHands": [
+          6,
+          5
+        ],
+        "myPlayed": [
+          7,
+          9,
+          8,
+          5
+        ],
+        "otherPlayed": {
+          "1": [
+            2,
+            1
+          ]
+        },
+        "lookHands": {
+          "1": [
+            8
+          ]
+        },
+        "lookedHands": {
+          "1": []
+        },
+        "pred": [
+          {
+            "subject": 1,
+            "object": 2,
+            "predCard": 9
+          }
+        ],
+        "reincarnation": true
+      },
+      "kind": "draw",
+      "choices": [
+        3
+      ],
+      "choice": 3
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 2,
+        "otherPlayers": {
+          "1": true
+        },
+        "cardNumber": 6,
+        "myHands": [
+          6,
+          5,
+          3
+        ],
+        "myPlayed": [
+          7,
+          9,
+          8,
+          5
+        ],
+        "otherPlayed": {
+          "1": [
+            2,
+            1,
+            10,
+            2
+          ]
+        },
+        "lookHands": {
+          "1": [
+            8
+          ]
+        },
+        "lookedHands": {
+          "1": []
+        },
+        "pred": [
+          {
+            "subject": 1,
+            "object": 2,
+            "predCard": 9
+          },
+          {
+            "subject": 1,
+            "object": 2,
+            "predCard": 10
+          }
+        ],
+        "reincarnation": false
+      },
+      "kind": "draw",
+      "choices": [
+        1
+      ],
+      "choice": 1
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 2,
+        "otherPlayers": {
+          "1": true
+        },
+        "cardNumber": 5,
+        "myHands": [
+          6,
+          5,
+          3,
+          1
+        ],
+        "myPlayed": [
+          7,
+          9,
+          8,
+          5
+        ],
+        "otherPlayed": {
+          "1": [
+            2,
+            1,
+            10,
+            2
+          ]
+        },
+        "lookHands": {
+          "1": [
+            8
+          ]
+        },
+        "lookedHands": {
+          "1": []
+        },
+        "pred": [
+          {
+            "subject": 1,
+            "object": 2,
+            "predCard": 9
+          },
+          {
+            "subject": 1,
+            "object": 2,
+            "predCard": 10
+          }
+        ],
+        "reincarnation": false
+      },
+      "kind": "play_card",
+      "choices": [
+        6,
+        5,
+        3,
+        1
+      ],
+      "choice": 5
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 2,
+        "otherPlayers": {
+          "1": true
+        },
+        "cardNumber": 5,
+        "myHands": [
+          6,
+          3,
+          1
+        ],
+        "myPlayed": [
+          7,
+          9,
+          8,
+          5,
+          5
+        ],
+        "otherPlayed": {
+          "1": [
+            2,
+            1,
+            10,
+            2
+          ]
+        },
+        "lookHands": {
+          "1": [
+            8
+          ]
+        },
+        "lookedHands": {
+          "1": []
+        },
+        "pred": [
+          {
+            "subject": 1,
+            "object": 2,
+            "predCard": 9
+          },
+          {
+            "subject": 1,
+            "object": 2,
+            "predCard": 10
+          }
+        ],
+        "reincarnation": false
+      },
+      "kind": "opponentChoice",
+      "choices": [
+        1
+      ],
+      "choice": 1
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 2,
+        "otherPlayers": {
+          "1": true
+        },
+        "cardNumber": 5,
+        "myHands": [
+          6,
+          3,
+          1
+        ],
+        "myPlayed": [
+          7,
+          9,
+          8,
+          5,
+          5
+        ],
+        "otherPlayed": {
+          "1": [
+            2,
+            1,
+            10,
+            2
+          ]
+        },
+        "lookHands": {
+          "1": [
+            8
+          ]
+        },
+        "lookedHands": {
+          "1": []
+        },
+        "pred": [
+          {
+            "subject": 1,
+            "object": 2,
+            "predCard": 9
+          },
+          {
+            "subject": 1,
+            "object": 2,
+            "predCard": 10
+          }
+        ],
+        "reincarnation": false
+      },
+      "kind": "draw",
+      "choices": [
+        6
+      ],
+      "choice": 6
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 2,
+        "otherPlayers": {
+          "1": true
+        },
+        "cardNumber": 3,
+        "myHands": [
+          6,
+          3,
+          1,
+          6
+        ],
+        "myPlayed": [
+          7,
+          9,
+          8,
+          5,
+          5
+        ],
+        "otherPlayed": {
+          "1": [
+            2,
+            1,
+            10,
+            2,
+            4
+          ]
+        },
+        "lookHands": {
+          "1": [
+            8
+          ]
+        },
+        "lookedHands": {
+          "1": []
+        },
+        "pred": [
+          {
+            "subject": 1,
+            "object": 2,
+            "predCard": 9
+          },
+          {
+            "subject": 1,
+            "object": 2,
+            "predCard": 10
+          }
+        ],
+        "reincarnation": false
+      },
+      "kind": "draw",
+      "choices": [
+        3
+      ],
+      "choice": 3
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 2,
+        "otherPlayers": {
+          "1": true
+        },
+        "cardNumber": 2,
+        "myHands": [
+          6,
+          3,
+          1,
+          6,
+          3
+        ],
+        "myPlayed": [
+          7,
+          9,
+          8,
+          5,
+          5
+        ],
+        "otherPlayed": {
+          "1": [
+            2,
+            1,
+            10,
+            2,
+            4
+          ]
+        },
+        "lookHands": {
+          "1": [
+            8
+          ]
+        },
+        "lookedHands": {
+          "1": []
+        },
+        "pred": [
+          {
+            "subject": 1,
+            "object": 2,
+            "predCard": 9
+          },
+          {
+            "subject": 1,
+            "object": 2,
+            "predCard": 10
+          }
+        ],
+        "reincarnation": false
+      },
+      "kind": "play_card",
+      "choices": [
+        6,
+        3,
+        1,
+        6,
+        3
+      ],
+      "choice": 1
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 2,
+        "otherPlayers": {
+          "1": true
+        },
+        "cardNumber": 2,
+        "myHands": [
+          6,
+          3,
+          6,
+          3
+        ],
+        "myPlayed": [
+          7,
+          9,
+          8,
+          5,
+          5,
+          1
+        ],
+        "otherPlayed": {
+          "1": [
+            2,
+            1,
+            10,
+            2,
+            4
+          ]
+        },
+        "lookHands": {
+          "1": [
+            8
+          ]
+        },
+        "lookedHands": {
+          "1": []
+        },
+        "pred": [
+          {
+            "subject": 1,
+            "object": 2,
+            "predCard": 9
+          },
+          {
+            "subject": 1,
+            "object": 2,
+            "predCard": 10
+          }
+        ],
+        "reincarnation": false
+      },
+      "kind": "opponentChoice",
+      "choices": [
+        1
+      ],
+      "choice": 1
+    },
+    {
+      "now": {
+        "playersLength": 2,
+        "myTurnNumber": 2,
+        "otherPlayers": {
+          "1": true
+        },
+        "cardNumber": 1,
+        "myHands": [
+          6,
+          3,
+          6,
+          3
+        ],
+        "myPlayed": [
+          7,
+          9,
+          8,
+          5,
+          5,
+          1
+        ],
+        "otherPlayed": {
+          "1": [
+            2,
+            1,
+            10,
+            2,
+            4
+          ]
+        },
+        "lookHands": {
+          "1": [
+            8,
+            4,
+            7
+          ]
+        },
+        "lookedHands": {
+          "1": []
+        },
+        "pred": [
+          {
+            "subject": 1,
+            "object": 2,
+            "predCard": 9
+          },
+          {
+            "subject": 1,
+            "object": 2,
+            "predCard": 10
+          }
+        ],
+        "reincarnation": false
+      },
+      "kind": "trush",
+      "choices": [
+        4,
+        7
+      ],
+      "choice": 7
+    },
+    "lose"
+  ]
 }
