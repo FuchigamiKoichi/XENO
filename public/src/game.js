@@ -11,6 +11,7 @@ class Game {
             const getNameFunc = funcs[i].get_name;
             const choiceFunc = funcs[i].choice;
             const name = String(getNameFunc(gameData.roomId,i));
+            console.log(gameData.players[i])
             players.push(new Player(name, choiceFunc, gameData.players[i]));
         }
 
