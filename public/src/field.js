@@ -48,7 +48,8 @@ class Field {
             const choiceNumber = parseInt(choiceFunc(
                 createData(this, player),
                 choices,
-                'draw'
+                'draw',
+                player.socketId
             ));
             
             createLog(
