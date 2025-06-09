@@ -4,14 +4,14 @@ const { shuffle } =  require('./card.js');
 const { createData, createLog } = require('./card.js');
 
 class Game {
-    constructor(playerNumber, funcs) {
+    constructor(playerNumber, funcs, gameData) {
         // プレイヤーの生成
         const players = [];
         for (let i = 0; i < playerNumber; i++) {
             const getNameFunc = funcs[i].get_name;
             const choiceFunc = funcs[i].choice;
-            const name = String(getNameFunc(i));
-            players.push(new Player(name, choiceFunc));
+            const name = String(getNameFunc(gameData.roomId,i));
+            players.push(new Player(name, choiceFunc, gameData.players[i]));
         }
 
         // プレイヤーのシャッフルと順番の設定
@@ -118,7 +118,8 @@ class Game {
             const cardNumber = parseInt(choice(
                 createData(this.field, player),
                 hands,
-                'play_card'
+                'play_card',
+                player.playerId
             ));
 
             createLog(

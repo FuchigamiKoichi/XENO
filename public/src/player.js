@@ -1,5 +1,5 @@
 class Player {
-    constructor(name, func) {
+    constructor(name, func, socketId) {
         this.name = name;
         this.turnNumber = -1;
         this.live = true;  // 生死の状態
@@ -11,6 +11,7 @@ class Player {
         this.affected = true;  // 効果を受けつける状態かどうか
         this.get = 1;      // 山札から
         this.choice = func; // 選択関数
+        this.socketId = socketId
     }
 } 
 module.exports = {

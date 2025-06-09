@@ -1,28 +1,6 @@
 const { Game } = require('./public/src/game.js');
 const { Player } = require('./public/src/player.js');
 
-// 使用例
-// CPUプレイヤーの選択関数
-function choiceCpu(now, choices, kind) {
-    const number = Math.floor(Math.random() * choices.length);
-    if (kind === 'opponentChoice') {
-        const choice = choices[number];
-        return choice.selectNumber;
-    }
-    return choices[number];
-}
-
-// CPUプレイヤーの命名関数
-function getNameCpu(index) {
-    return `test_player${index}`;
-}
-
-// 使用例
-const funcs = [
-    { get_name: getNameCpu, choice: choiceCpu },
-    { get_name: getNameCpu, choice: choiceCpu }
-];
-
 // dataManager.js
 const fs = require('fs');
 const DATA_FILE = './data.json';
@@ -42,27 +20,11 @@ function saveData(data) {
   fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2));
 }
 
-loadData();
-// ゲームの実行
-for(let i = 0; i < 10; i++) {
-    const game = new Game(2, funcs);
-    const result = game.game();
-    if((result[0])) {
-        // console.log('ゲームログ:', result[1]);
-        for(let j=0; j<2; j++){
-          for(let k=0; k<result[1][j].length; k++){
-            jsonData.logs.push(result[1][j][k]);
-          }
-        }
-    }
-}
-saveData(jsonData);
-
 // プレイヤーの追加
 function addPlayer(playerData) {
     loadData();
     if (!jsonData.players[playerData.id]) {
-      jsonData.players[playerData.id] = { name: playerData.name, socketId: playerData.id };
+      jsonData.players[playerData.id] = { name: playerData.name, socketId: playerData.id, ready: playerData.ready };
       saveData(jsonData);
     }
 }
@@ -163,7 +125,7 @@ io.on('connection', (socket) => {
 
   //　プレイヤーを登録する
   socket.on('registPlayer', (data) => {
-    let playerData = {id: socket.id, name: data.name}
+    let playerData = {id: socket.id, name: data.name, ready: 0}
     addPlayer(playerData)
     console.log(`registPlayer:${playerData.name}`)
   })
@@ -285,6 +247,55 @@ io.on('connection', (socket) => {
     loadData()
     io.to(roomId).emit('startGame',{players: jsonData.rooms[roomId].players});
   });
+
+  // CPUプレイヤーの選択関数
+  function choice(now, choices, kind, socketId) {
+    if (kind === 'opponentChoice') {
+      io.timeout(5000).to(socketId).emit('yourTurn', {now: now, choices: choices, kind: kind}, (err, response) =>{
+        const choice = choices[response[0]];
+        return choice.selectNumber;
+      })
+    }else{
+      io.to(socketId).emit('yourTurn', {now: now, choices: choices, kind: kind}, (response) =>{
+        return choices[response.choice];
+      })
+    }
+  }
+
+  // CPUプレイヤーの命名関数
+  function getName(roomId, index) {
+    loadData();
+    return `${jsonData.players[jsonData.rooms[roomId].players[index]].name}`;
+  }
+
+  // 使用例
+  const funcs = [
+      { get_name: getName, choice: choice },
+      { get_name: getName, choice: choice }
+  ];
+
+  // 全てのプレイヤーのreadyを判定
+  socket.on("ready", (data) => {
+    loadData();
+    jsonData.players[data.playerId].ready = 1
+    saveData(jsonData);
+    let ready = 0;
+    for(let i=0; i<jsonData.rooms[data.roomId].players.length; i++){
+      ready += jsonData.players[jsonData.rooms[data.roomId].players[i]].ready;
+    }
+    console.log(`ready: ${ready}`);
+    if(ready==2){
+      loadData()
+      console.log('準備完了！')
+      let socketIdList = []
+      for(let i=0; i<2; i++){
+        socketIdList.push(jsonData.players[jsonData.rooms[data.roomId].players[i]].socketId)
+      }
+      const gameData = {roomId: data.roomId, players: socketIdList};
+      const game = new Game(2, funcs, gameData);
+      game.game();
+    }
+  })
 
   // ゲーム中のプレイヤー操作を受け取る例
   socket.on('playerAction', (roomId, actionData) => {

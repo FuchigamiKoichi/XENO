@@ -476,7 +476,7 @@
                 </div>
                 <div class="tab-content" id="page2">
                     <h2>少年</h2>
-                    <img src="boy.jpg" class="rule-image">
+                    <!-- <img src="boy.jpg" class="rule-image"> -->
                     <h3>カード効果【革命】</h3>
                     <p>
                         1枚目は何の効果も発動しないが、場に2枚目が出た場合は皇帝と同じ「公開処刑」が発動する。
@@ -491,7 +491,7 @@
         </div>
         <!-- 山札とプレイエリア -->
         <div id="deck-container">
-            <img id="deck" src="0.jpg" alt="山札">
+            <!-- <img id="deck" src="0.jpg" alt="山札"> -->
             <div id="deck-count">残り枚数:17</div> <!-- 残り枚数表示 -->
             <!-- 横向きのカード -->
             <div id="side-card-container">
@@ -505,11 +505,11 @@
             </div>
             <div id="playArea">プレイエリア</div>
         </div>
-        <div id="turnSelection">
+        <!-- <div id="turnSelection">
             <p>先行か後攻を選んでください</p>
             <button onclick="selectTurn(true)">先行</button>
             <button onclick="selectTurn(false)">後攻</button>
-        </div>
+        </div> -->
         <div id="turnIndicator">あなたのターンです</div>
         <div id="second_turn">相手のターンです</div>
         <!-- カード拡大表示エリア -->
@@ -548,10 +548,38 @@
         let closeRule = document.getElementById("clothRule");
 
 
+        now = {
+            "playersLength": 2,
+            "myTurnNumber": 2,
+            "otherPlayers": {
+            "1": true
+            },
+            "cardNumber": 13,
+            "myHands": [
+            10
+            ],
+            "myPlayed": [
+            2
+            ],
+            "otherPlayed": {
+            "1": [
+                7
+            ]
+            },
+            "lookHands": {
+            "1": []
+            },
+            "lookedHands": {
+            "1": []
+            },
+            "pred": [],
+            "reincarnation": true
+        };
 
         function startGame() {
             document.getElementById("startScreen").style.display = "none";
             document.getElementById("gameScreen").style.display = "flex";
+            socket.emit("ready", {roomId: roomId, playerId: playerId});
             // ゲーム開始時に手札を初期化
             // playerHand = [];
             // opponentHand = [];
@@ -569,7 +597,7 @@
             playerHandZone.innerHTML = "";
             now.myHands.forEach(card => {
                 const cardImg = document.createElement("img");
-                cardImg.src = card.name;
+                cardImg.src =  `../images/${card}.jpg`;
                 cardImg.classList.add("card");
                 // cardImg.addEventListener("click", () => playCard(cardImg));
                 playerHandZone.appendChild(cardImg);
@@ -578,39 +606,69 @@
             // 自分の場に出されたカード表示
             const playArea = document.getElementById("playArea");
             playArea.innerHTML = "";
+            let index = 0;
             now.myPlayed.forEach(card => {
                 const playedImg = document.createElement("img");
-                playedImg.src = card.name;
+                playedImg.src = `../images/${card}.jpg`;
                 playedImg.classList.add("played-card");
+                playedImg.position = "absolute";
+                playedImg.left = `${index * 40}px`;
+                playedImg.zIndex = index;
+                playedImg.style.width = "100px";
+                playedImg.style.height = "150px";
                 playArea.appendChild(playedImg);
+                index++;
             });
 
             // 相手の場に出されたカード
             const opponentArea = document.getElementById("opponent-playArea");
             opponentArea.innerHTML = "";
-            now.otherPlayed.forEach(card => {
+            index = 0;
+            now.otherPlayed["1"].forEach(card => {
                 const playedImg = document.createElement("img");
-                playedImg.src = card.name;
+                playedImg.src = `../images/${card}.jpg`;
                 playedImg.classList.add("played-card");
+                playedImg.position = "absolute";
+                playedImg.left = `${index * 40}px`;
+                playedImg.zIndex = index;
+                playedImg.style.width = "100px";
+                playedImg.style.height = "150px";
                 opponentArea.appendChild(playedImg);
+                index++;
             });
 
             // 相手の手札（裏向き）
             const opponentHandZone = document.getElementById("opponent-hand");
             opponentHandZone.innerHTML = "";
-            for (let i = 0; i < now.otherPlayers[0].handLength; i++) {
-                const backCard = document.createElement("img");
-                backCard.src = "0.jpg";
-                backCard.classList.add("card");
-                opponentHandZone.appendChild(backCard);
+            const backCard = document.createElement("img");
+            backCard.src = `../images/0.jpg`;
+            backCard.classList.add("card");
+            opponentHandZone.appendChild(backCard);
+
+            // 転生札
+            if(now.reincarnation){
+                const sideCard = document.createElement("img");
+                sideCard.src = `../images/0.jpg`;
+                sideCard.classList.add("side-card");
+                const sideContainer = document.getElementById("side-card-container");
+                sideContainer.appendChild(sideCard);
             }
 
-            // 山札の残り枚数
+            // デッキ
+            if(now.cardNumber>0){
+                const deckCard = document.createElement("img");
+                deckCard.src = `../images/0.jpg`;  
+                deckCard.id = "deck";
+                const deckContainer = document.getElementById("deck-container");
+                deckContainer.appendChild(deckCard);
+            }
+
+            // デッキ枚数
             const deckCount = document.getElementById("deck-count");
             deckCount.textContent = `残り枚数: ${now.cardNumber}`;
 
             // 使用済みカードの表示（ログ更新）
-            updateUsedCardsDisplay();
+            // updateUsedCardsDisplay();
         }
 
 
@@ -731,26 +789,6 @@
             // 結果を入れる変数を用意
             let characterConsoleName = "不明なキャラクター";
             let ofCard;
-            OriginalDecks = [
-                { name: "boy.jpg", value: 1 ,character:"少年"},
-                { name: "boy.jpg", value: 1,character:"少年"},
-                { name: "soldier.jpg", value: 2,character:"兵士" },
-                { name: "soldier.jpg", value: 2,character:"兵士" },
-                { name: "diviner.jpg", value: 3,character:"占い師" },
-                { name: "diviner.jpg", value: 3,character:"占い師" },
-                { name: "noble.jpg", value: 6,character:"貴族" },
-                { name: "noble.jpg", value: 6,character:"貴族" },
-                { name: "maiden.jpg", value: 4,character:"乙女" },
-                { name: "maiden.jpg", value: 4,character:"乙女" },
-                { name: "sage.jpg", value: 7,character:"賢者" },
-                { name: "sage.jpg", value: 7,character:"賢者" },
-                { name: "reaper.jpg", value: 5,character:"死神" },
-                { name: "reaper.jpg", value: 5,character:"死神" },
-                { name: "spirit.jpg", value: 8,character:"精霊" },
-                { name: "spirit.jpg", value: 8,character:"精霊" },
-                { name: "kaizer.jpg", value: 9,character:"皇帝" },
-                { name: "hero.jpg", value: 10,character:"英雄" },
-            ];
             // decks 配列を1つずつ確認
             for (let i = 0; i < OriginalDecks.length; i++) {
                 ofCard = OriginalDecks[i];
@@ -1024,7 +1062,7 @@
             let modal = document.getElementById("usedCardsModal");
             modal.style.display = "none";
         }
-        console.log(decks); // シャッフルされた山札を確認
+        // console.log(decks); // シャッフルされた山札を確認
 
         //ターンを決める
         function selectTurn(playerGoesFarst) {
@@ -1319,12 +1357,16 @@
             alert(message);
         }
 
+        socket.on('yourTurn', (data, callback) => {
+            updateGameView(data.now);
+            console.log('myTurn');
+            callback(0)
+        })
 
-
-        // テスト用（ゲーム開始時に1回ターン開始）
-        window.onload = function () {
-            setupSideCard();
-        };
+    //     // テスト用（ゲーム開始時に1回ターン開始）
+    //     window.onload = function () {
+    //         setupSideCard();
+    //     };
     </script>
 </body>
 </html>
