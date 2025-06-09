@@ -1,1 +1,9 @@
 result/*
+data.json
+data.Manager.json
+cpu.py
+cpu.ipynb
+xeno.py
+training.py
+test.ipynb
+play.py

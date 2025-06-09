@@ -143,7 +143,7 @@ io.on('connection', (socket) => {
   socket.on('changeSocketid', (data) => {
     loadData()
     let playerData = {id: data.id, name: jsonData.players[data.id], socketid: socket.id}
-    console.log(`ユーザーのsocketidを変更しました: ${jsonData.players[data.id].name}, new: ${jsonData.players[data.id].socketId}`)
+    console.log(`ユーザーのsocketidを変更しました: ${jsonData.players[data.id].name}, new: ${playerData.socketid}`)
     changeSocketId(playerData)
     socket.join(data.roomId)
   })
@@ -252,12 +252,14 @@ io.on('connection', (socket) => {
   function choice(now, choices, kind, socketId) {
     if (kind === 'opponentChoice') {
       io.timeout(5000).to(socketId).emit('yourTurn', {now: now, choices: choices, kind: kind}, (err, response) =>{
+        console.log(`response: ${response}`)
         const choice = choices[response[0]];
         return choice.selectNumber;
       })
     }else{
-      io.to(socketId).emit('yourTurn', {now: now, choices: choices, kind: kind}, (response) =>{
-        return choices[response.choice];
+      io.timeout(5000).to(socketId).emit('yourTurn', {now: now, choices: choices, kind: kind}, (err, response) =>{
+        console.log(`response: ${response}`)
+        return choices[response[0]];
       })
     }
   }
