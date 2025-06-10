@@ -494,9 +494,7 @@
             <!-- <img id="deck" src="0.jpg" alt="山札"> -->
             <div id="deck-count">残り枚数:17</div> <!-- 残り枚数表示 -->
             <!-- 横向きのカード -->
-            <div id="side-card-container">
-                <!-- <img class="side-card" src="0.jpg" alt="横向きカード"> -->
-            </div>
+            <div id="side-card-container"><!-- <img class="side-card" src="0.jpg" alt="横向きカード"> --></div>
         </div>
         <div id="center-area">
             <!-- 自分の手札 -->
@@ -547,35 +545,6 @@
         let ruleModal = document.getElementById("ruleModal");
         let closeRule = document.getElementById("clothRule");
 
-
-        now = {
-            "playersLength": 2,
-            "myTurnNumber": 2,
-            "otherPlayers": {
-            "1": true
-            },
-            "cardNumber": 13,
-            "myHands": [
-            10
-            ],
-            "myPlayed": [
-            2
-            ],
-            "otherPlayed": {
-            "1": [
-                7
-            ]
-            },
-            "lookHands": {
-            "1": []
-            },
-            "lookedHands": {
-            "1": []
-            },
-            "pred": [],
-            "reincarnation": true
-        };
-
         function startGame() {
             document.getElementById("startScreen").style.display = "none";
             document.getElementById("gameScreen").style.display = "flex";
@@ -591,11 +560,23 @@
         }
 
         function updateGameView(now) {
+            const playerHandZone = document.getElementById("player-hand");
+            playerHandZone.innerHTML = "";
+
+            const playArea = document.getElementById("playArea");
+            playArea.innerHTML = "";
+
+            const opponentArea = document.getElementById("opponent-playArea");
+            opponentArea.innerHTML = "";
+
+            const deckContainer = document.getElementById("deck-container");
+            deckContainer.innerHTML = "<div id='deck-count'>/div><div id='side-card-container'></div>";
+
+            const sideContainer = document.getElementById("side-card-container");
+            sideContainer.innerHTML = "";
 
             // 手札表示を更新
             if(now.myHands.length>0){
-                const playerHandZone = document.getElementById("player-hand");
-                playerHandZone.innerHTML = "";
                 now.myHands.forEach(card => {
                     const cardImg = document.createElement("img");
                     cardImg.src =  `../images/${card}.jpg`;
@@ -607,8 +588,6 @@
 
             // 自分の場に出されたカード表示
             if(now.myPlayed.length>0){
-                const playArea = document.getElementById("playArea");
-                playArea.innerHTML = "";
                 let index = 0;
                 now.myPlayed.forEach(card => {
                     const playedImg = document.createElement("img");
@@ -626,8 +605,6 @@
 
             // 相手の場に出されたカード
             if("1" in now.otherPlayed){
-                const opponentArea = document.getElementById("opponent-playArea");
-                opponentArea.innerHTML = "";
                 index = 0;
                 now.otherPlayed["1"].forEach(card => {
                     const playedImg = document.createElement("img");
@@ -656,17 +633,14 @@
                 const sideCard = document.createElement("img");
                 sideCard.src = `../images/0.jpg`;
                 sideCard.classList.add("side-card");
-                const sideContainer = document.getElementById("side-card-container");
                 sideContainer.appendChild(sideCard);
             }
 
             // デッキ
-            console.log(`now.cardNumber: ${now.cardNumber}`)
             if(now.cardNumber>0){
                 const deckCard = document.createElement("img");
                 deckCard.src = `../images/0.jpg`;  
                 deckCard.id = "deck";
-                const deckContainer = document.getElementById("deck-container");
                 deckContainer.appendChild(deckCard);
             }
 
@@ -915,23 +889,13 @@
         }
 
         // 山札から手札にカードを追加
-        function drawCardToHand() {
+        function drawCardToHand(drawnCard) {
             let deckElement = document.getElementById("deck"); // 山札の要素
             let deckCountElement = document.getElementById("deck-count"); // 修正
             let playerHand = document.getElementById("player-hand"); // プレイヤーの手札
-            if (decks.length === 0) {
-                 // 山札が空なら、山札の要素を非表示にする
-                deckElement.style.transition = "opacity 0.5s ease-out"; // フェードアウトアニメーション
-                deckElement.style.opacity = "0"; // 山札を消す
-                setTimeout(() => {
-                    deckElement.style.display = "none"; // アニメーション後に非表示にする
-                    deckCountElement.style.display = "none"; // 残り枚数の表示も非表示にする
-                }, 500); // 500ms後に完全に非表示
-                return; // 山札が空なので、カードを引く処理を停止
-            }
-            let drawnCard = decks.pop(); // 山札から1枚引く
+            
             let newCard = document.createElement("img");
-            newCard.src = drawnCard.name; // 画像のパスを組み立てる
+            newCard.src = `../images/${drawnCard}.jpg`; // 画像のパスを組み立てる
             newCard.classList.add("card");
 
             // cardInfoをdata属性に設定
@@ -961,17 +925,8 @@
                 newCard.style.position = "static";
                 newCard.style.transition = "none";
                 playerHand.appendChild(newCard); // 手札エリアに正式追加
-                // カードにクリックイベントを追加（手札に追加後）
-                newCard.addEventListener("click", function() {
-                    playCard(newCard);  // プレイヤーがカードを選択した場合の処理
-                });
             }, 600);
-            // ** 山札の残り枚数を更新 **
-            deckCountElement.textContent = `残り枚数: ${decks.length}`;
-
-            
-            //山札がなくなったら互いのカードを比べ、勝敗を決める
-            checkDeckEmpty();
+            playerHand.innerHTML = "";
         }
 
         
@@ -1364,9 +1319,17 @@
             alert(message);
         }
 
-        socket.on('yourTurn', (data, callback) => {
-            updateGameView(data.now);
-            callback([0])
+        socket.on('yourTurn', async (data, callback) => {
+            await updateGameView(data.now)
+            if(data.kind=='draw'){
+                if(data.choices.length>2){
+                    await drawCardToHand(data.choices[0])
+                    callback([0])
+                }else{
+                    await drawCardToHand(data.choices[0])
+                    callback([0])
+                }
+            }
         })
 
     //     // テスト用（ゲーム開始時に1回ターン開始）
