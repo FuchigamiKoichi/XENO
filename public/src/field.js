@@ -38,19 +38,21 @@ class Field {
         this.reincarnation = [reincarnationCard];
     }
 
-    draw(player) {
+    async draw(player) {
         const choiceFunc = player.choice;
         player.affected = true;
         const cards = this.deck.slice(0, player.get);
-        
         if (cards.length > 0) {
             const choices = cards.map(card => card.number);
-            const choiceNumber = parseInt(choiceFunc(
+            console.log(`draw: ${player.socketId}`);
+            const responce = await choiceFunc(
                 createData(this, player),
                 choices,
                 'draw',
                 player.socketId
-            ));
+            );
+            const choiceNumber = parseInt(responce);
+            console.log(`draw_choice: ${choiceNumber}`);
             
             createLog(
                 createData(this, player),
