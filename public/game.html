@@ -406,6 +406,15 @@
             flex-direction: column;
             gap: 8px;
         }
+
+        #overlay {
+            position: fixed;          /* ウィンドウ全体に固定配置 */
+            overflow-y: auto;
+            top: 50;
+            left: 50;
+            z-index: 9999;            /* 他の要素より前面に配置 */
+            pointer-events: auto;     /* クリックを受け付ける（必要なら） */
+        }
     </style>
 </head>
 <body>
@@ -431,6 +440,8 @@
             <button id="surrenderButton" onclick="surrender()">投降する</button>
             <button id="ruleButton">ルール説明</button>
         </div>
+
+        <div id="select-container"></div>
     
         <!-- 相手のプレイエリアと手札 -->
         <div id="opponent-center-area">
@@ -519,6 +530,11 @@
     <script src="/socket.io/socket.io.js"></script>
     <script>
         const socket = io();
+
+        let playerSelect = -1;
+
+        let selectContainer = document.getElementById("select-container");
+        selectContainer.style.display = 'none';
 
         let urls = String(window.location.href).split('?')
         const roomId = urls[1].substr(7,urls[1].length)
@@ -1319,23 +1335,52 @@
             alert(message);
         }
 
+        async function select(choices) {
+            new Promise((resolve) => {
+                console.log('select')
+                let selectContainer = document.getElementById('select-container')
+                selectContainer.innerHTML = "";
+                for(let i=0; i<choices.length; i++){
+                    let card_number = choices[i]
+                    let card = document.createElement("img");
+                    card.src = `../images/${card_number}.jpg`;
+                    card.width = 200;
+                    card.height = 300;
+                    card.addEventListener('click', function(card_number){
+                        playerSelect = card_number
+                    })
+                    card.classList.add('select-card');
+                    selectContainer.appendChild(card);
+                }
+                selectContainer.style.display = 'block';
+            })
+        }
+
         socket.on('yourTurn', async (data, callback) => {
             await updateGameView(data.now)
+            console.log(data.kind)
             if(data.kind=='draw'){
                 if(data.choices.length>2){
-                    await drawCardToHand(data.choices[0])
-                    callback([0])
+                    playerSelect = -1
+                    await select(data.choices);
+                    selectContainer.style.display = 'none';
+                    await drawCardToHand(playerSelect)
+                    callback([playerSelect])
+                    playerSelect = -1
                 }else{
                     await drawCardToHand(data.choices[0])
                     callback([0])
                 }
+            }else if(data.kind=='opponentChoice'){
+                callback([0])
+            }else{
+                playerSelect = -1
+                await select(data.choices);
+                selectContainer.style.display = 'none';
+                callback([playerSelect])
+                playerSelect = -1
             }
         })
-
-    //     // テスト用（ゲーム開始時に1回ターン開始）
-    //     window.onload = function () {
-    //         setupSideCard();
-    //     };
     </script>
 </body>
 </html>

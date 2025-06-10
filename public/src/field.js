@@ -44,7 +44,6 @@ class Field {
         const cards = this.deck.slice(0, player.get);
         if (cards.length > 0) {
             const choices = cards.map(card => card.number);
-            console.log(`draw: ${player.socketId}`);
             const responce = await choiceFunc(
                 createData(this, player),
                 choices,
@@ -52,7 +51,6 @@ class Field {
                 player.socketId
             );
             const choiceNumber = parseInt(responce);
-            console.log(`draw_choice: ${choiceNumber}`);
             
             createLog(
                 createData(this, player),
