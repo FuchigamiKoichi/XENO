@@ -106,21 +106,22 @@ class Game {
         return [true];
     }
 
-    turn(player) {
+    async turn(player) {
         const choice = player.choice;
-        this.field.draw(player);
+        await this.field.draw(player);
         
         if (player.hands.length > 1) {
             const hands = player.hands
                 .filter(card => card.number !== 10)
                 .map(card => card.number);
 
-            const cardNumber = parseInt(choice(
+            const response = await choice(
                 createData(this.field, player),
                 hands,
                 'play_card',
                 player.playerId
-            ));
+            );
+            const cardNumber = parseInt(response);
 
             createLog(
                 createData(this.field, player),
@@ -132,7 +133,7 @@ class Game {
             );
 
             const cardIndex = player.hands.findIndex(card => card.number === cardNumber);
-            player.hands[cardIndex].play(player);
+            await player.hands[cardIndex].play(player);
         }
     }
 
@@ -151,7 +152,7 @@ class Game {
                 for (const player of players) {
                     state = this.isContinue();
                     if (state[0]) {
-                        this.turn(player);
+                        await this.turn(player);
                     } else {
                         this.winners = state[1];
                         this.losers = state[2];
