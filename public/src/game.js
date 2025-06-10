@@ -11,7 +11,6 @@ class Game {
             const getNameFunc = funcs[i].get_name;
             const choiceFunc = funcs[i].choice;
             const name = String(getNameFunc(gameData.roomId,i));
-            console.log(gameData.players[i])
             players.push(new Player(name, choiceFunc, gameData.players[i]));
         }
 
@@ -137,14 +136,14 @@ class Game {
         }
     }
 
-    game() {
+    async game() {
         try {
             const players = this.field.players;
             let state = [true];
 
             // 初期手札の配布
             for (const player of players) {
-                this.field.draw(player);
+                await this.field.draw(player);
             }
 
             // ゲームループ

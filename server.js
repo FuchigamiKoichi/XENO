@@ -248,20 +248,32 @@ io.on('connection', (socket) => {
     io.to(roomId).emit('startGame',{players: jsonData.rooms[roomId].players});
   });
 
+
+  function emitWithAck(now, choices, kind, socketId) {
+    return new Promise((resolve, reject) => {
+      io.timeout(5000).to(socketId).emit('yourTurn', {now: now, choices: choices, kind: kind}, (err, responses) => {
+        if (err) {
+          reject(err);
+        } else {
+          if(responses && responses.length>0){
+            if(kind=='opponentChoice'){
+              resolve(choices[responses[0]].selectNumber); // 最初の応答を返す（単一対象を想定）
+            }else{
+              resolve(choices[responses[0]])
+            }
+          }else{
+            reject(new Error("No response received"));
+          }
+        }
+      });
+    });
+  }
+
   // CPUプレイヤーの選択関数
-  function choice(now, choices, kind, socketId) {
-    if (kind === 'opponentChoice') {
-      io.timeout(5000).to(socketId).emit('yourTurn', {now: now, choices: choices, kind: kind}, (err, response) =>{
-        console.log(`response: ${response}`)
-        const choice = choices[response[0]];
-        return choice.selectNumber;
-      })
-    }else{
-      io.timeout(5000).to(socketId).emit('yourTurn', {now: now, choices: choices, kind: kind}, (err, response) =>{
-        console.log(`response: ${response}`)
-        return choices[response[0]];
-      })
-    }
+  async function choice(now, choices, kind, socketId) {
+    const response = await emitWithAck(now, choices, kind, socketId);
+    console.log(`responce: ${response}`)
+    return response
   }
 
   // CPUプレイヤーの命名関数

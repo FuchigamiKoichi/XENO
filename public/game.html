@@ -593,49 +593,55 @@
         function updateGameView(now) {
 
             // 手札表示を更新
-            const playerHandZone = document.getElementById("player-hand");
-            playerHandZone.innerHTML = "";
-            now.myHands.forEach(card => {
-                const cardImg = document.createElement("img");
-                cardImg.src =  `../images/${card}.jpg`;
-                cardImg.classList.add("card");
-                // cardImg.addEventListener("click", () => playCard(cardImg));
-                playerHandZone.appendChild(cardImg);
-            });
+            if(now.myHands.length>0){
+                const playerHandZone = document.getElementById("player-hand");
+                playerHandZone.innerHTML = "";
+                now.myHands.forEach(card => {
+                    const cardImg = document.createElement("img");
+                    cardImg.src =  `../images/${card}.jpg`;
+                    cardImg.classList.add("card");
+                    // cardImg.addEventListener("click", () => playCard(cardImg));
+                    playerHandZone.appendChild(cardImg);
+                });
+            }
 
             // 自分の場に出されたカード表示
-            const playArea = document.getElementById("playArea");
-            playArea.innerHTML = "";
-            let index = 0;
-            now.myPlayed.forEach(card => {
-                const playedImg = document.createElement("img");
-                playedImg.src = `../images/${card}.jpg`;
-                playedImg.classList.add("played-card");
-                playedImg.position = "absolute";
-                playedImg.left = `${index * 40}px`;
-                playedImg.zIndex = index;
-                playedImg.style.width = "100px";
-                playedImg.style.height = "150px";
-                playArea.appendChild(playedImg);
-                index++;
-            });
+            if(now.myPlayed.length>0){
+                const playArea = document.getElementById("playArea");
+                playArea.innerHTML = "";
+                let index = 0;
+                now.myPlayed.forEach(card => {
+                    const playedImg = document.createElement("img");
+                    playedImg.src = `../images/${card}.jpg`;
+                    playedImg.classList.add("played-card");
+                    playedImg.position = "absolute";
+                    playedImg.left = `${index * 40}px`;
+                    playedImg.zIndex = index;
+                    playedImg.style.width = "100px";
+                    playedImg.style.height = "150px";
+                    playArea.appendChild(playedImg);
+                    index++;
+                });
+            }
 
             // 相手の場に出されたカード
-            const opponentArea = document.getElementById("opponent-playArea");
-            opponentArea.innerHTML = "";
-            index = 0;
-            now.otherPlayed["1"].forEach(card => {
-                const playedImg = document.createElement("img");
-                playedImg.src = `../images/${card}.jpg`;
-                playedImg.classList.add("played-card");
-                playedImg.position = "absolute";
-                playedImg.left = `${index * 40}px`;
-                playedImg.zIndex = index;
-                playedImg.style.width = "100px";
-                playedImg.style.height = "150px";
-                opponentArea.appendChild(playedImg);
-                index++;
-            });
+            if("1" in now.otherPlayed){
+                const opponentArea = document.getElementById("opponent-playArea");
+                opponentArea.innerHTML = "";
+                index = 0;
+                now.otherPlayed["1"].forEach(card => {
+                    const playedImg = document.createElement("img");
+                    playedImg.src = `../images/${card}.jpg`;
+                    playedImg.classList.add("played-card");
+                    playedImg.position = "absolute";
+                    playedImg.left = `${index * 40}px`;
+                    playedImg.zIndex = index;
+                    playedImg.style.width = "100px";
+                    playedImg.style.height = "150px";
+                    opponentArea.appendChild(playedImg);
+                    index++;
+                });
+            }
 
             // 相手の手札（裏向き）
             const opponentHandZone = document.getElementById("opponent-hand");
@@ -655,6 +661,7 @@
             }
 
             // デッキ
+            console.log(`now.cardNumber: ${now.cardNumber}`)
             if(now.cardNumber>0){
                 const deckCard = document.createElement("img");
                 deckCard.src = `../images/0.jpg`;  
@@ -1359,8 +1366,7 @@
 
         socket.on('yourTurn', (data, callback) => {
             updateGameView(data.now);
-            console.log('myTurn');
-            callback(0)
+            callback([0])
         })
 
     //     // テスト用（ゲーム開始時に1回ターン開始）
