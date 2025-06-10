@@ -119,7 +119,7 @@ class Game {
                 createData(this.field, player),
                 hands,
                 'play_card',
-                player.playerId
+                player.socketId
             );
             const cardNumber = parseInt(response);
 
