@@ -251,12 +251,17 @@ io.on('connection', (socket) => {
 
   function emitWithAck(now, choices, kind, socketId) {
     return new Promise((resolve, reject) => {
-      io.timeout(5000).to(socketId).emit('yourTurn', {now: now, choices: choices, kind: kind}, (err, responses) => {
+      console.log(`socketId: ${socketId}`)
+      console.log(`kind: ${kind}`)
+      const util = require('util');
+      console.log(util.inspect(choices, { depth: null }));
+      io.timeout(50000).to(socketId).emit('yourTurn', {now: now, choices: choices, kind: kind}, (err, responses) => {
         if (err) {
           reject(err);
         } else {
           if(responses && responses.length>0){
             if(kind=='opponentChoice'){
+              console.log(`responses[0]: ${responses[0]}`)
               resolve(choices[responses[0]].selectNumber); // 最初の応答を返す（単一対象を想定）
             }else{
               resolve(choices[responses[0]])
@@ -271,9 +276,13 @@ io.on('connection', (socket) => {
 
   // CPUプレイヤーの選択関数
   async function choice(now, choices, kind, socketId) {
-    const response = await emitWithAck(now, choices, kind, socketId);
-    console.log(`responce: ${response}`)
-    return response
+    try {
+      const response = await emitWithAck(now, choices, kind, socketId);
+      console.log(`responce: ${response}`)
+      return response
+    } catch (e) {
+      console.error("choice (yourTurn) failed:", e);
+    }
   }
 
   // CPUプレイヤーの命名関数
