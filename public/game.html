@@ -605,6 +605,7 @@
                     const cardImg = document.createElement("img");
                     cardImg.src =  `../images/${card}.jpg`;
                     cardImg.classList.add("card");
+                    cardImg.value = card;
                     // cardImg.addEventListener("click", () => playCard(cardImg));
                     playerHandZone.appendChild(cardImg);
                 });
@@ -721,10 +722,17 @@
             resetGame(); 
         }
         
-        function playCard(playCard) {
+        function playCard (cardNumber) {
             return new Promise((resolve) => {
-                let imgSrc = cardElement.src; // クリックしたカードの画像を取得
-                usedCards.push(imgSrc); // 使用済みリストに追加
+                let myHands = playerHandZone.querySelectorAll('img');
+                const imgSrc = `../images/${cardNumber}.jpg`
+                for(let i=0; i<myHands.length; i++){
+                    console.log(`Image: ${myHands[i].value}`)
+                    if(myHands[i].value == cardNumber){
+                        playerHandZone.removeChild(myHands[i])
+                        break
+                    }
+                }
 
                 // 拡大表示エリア
                 let zoomArea = document.getElementById("cardZoom");
@@ -741,8 +749,7 @@
 
                 // 効果説明テキスト
                 let CharacterConsoleValue;
-                let fileName = imgSrc.split("/").pop();
-                let characterName = getCharacterName(fileName);
+                let characterName = getCharacterName(cardNumber);
                 let effectText = document.getElementById("effectDescription");
                 effectText.textContent = getEffectDescription(characterName);
 
@@ -765,52 +772,20 @@
                     newCard.style.height = "150px";
                     newCard.style.transition = "transform 0.5s ease-in-out";
                     playArea.appendChild(newCard);
-
-                    console.log('cardElement：'+cardElement)
-                    // 手札から削除
-                    cardElement.remove();
-                    
-                    console.log("fileName:" + fileName);
-                   
-                    addLog("プレイヤー１が" + characterName + "を使用しました");
                 }, 1500);
-                // **3秒後に「相手のターンです」を表示**
+                // 1.5秒後（アニメーション完了後）にプレイエリアに移動
                 setTimeout(() => {
-                    let secondTurnIndicator = document.getElementById("second_turn");
-                    secondTurnIndicator.style.display = "block";
-                    secondTurnIndicator.style.opacity = "1";
-
-                    // **さらに2秒後に CPU のターンを開始 & 「相手のターンです」を消す**
-                    setTimeout(() => {
-                        secondTurnIndicator.style.opacity = "0";
-                        secondTurnIndicator.style.display = "none";
-                        cpuTurn(); // CPUのターン開始
-                    }, 2000);
-                }, 3000);
+                    resolve('done');
+                }, 1500);
             })
         }
         
         //場に出したキャラクターの名前を取得(例：皇帝)
-        function getCharacterName(filename) {
-
+        function getCharacterName(cardNumber) {
+            cardNumber = parseInt(cardNumber)
             // 結果を入れる変数を用意
-            let characterConsoleName = "不明なキャラクター";
-            let ofCard;
-            // decks 配列を1つずつ確認
-            for (let i = 0; i < OriginalDecks.length; i++) {
-                ofCard = OriginalDecks[i];
-
-                // ファイル名が一致するかを確認
-                if (ofCard.name === filename) {
-                    // 一致したらキャラクター名をセットして終了
-                    characterConsoleName = ofCard.character;
-                    CharacterConsoleValue = ofCard.value;
-                    break;
-                }else{
-                    console.log("ofCard:" + ofCard.name);
-                }
-            }
-            return characterConsoleName;
+            characterNames = ['少年', '兵士', '占い師', '乙女', '死神', '貴族', '賢者', '精霊', '皇帝', '英雄']
+            return characterNames[cardNumber - 1];
         }
 
         
@@ -1391,6 +1366,14 @@
             }else if(data.kind=='opponentChoice'){
                 console.log('opponentChoice')
                 callback([0])
+            }else if(data.kind == 'play_card'){
+                let playerSelect = await select(data.choices);
+                selectContainer.style.display = 'none';
+                const done = await playCard(data.choices[playerSelect])
+                if(done == 'done'){
+                    callback([playerSelect])
+                }
+                console.log(`playerSelect: ${playerSelect}`)
             }else{
                 let playerSelect = await select(data.choices);
                 selectContainer.style.display = 'none';
