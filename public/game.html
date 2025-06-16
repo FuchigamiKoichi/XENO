@@ -571,7 +571,6 @@
         let ruleModal = document.getElementById("ruleModal");
         let closeRule = document.getElementById("clothRule");
 
-        const sideContainer = document.getElementById("side-card-container");
         const playerHandZone = document.getElementById("player-hand");
         const playArea = document.getElementById("playArea");
         const opponentArea = document.getElementById("opponent-playArea");
@@ -596,7 +595,8 @@
             playerHandZone.innerHTML = "";
             playArea.innerHTML = "";
             opponentArea.innerHTML = "";
-            deckContainer.innerHTML = "<div id='deck-count'>/div><div id='side-card-container'></div>";
+            deckContainer.innerHTML = "<div id='deck-count'></div><div id='side-card-container'></div>";
+            const sideContainer = document.getElementById("side-card-container");
             sideContainer.innerHTML = "";
 
             // 手札表示を更新
@@ -657,6 +657,7 @@
             opponentHandZone.appendChild(backCard);
 
             // 転生札
+            console.log(`reincarnatin: ${now.reincarnation}`)
             if(now.reincarnation){
                 const sideCard = document.createElement("img");
                 sideCard.src = `../images/0.jpg`;
