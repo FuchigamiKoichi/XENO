@@ -628,20 +628,24 @@
             }
 
             // 相手の場に出されたカード
-            if("1" in now.otherPlayed){
-                index = 0;
-                now.otherPlayed["1"].forEach(card => {
-                    const playedImg = document.createElement("img");
-                    playedImg.src = `../images/${card}.jpg`;
-                    playedImg.classList.add("played-card");
-                    playedImg.position = "absolute";
-                    playedImg.left = `${index * 40}px`;
-                    playedImg.zIndex = index;
-                    playedImg.style.width = "100px";
-                    playedImg.style.height = "150px";
-                    opponentArea.appendChild(playedImg);
-                    index++;
-                });
+            const otherPlayedKeys = Object.keys(now.otherPlayed)
+            if(otherPlayedKeys){
+                if(otherPlayedKeys.length > 0){
+                    index = 0;
+                    console.log(`keys: ${otherPlayedKeys}`);
+                    now.otherPlayed[otherPlayedKeys[0]].forEach(card => {
+                        const playedImg = document.createElement("img");
+                        playedImg.src = `../images/${card}.jpg`;
+                        playedImg.classList.add("played-card");
+                        playedImg.position = "absolute";
+                        playedImg.left = `${index * 40}px`;
+                        playedImg.zIndex = index;
+                        playedImg.style.width = "100px";
+                        playedImg.style.height = "150px";
+                        opponentArea.appendChild(playedImg);
+                        index++;
+                    });
+                }
             }
 
             // 相手の手札（裏向き）
