@@ -415,6 +415,18 @@
             z-index: 9999;            /* 他の要素より前面に配置 */
             pointer-events: auto;     /* クリックを受け付ける（必要なら） */
         }
+
+        #select-container{
+            position: fixed;
+            top: 20%;
+            left: 30%;
+            width: 50vw;
+            height: 50vh;
+            background-color: rgba(0, 0, 0, 0);
+            justify-content: center;
+            align-items: center;
+            z-index: 99;
+        }
     </style>
 </head>
 <body>
@@ -704,11 +716,8 @@
             resetGame(); 
         }
         
-        function playCard(cardElement) {
-            if (!isPlayerTurn == true) {
-                return;
-            } else {
-                isPlayerTurn = false;
+        function playCard(playCard) {
+            return new Promise((resolve) => {
                 let imgSrc = cardElement.src; // クリックしたカードの画像を取得
                 usedCards.push(imgSrc); // 使用済みリストに追加
 
@@ -773,7 +782,7 @@
                         cpuTurn(); // CPUのターン開始
                     }, 2000);
                 }, 3000);
-            }
+            })
         }
         
         //場に出したキャラクターの名前を取得(例：皇帝)
@@ -1338,22 +1347,22 @@
         }
 
         async function select(choices) {
-            selectContainer.style.display = 'block';
             return new Promise((resolve) => {
-                console.log('select')
-                selectContainer.innerHTML = "";
+                selectContainer.innerHTML = ""
                 for(let i=0; i<choices.length; i++){
                     let card_number = choices[i]
                     let card = document.createElement("img");
                     card.src = `../images/${card_number}.jpg`;
                     card.width = 140;
                     card.height = 210;
+                    card.zIndex = 100;
                     card.addEventListener('click', () => {
                         resolve(i)
                     })
                     card.classList.add('select-card');
                     selectContainer.appendChild(card);
                 }
+                selectContainer.style.display = 'block';
             })
         }
 
@@ -1362,7 +1371,7 @@
             console.log(data.kind)
             if(data.kind=='draw'){
                 if(data.choices.length>2){
-                    const playerSelect =  select(data.choices);
+                    let playerSelect =  await select(data.choices);
                     selectContainer.style.display = 'none';
                     const done = await drawCardToHand(playerSelect)
                     if(done == 'done'){
@@ -1375,10 +1384,12 @@
                     }
                 }
             }else if(data.kind=='opponentChoice'){
+                console.log('opponentChoice')
                 callback([0])
             }else{
-                const playerSelect = await select(data.choices);
+                let playerSelect = await select(data.choices);
                 selectContainer.style.display = 'none';
+                console.log(playerSelect)
                 callback([playerSelect])
             }
         })
