@@ -318,7 +318,8 @@ io.on('connection', (socket) => {
       }
       const gameData = {roomId: data.roomId, players: socketIdList};
       const game = new Game(2, funcs, gameData);
-      game.game();
+      const result = game.game();
+      console.log(`result: ${result}`)
     }
   })
 
