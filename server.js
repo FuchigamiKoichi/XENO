@@ -300,7 +300,7 @@ io.on('connection', (socket) => {
   ];
 
   // 全てのプレイヤーのreadyを判定
-  socket.on("ready", (data) => {
+  socket.on("ready", async (data) => {
     loadData();
     jsonData.players[data.playerId].ready = 1
     saveData(jsonData);
@@ -318,7 +318,7 @@ io.on('connection', (socket) => {
       }
       const gameData = {roomId: data.roomId, players: socketIdList};
       const game = new Game(2, funcs, gameData);
-      const result = game.game();
+      const result = await game.game();
       console.log(`result: ${result}`)
     }
   })

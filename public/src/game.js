@@ -160,7 +160,7 @@ class Game {
                     }
                 }
             }
-            
+            console.log('gameDone')
 
             return [true, this.log];
         } catch (e) {
