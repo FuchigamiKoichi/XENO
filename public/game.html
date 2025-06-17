@@ -427,6 +427,19 @@
             align-items: center;
             z-index: 99;
         }
+
+        #showResult{
+            position: fixed;
+            top: 20%;
+            left: 30%;
+            width: 50vw;
+            height: 50vh;
+            background-color: rgba(0, 0, 0, 0);
+            justify-content: center;
+            align-items: center;
+            z-index: 99;
+            display: none;
+        }
     </style>
 </head>
 <body>
@@ -454,6 +467,7 @@
         </div>
 
         <div id="select-container"></div>
+        <div id="showResult"></div>
     
         <!-- 相手のプレイエリアと手札 -->
         <div id="opponent-center-area">
@@ -1303,27 +1317,10 @@
             logMessages.scrollTop = logMessages.scrollHeight;
         }
 
-        function checkDeckEmpty(){
-            if(deck.length == 0){
-                // 両者の手札を公開
-                showBothHands();
-                // 手札の value を取得
-                let playerCard = playerHand[0];
-                let cpuCard = opponentHand[0];
-
-                 // 勝敗判定
-                if (playerCard.value > cpuCard.value) {
-                    showResult("あなたの勝ち！");
-                } else if (playerCard.value < cpuCard.value) {
-                    showResult("CPUの勝ち！");
-                } else {
-                    showResult("引き分け！");
-                }
-            }
-        }
-
         function showResult(message){
-            alert(message);
+            const showResultElement = document.getElementById("showResult")
+            showResultElement.innerHTML = message;
+            showResultElement.style.display = "block";
         }
 
         async function select(choices) {
@@ -1384,6 +1381,10 @@
                     console.log(error)
                 }
             }
+        })
+
+        socket.on('result', (data) => {
+            showResult(data.result)
         })
     </script>
 </body>
