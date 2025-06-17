@@ -1375,10 +1375,14 @@
                 }
                 console.log(`playerSelect: ${playerSelect}`)
             }else{
-                let playerSelect = await select(data.choices);
-                selectContainer.style.display = 'none';
-                console.log(playerSelect)
-                callback([playerSelect])
+                try {
+                    let playerSelect = await select(data.choices);
+                    selectContainer.style.display = 'none';
+                    console.log(playerSelect)
+                    callback([playerSelect])   
+                } catch (error) {
+                    console.log(error)
+                }
             }
         })
     </script>

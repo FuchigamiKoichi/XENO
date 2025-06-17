@@ -160,6 +160,7 @@ class Game {
                     }
                 }
             }
+            
 
             return [true, this.log];
         } catch (e) {

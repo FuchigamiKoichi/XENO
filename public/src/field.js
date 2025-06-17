@@ -42,6 +42,7 @@ class Field {
         const choiceFunc = player.choice;
         player.affected = true;
         const cards = this.deck.slice(0, player.get);
+        player.get = 1;
         if (cards.length > 0) {
             const choices = cards.map(card => card.number);
             const responce = await choiceFunc(
@@ -65,7 +66,6 @@ class Field {
             const getCard = cards[getCardIndex];
             player.hands.push(getCard);
             this.deck.splice(getCardIndex, 1);
-            player.get = 1;
             this.deck = shuffle(this.deck);
         }
     }
