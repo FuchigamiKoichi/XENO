@@ -319,7 +319,19 @@ io.on('connection', (socket) => {
       const gameData = {roomId: data.roomId, players: socketIdList};
       const game = new Game(2, funcs, gameData);
       const result = await game.game();
-      console.log(`result: ${result}`)
+      if(result[0]){
+        const gameLog = result[1]
+        for(let i=0; i<jsonData.rooms[data.roomId].players.length; i++){
+          const player = jsonData.players[jsonData.rooms[data.roomId].players[i]]
+          const result = gameLog[i][gameLog[i].length - 1]
+          io.to(player.socketId).emit('result', {result: result})
+          console.log(`${player.name}: ${result}`)
+        }
+
+      }else{
+        console.log(`err: ${result[1]}`)
+        console.log(`log: ${result[2]}`)
+      }
     }
   })
 
