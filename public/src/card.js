@@ -14,7 +14,7 @@ class Card {
         field.played[turnNumber - 1].push(this);
     }
 
-    opponentChoice(me) {
+    async opponentChoice(me) {
         const choice = me.choice;
         const field = this.field;
         let num = 0;
@@ -23,20 +23,30 @@ class Card {
 
         for (const player of field.players) {
             if (player !== me && player.affected) {
-                opponentPlayers.push(player);
-                choices.push({ selectNumber: num, player: player });
+                choices.push({ selectNumber: num, player: player.turnNumber });
                 num++;
             }
         }
 
-        if (opponentPlayers.length !== 0) {
-            const opponentNumber = parseInt(choice(
+        if (choices.length !== 0) {
+            const responce = await choice(
                 createData(field, me),
                 choices,
-                'opponentChoice'
-            ));
-            createLog(createData(field, me), choices, 'opponentChoice', field, me, opponentNumber);
-            return opponentPlayers[opponentNumber];
+                'opponentChoice',
+                me.socketId
+            )
+            const opponentTurnNumber = parseInt(responce);
+            let opponent = '';
+            console.log(`opponentTurnNumber: ${opponentTurnNumber}`)
+            for(const player of field.players) {
+                console.log(`player: ${player}`)
+                if(player.turnNumber == opponentTurnNumber){
+                    opponent = player;
+                }
+            }
+            console.log(`opponent: ${opponent.name}`)
+            createLog(createData(field, me), choices, 'opponentChoice', field, me, opponentTurnNumber);
+            return opponent;
         }
         return null;
     }
@@ -60,14 +70,15 @@ class Card1 extends Card {
         super(1, '少年', field);
     }
 
-    play(player) {
+    async play(player) {
+        console.log('playCard1')
         const choice = player.choice;
         const field = this.field;
         const playedCards = field.played.flat();
         
         if (playedCards.some(card => card instanceof Card1)) {
             this.move(player);
-            const opponent = this.opponentChoice(player);
+            const opponent = await this.opponentChoice(player);
             if (opponent && this.field.deck.length > 0) {
                 const getNumber = opponent.get;
                 opponent.get = 1;
@@ -82,11 +93,12 @@ class Card1 extends Card {
                     opponent.looked.push({ subject: player, card });
                 });
 
-                const cardNumber = parseInt(choice(
+                const responce = await choice(
                     createData(field, player),
                     choices,
                     'trush'
-                ));
+                )
+                const cardNumber = parseInt(responce);
                 createLog(createData(field, player), choices, 'trush', field, player, cardNumber);
                 
                 const trushIndex = opponent.hands.findIndex(card => card.number === cardNumber);
@@ -109,13 +121,14 @@ class Card2 extends Card {
         super(2, '兵士', field);
     }
 
-    play(player) {
+    async play(player) {
+        console.log('playCard2')
         const choice = player.choice;
         this.move(player);
-        const field = this.field;
-        const opponent = this.opponentChoice(player);
+        const opponent = await this.opponentChoice(player);
         
         if (opponent) {
+            const field = this.field;
             const cards = [
                 new Card1(field), new Card2(field), new Card3(field),
                 new Card4(field), new Card5(field), new Card6(field),
@@ -124,11 +137,12 @@ class Card2 extends Card {
             ];
             const cardsNumber = cards.map(card => card.number);
             
-            const predNumber = parseInt(choice(
+            const responce = await choice(
                 createData(field, player),
                 cardsNumber,
                 'pred'
-            ));
+            )
+            const predNumber = parseInt(responce);
             createLog(createData(field, player), cardsNumber, 'pred', field, player, predNumber);
             
             const predCard = cards[predNumber - 1];
@@ -151,10 +165,11 @@ class Card3 extends Card {
         super(3, '占い師', field);
     }
 
-    play(player) {
+    async play(player) {
+        console.log('playCard3')
         const choice = player.choice;
         this.move(player);
-        const opponent = this.opponentChoice(player);
+        const opponent = await this.opponentChoice(player);
         
         if (opponent) {
             for (const card of opponent.hands) {
@@ -171,7 +186,8 @@ class Card4 extends Card {
         super(4, '乙女', field);
     }
 
-    play(player) {
+    async play(player) {
+        console.log('playCard4')
         this.move(player);
         player.affected = false;
     }
@@ -183,10 +199,11 @@ class Card5 extends Card {
         super(5, '死神', field);
     }
 
-    play(player) {
+    async play(player) {
+        console.log('playCard5')
         const choice = player.choice;
         this.move(player);
-        const opponent = this.opponentChoice(player);
+        const opponent = await this.opponentChoice(player);
         
         if (opponent && this.field.deck.length > 0) {
             const getNumber = opponent.get;
@@ -212,10 +229,11 @@ class Card6 extends Card {
         super(6, '貴族', field);
     }
 
-    play(player) {
+    async play(player) {
+        console.log('playCard6')
         const choice = player.choice;
         this.move(player);
-        const opponent = this.opponentChoice(player);
+        const opponent = await this.opponentChoice(player);
         
         if (opponent && player.hands.length > 0) {
             if (player.hands[0].number < opponent.hands[0].number) {
@@ -241,7 +259,8 @@ class Card7 extends Card {
         super(7, '賢者', field);
     }
 
-    play(player) {
+    async play(player) {
+        console.log('playCard7')
         this.move(player);
         player.get = 3;
     }
@@ -253,10 +272,11 @@ class Card8 extends Card {
         super(8, '精霊', field);
     }
 
-    play(player) {
+    async play(player) {
+        console.log('playCard8')
         const choice = player.choice;
         this.move(player);
-        const opponent = this.opponentChoice(player);
+        const opponent = await this.opponentChoice(player);
         
         if (opponent && player.hands.length > 0 && opponent.hands.length > 0) {
             const copySelf = player.hands.pop();
@@ -278,10 +298,11 @@ class Card9 extends Card {
         super(9, '皇帝', field);
     }
 
-    play(player) {
+    async play(player) {
+        console.log('playCard9')
         const choice = player.choice;
         this.move(player);
-        const opponent = this.opponentChoice(player);
+        const opponent = await this.opponentChoice(player);
         
         if (opponent && this.field.deck.length > 0) {
             const getNumber = opponent.get;
@@ -296,11 +317,12 @@ class Card9 extends Card {
                 player.look.push({ opponent, card });
             });
 
-            const choiceNumber = parseInt(choice(
+            const responce = await choice(
                 createData(this.field, player),
                 choices,
                 'trush'
-            ));
+            )
+            const choiceNumber = parseInt(responce);
             createLog(createData(this.field, player), choices, 'trush', this.field, player, choiceNumber);
             
             const choiceIndex = opponent.hands.findIndex(card => card.number === choiceNumber);
@@ -321,6 +343,7 @@ class Card10 extends Card {
     }
 
     play(player) {
+        console.log('playCard10')
         return null;
     }
 }
