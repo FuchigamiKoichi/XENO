@@ -261,8 +261,10 @@ io.on('connection', (socket) => {
         } else {
           if(responses && responses.length>0){
             if(kind=='opponentChoice'){
-              console.log(`responses[0]: ${responses[0]}`)
-              resolve(choices[responses[0]].selectNumber); // 最初の応答を返す（単一対象を想定）
+              const playerChoice = choices[responses].player
+              console.log(`responses: ${responses}`)
+              console.log(`playerChoice: ${playerChoice}`)
+              resolve(playerChoice); // 最初の応答を返す（単一対象を想定）
             }else{
               resolve(choices[responses[0]])
             }

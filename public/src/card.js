@@ -29,24 +29,23 @@ class Card {
         }
 
         if (choices.length !== 0) {
-            console.log(`me.socketId: ${me.socketId}`)
-            console.log(`opponentChoice_choices: ${choices}`)
             const responce = await choice(
                 createData(field, me),
                 choices,
                 'opponentChoice',
                 me.socketId
             )
-            const opponentNumber = parseInt(responce);
-            const opponentTurnNumber = choices[opponentNumber]
+            const opponentTurnNumber = parseInt(responce);
             let opponent = '';
-            let num = 0;
+            console.log(`opponentTurnNumber: ${opponentTurnNumber}`)
             for(const player of field.players) {
+                console.log(`player: ${player}`)
                 if(player.turnNumber == opponentTurnNumber){
                     opponent = player;
                 }
             }
-            createLog(createData(field, me), choices, 'opponentChoice', field, me, opponentNumber);
+            console.log(`opponent: ${opponent.name}`)
+            createLog(createData(field, me), choices, 'opponentChoice', field, me, opponentTurnNumber);
             return opponent;
         }
         return null;
