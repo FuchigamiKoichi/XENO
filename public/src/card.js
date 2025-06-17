@@ -96,7 +96,8 @@ class Card1 extends Card {
                 const responce = await choice(
                     createData(field, player),
                     choices,
-                    'trush'
+                    'trush',
+                    player.socketId
                 )
                 const cardNumber = parseInt(responce);
                 createLog(createData(field, player), choices, 'trush', field, player, cardNumber);
@@ -140,7 +141,8 @@ class Card2 extends Card {
             const responce = await choice(
                 createData(field, player),
                 cardsNumber,
-                'pred'
+                'pred',
+                player.socketId
             )
             const predNumber = parseInt(responce);
             createLog(createData(field, player), cardsNumber, 'pred', field, player, predNumber);
@@ -320,7 +322,8 @@ class Card9 extends Card {
             const responce = await choice(
                 createData(this.field, player),
                 choices,
-                'trush'
+                'trush',
+                player.socketId
             )
             const choiceNumber = parseInt(responce);
             createLog(createData(this.field, player), choices, 'trush', this.field, player, choiceNumber);
