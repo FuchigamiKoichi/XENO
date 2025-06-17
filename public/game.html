@@ -408,12 +408,24 @@
         }
 
         #overlay {
-            position: fixed;          /* ウィンドウ全体に固定配置 */
+            position: absolute;          /* ウィンドウ全体に固定配置 */
             overflow-y: auto;
             top: 50;
             left: 50;
             z-index: 9999;            /* 他の要素より前面に配置 */
             pointer-events: auto;     /* クリックを受け付ける（必要なら） */
+        }
+
+        #select-container{
+            position: fixed;
+            top: 20%;
+            left: 30%;
+            width: 50vw;
+            height: 50vh;
+            background-color: rgba(0, 0, 0, 0);
+            justify-content: center;
+            align-items: center;
+            z-index: 99;
         }
     </style>
 </head>
@@ -531,9 +543,7 @@
     <script>
         const socket = io();
 
-        let playerSelect = -1;
-
-        let selectContainer = document.getElementById("select-container");
+        const selectContainer = document.getElementById('select-container')
         selectContainer.style.display = 'none';
 
         let urls = String(window.location.href).split('?')
@@ -561,6 +571,11 @@
         let ruleModal = document.getElementById("ruleModal");
         let closeRule = document.getElementById("clothRule");
 
+        const playerHandZone = document.getElementById("player-hand");
+        const playArea = document.getElementById("playArea");
+        const opponentArea = document.getElementById("opponent-playArea");
+        const deckContainer = document.getElementById("deck-container");
+
         function startGame() {
             document.getElementById("startScreen").style.display = "none";
             document.getElementById("gameScreen").style.display = "flex";
@@ -576,18 +591,11 @@
         }
 
         function updateGameView(now) {
-            const playerHandZone = document.getElementById("player-hand");
+            
             playerHandZone.innerHTML = "";
-
-            const playArea = document.getElementById("playArea");
             playArea.innerHTML = "";
-
-            const opponentArea = document.getElementById("opponent-playArea");
             opponentArea.innerHTML = "";
-
-            const deckContainer = document.getElementById("deck-container");
-            deckContainer.innerHTML = "<div id='deck-count'>/div><div id='side-card-container'></div>";
-
+            deckContainer.innerHTML = "<div id='deck-count'></div><div id='side-card-container'></div>";
             const sideContainer = document.getElementById("side-card-container");
             sideContainer.innerHTML = "";
 
@@ -597,6 +605,7 @@
                     const cardImg = document.createElement("img");
                     cardImg.src =  `../images/${card}.jpg`;
                     cardImg.classList.add("card");
+                    cardImg.value = card;
                     // cardImg.addEventListener("click", () => playCard(cardImg));
                     playerHandZone.appendChild(cardImg);
                 });
@@ -620,20 +629,24 @@
             }
 
             // 相手の場に出されたカード
-            if("1" in now.otherPlayed){
-                index = 0;
-                now.otherPlayed["1"].forEach(card => {
-                    const playedImg = document.createElement("img");
-                    playedImg.src = `../images/${card}.jpg`;
-                    playedImg.classList.add("played-card");
-                    playedImg.position = "absolute";
-                    playedImg.left = `${index * 40}px`;
-                    playedImg.zIndex = index;
-                    playedImg.style.width = "100px";
-                    playedImg.style.height = "150px";
-                    opponentArea.appendChild(playedImg);
-                    index++;
-                });
+            const otherPlayedKeys = Object.keys(now.otherPlayed)
+            if(otherPlayedKeys){
+                if(otherPlayedKeys.length > 0){
+                    index = 0;
+                    console.log(`keys: ${otherPlayedKeys}`);
+                    now.otherPlayed[otherPlayedKeys[0]].forEach(card => {
+                        const playedImg = document.createElement("img");
+                        playedImg.src = `../images/${card}.jpg`;
+                        playedImg.classList.add("played-card");
+                        playedImg.position = "absolute";
+                        playedImg.left = `${index * 40}px`;
+                        playedImg.zIndex = index;
+                        playedImg.style.width = "100px";
+                        playedImg.style.height = "150px";
+                        opponentArea.appendChild(playedImg);
+                        index++;
+                    });
+                }
             }
 
             // 相手の手札（裏向き）
@@ -645,6 +658,7 @@
             opponentHandZone.appendChild(backCard);
 
             // 転生札
+            console.log(`reincarnatin: ${now.reincarnation}`)
             if(now.reincarnation){
                 const sideCard = document.createElement("img");
                 sideCard.src = `../images/0.jpg`;
@@ -708,13 +722,17 @@
             resetGame(); 
         }
         
-        function playCard(cardElement) {
-            if (!isPlayerTurn == true) {
-                return;
-            } else {
-                isPlayerTurn = false;
-                let imgSrc = cardElement.src; // クリックしたカードの画像を取得
-                usedCards.push(imgSrc); // 使用済みリストに追加
+        function playCard (cardNumber) {
+            return new Promise((resolve) => {
+                let myHands = playerHandZone.querySelectorAll('img');
+                const imgSrc = `../images/${cardNumber}.jpg`
+                for(let i=0; i<myHands.length; i++){
+                    console.log(`Image: ${myHands[i].value}`)
+                    if(myHands[i].value == cardNumber){
+                        playerHandZone.removeChild(myHands[i])
+                        break
+                    }
+                }
 
                 // 拡大表示エリア
                 let zoomArea = document.getElementById("cardZoom");
@@ -731,8 +749,7 @@
 
                 // 効果説明テキスト
                 let CharacterConsoleValue;
-                let fileName = imgSrc.split("/").pop();
-                let characterName = getCharacterName(fileName);
+                let characterName = getCharacterName(cardNumber);
                 let effectText = document.getElementById("effectDescription");
                 effectText.textContent = getEffectDescription(characterName);
 
@@ -755,52 +772,20 @@
                     newCard.style.height = "150px";
                     newCard.style.transition = "transform 0.5s ease-in-out";
                     playArea.appendChild(newCard);
-
-                    console.log('cardElement：'+cardElement)
-                    // 手札から削除
-                    cardElement.remove();
-                    
-                    console.log("fileName:" + fileName);
-                   
-                    addLog("プレイヤー１が" + characterName + "を使用しました");
                 }, 1500);
-                // **3秒後に「相手のターンです」を表示**
+                // 1.5秒後（アニメーション完了後）にプレイエリアに移動
                 setTimeout(() => {
-                    let secondTurnIndicator = document.getElementById("second_turn");
-                    secondTurnIndicator.style.display = "block";
-                    secondTurnIndicator.style.opacity = "1";
-
-                    // **さらに2秒後に CPU のターンを開始 & 「相手のターンです」を消す**
-                    setTimeout(() => {
-                        secondTurnIndicator.style.opacity = "0";
-                        secondTurnIndicator.style.display = "none";
-                        cpuTurn(); // CPUのターン開始
-                    }, 2000);
-                }, 3000);
-            }
+                    resolve('done');
+                }, 1500);
+            })
         }
         
         //場に出したキャラクターの名前を取得(例：皇帝)
-        function getCharacterName(filename) {
-
+        function getCharacterName(cardNumber) {
+            cardNumber = parseInt(cardNumber)
             // 結果を入れる変数を用意
-            let characterConsoleName = "不明なキャラクター";
-            let ofCard;
-            // decks 配列を1つずつ確認
-            for (let i = 0; i < OriginalDecks.length; i++) {
-                ofCard = OriginalDecks[i];
-
-                // ファイル名が一致するかを確認
-                if (ofCard.name === filename) {
-                    // 一致したらキャラクター名をセットして終了
-                    characterConsoleName = ofCard.character;
-                    CharacterConsoleValue = ofCard.value;
-                    break;
-                }else{
-                    console.log("ofCard:" + ofCard.name);
-                }
-            }
-            return characterConsoleName;
+            characterNames = ['少年', '兵士', '占い師', '乙女', '死神', '貴族', '賢者', '精霊', '皇帝', '英雄']
+            return characterNames[cardNumber - 1];
         }
 
         
@@ -906,43 +891,49 @@
 
         // 山札から手札にカードを追加
         function drawCardToHand(drawnCard) {
-            let deckElement = document.getElementById("deck"); // 山札の要素
-            let deckCountElement = document.getElementById("deck-count"); // 修正
-            let playerHand = document.getElementById("player-hand"); // プレイヤーの手札
-            
-            let newCard = document.createElement("img");
-            newCard.src = `../images/${drawnCard}.jpg`; // 画像のパスを組み立てる
-            newCard.classList.add("card");
+            return new Promise((resolve) => {
+                let deckElement = document.getElementById("deck"); // 山札の要素
+                let deckCountElement = document.getElementById("deck-count"); // 修正
+                let playerHand = document.getElementById("player-hand"); // プレイヤーの手札
+                
+                let newCard = document.createElement("img");
+                newCard.src = `../images/${drawnCard}.jpg`; // 画像のパスを組み立てる
+                newCard.classList.add("card");
 
-            // cardInfoをdata属性に設定
-            newCard.dataset.cardInfo = JSON.stringify(drawnCard); // cardInfoをdata属性として格納
+                // cardInfoをdata属性に設定
+                newCard.dataset.cardInfo = JSON.stringify(drawnCard); // cardInfoをdata属性として格納
 
-            
-            // ** 初期位置（山札の位置）を取得 **
-            let deckRect = deckElement.getBoundingClientRect();
-            let handRect = playerHand.getBoundingClientRect();
-            newCard.style.position = "absolute";
-            newCard.style.left = `${deckRect.left}px`;
-            newCard.style.top = `${deckRect.top}px`;
-            newCard.style.width = "100px"; 
-            newCard.style.height = "150px";
-            newCard.style.opacity = "0"; // 最初は透明
-            
-            document.body.appendChild(newCard); // 一時的にbodyに追加
-            // ** 少し遅延を入れてアニメーションを開始 **
-            setTimeout(() => {
-                newCard.style.transition = "left 0.5s ease-out, top 0.5s ease-out, opacity 0.5s";
-                newCard.style.left = `${handRect.left + 20}px`;
-                newCard.style.top = `${handRect.top + 20}px`;
-                newCard.style.opacity = "1";
-            }, 10);
-            // ** アニメーション完了後に手札に追加 **
-            setTimeout(() => {
-                newCard.style.position = "static";
-                newCard.style.transition = "none";
-                playerHand.appendChild(newCard); // 手札エリアに正式追加
-            }, 600);
-            playerHand.innerHTML = "";
+                
+                // ** 初期位置（山札の位置）を取得 **
+                let deckRect = deckElement.getBoundingClientRect();
+                let handRect = playerHand.getBoundingClientRect();
+                newCard.style.position = "absolute";
+                newCard.style.left = `${deckRect.left}px`;
+                newCard.style.top = `${deckRect.top}px`;
+                newCard.style.width = "100px"; 
+                newCard.style.height = "150px";
+                newCard.style.opacity = "0"; // 最初は透明
+                
+                document.body.appendChild(newCard); // 一時的にbodyに追加
+                // ** 少し遅延を入れてアニメーションを開始 **
+                setTimeout(() => {
+                    newCard.style.transition = "left 0.5s ease-out, top 0.5s ease-out, opacity 0.5s";
+                    newCard.style.left = `${handRect.left + 20}px`;
+                    newCard.style.top = `${handRect.top + 20}px`;
+                    newCard.style.opacity = "1";
+                }, 10);
+                // ** アニメーション完了後に手札に追加 **
+                setTimeout(() => {
+                    newCard.style.position = "static";
+                    newCard.style.transition = "none";
+                    playerHandZone.appendChild(newCard); // 手札エリアに正式追加
+                }, 600);
+                // playerHandZone.innerHTML = "";
+                // ** アニメーション完了後に手札に追加 **
+                setTimeout(() => {
+                    resolve('done')
+                }, 600);
+            })
         }
 
         
@@ -1336,18 +1327,17 @@
         }
 
         async function select(choices) {
-            new Promise((resolve) => {
-                console.log('select')
-                let selectContainer = document.getElementById('select-container')
-                selectContainer.innerHTML = "";
+            return new Promise((resolve) => {
+                selectContainer.innerHTML = ""
                 for(let i=0; i<choices.length; i++){
                     let card_number = choices[i]
                     let card = document.createElement("img");
                     card.src = `../images/${card_number}.jpg`;
-                    card.width = 200;
-                    card.height = 300;
-                    card.addEventListener('click', function(card_number){
-                        playerSelect = card_number
+                    card.width = 140;
+                    card.height = 210;
+                    card.zIndex = 100;
+                    card.addEventListener('click', () => {
+                        resolve(i)
                     })
                     card.classList.add('select-card');
                     selectContainer.appendChild(card);
@@ -1361,24 +1351,34 @@
             console.log(data.kind)
             if(data.kind=='draw'){
                 if(data.choices.length>2){
-                    playerSelect = -1
-                    await select(data.choices);
+                    let playerSelect =  await select(data.choices);
                     selectContainer.style.display = 'none';
-                    await drawCardToHand(playerSelect)
-                    callback([playerSelect])
-                    playerSelect = -1
+                    const done = await drawCardToHand(playerSelect)
+                    if(done == 'done'){
+                        callback([playerSelect])
+                    }
                 }else{
-                    await drawCardToHand(data.choices[0])
-                    callback([0])
+                    const done = await drawCardToHand(data.choices[0])
+                    if(done == 'done'){
+                        callback([0])
+                    }
                 }
             }else if(data.kind=='opponentChoice'){
+                console.log('opponentChoice')
                 callback([0])
-            }else{
-                playerSelect = -1
-                await select(data.choices);
+            }else if(data.kind == 'play_card'){
+                let playerSelect = await select(data.choices);
                 selectContainer.style.display = 'none';
+                const done = await playCard(data.choices[playerSelect])
+                if(done == 'done'){
+                    callback([playerSelect])
+                }
+                console.log(`playerSelect: ${playerSelect}`)
+            }else{
+                let playerSelect = await select(data.choices);
+                selectContainer.style.display = 'none';
+                console.log(playerSelect)
                 callback([playerSelect])
-                playerSelect = -1
             }
         })
     </script>
