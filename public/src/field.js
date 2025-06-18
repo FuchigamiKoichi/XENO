@@ -38,7 +38,7 @@ class Field {
         this.reincarnation = [reincarnationCard];
     }
 
-    async draw(player) {
+    async draw(player, roomId) {
         const choiceFunc = player.choice;
         player.affected = true;
         const cards = this.deck.slice(0, player.get);
@@ -49,7 +49,8 @@ class Field {
                 createData(this, player),
                 choices,
                 'draw',
-                player.socketId
+                player.socketId,
+                roomId
             );
             const choiceNumber = parseInt(responce);
             

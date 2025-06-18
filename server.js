@@ -277,9 +277,10 @@ io.on('connection', (socket) => {
   }
 
   // CPUプレイヤーの選択関数
-  async function choice(now, choices, kind, socketId) {
+  async function choice(now, choices, kind, socketId, roomId) {
     try {
-      const response = await emitWithAck(now, choices, kind, socketId);
+      const response = await emitWithAck(now, choices, kind, socketId, roomId);
+      io.to(roomId).except(socketId).emit('onatherTurn', {now: now, choices: choices, kind: kind, choice: response})
       console.log(`responce: ${response}`)
       return response
     } catch (e) {
@@ -317,7 +318,7 @@ io.on('connection', (socket) => {
         socketIdList.push(jsonData.players[jsonData.rooms[data.roomId].players[i]].socketId)
       }
       const gameData = {roomId: data.roomId, players: socketIdList};
-      const game = new Game(2, funcs, gameData);
+      const game = new Game(2, funcs, gameData, data.roomId);
       const result = await game.game();
       if(result[0]){
         const gameLog = result[1]
