@@ -1383,6 +1383,10 @@
             }
         })
 
+        socket.on('onatherTurn', (data) => {
+            console.log(`相手のターン: ${data.kind} -> ${data.choice}`)
+        })
+
         socket.on('result', (data) => {
             showResult(data.result)
         })

@@ -14,7 +14,7 @@ class Card {
         field.played[turnNumber - 1].push(this);
     }
 
-    async opponentChoice(me) {
+    async opponentChoice(me, roomId) {
         const choice = me.choice;
         const field = this.field;
         let num = 0;
@@ -33,7 +33,8 @@ class Card {
                 createData(field, me),
                 choices,
                 'opponentChoice',
-                me.socketId
+                me.socketId,
+                roomId
             )
             const opponentTurnNumber = parseInt(responce);
             let opponent = '';
@@ -70,7 +71,7 @@ class Card1 extends Card {
         super(1, '少年', field);
     }
 
-    async play(player) {
+    async play(player, roomId) {
         console.log('playCard1')
         const choice = player.choice;
         const field = this.field;
@@ -78,11 +79,11 @@ class Card1 extends Card {
         
         if (playedCards.some(card => card instanceof Card1)) {
             this.move(player);
-            const opponent = await this.opponentChoice(player);
+            const opponent = await this.opponentChoice(player, roomId);
             if (opponent && this.field.deck.length > 0) {
                 const getNumber = opponent.get;
                 opponent.get = 1;
-                field.draw(opponent);
+                field.draw(opponent, roomId);
                 opponent.get = getNumber;
                 
                 const opponentHands = [...opponent.hands];
@@ -97,7 +98,8 @@ class Card1 extends Card {
                     createData(field, player),
                     choices,
                     'trush',
-                    player.socketId
+                    player.socketId,
+                    roomId
                 )
                 const cardNumber = parseInt(responce);
                 createLog(createData(field, player), choices, 'trush', field, player, cardNumber);
@@ -122,11 +124,11 @@ class Card2 extends Card {
         super(2, '兵士', field);
     }
 
-    async play(player) {
+    async play(player, roomId) {
         console.log('playCard2')
         const choice = player.choice;
         this.move(player);
-        const opponent = await this.opponentChoice(player);
+        const opponent = await this.opponentChoice(player, roomId);
         
         if (opponent) {
             const field = this.field;
@@ -142,7 +144,8 @@ class Card2 extends Card {
                 createData(field, player),
                 cardsNumber,
                 'pred',
-                player.socketId
+                player.socketId,
+                roomId
             )
             const predNumber = parseInt(responce);
             createLog(createData(field, player), cardsNumber, 'pred', field, player, predNumber);
@@ -167,11 +170,11 @@ class Card3 extends Card {
         super(3, '占い師', field);
     }
 
-    async play(player) {
+    async play(player, roomId) {
         console.log('playCard3')
         const choice = player.choice;
         this.move(player);
-        const opponent = await this.opponentChoice(player);
+        const opponent = await this.opponentChoice(player, roomId);
         
         if (opponent) {
             for (const card of opponent.hands) {
@@ -188,7 +191,7 @@ class Card4 extends Card {
         super(4, '乙女', field);
     }
 
-    async play(player) {
+    async play(player, roomId) {
         console.log('playCard4')
         this.move(player);
         player.affected = false;
@@ -201,16 +204,16 @@ class Card5 extends Card {
         super(5, '死神', field);
     }
 
-    async play(player) {
+    async play(player, roomId) {
         console.log('playCard5')
         const choice = player.choice;
         this.move(player);
-        const opponent = await this.opponentChoice(player);
+        const opponent = await this.opponentChoice(player, roomId);
         
         if (opponent && this.field.deck.length > 0) {
             const getNumber = opponent.get;
             opponent.get = 1;
-            this.field.draw(player);
+            this.field.draw(player, roomId);
             opponent.get = getNumber;
             
             const randomIndex = Math.floor(Math.random() * opponent.hands.length);
@@ -231,11 +234,11 @@ class Card6 extends Card {
         super(6, '貴族', field);
     }
 
-    async play(player) {
+    async play(player, roomId) {
         console.log('playCard6')
         const choice = player.choice;
         this.move(player);
-        const opponent = await this.opponentChoice(player);
+        const opponent = await this.opponentChoice(player, roomId);
         
         if (opponent && player.hands.length > 0) {
             if (player.hands[0].number < opponent.hands[0].number) {
@@ -261,7 +264,7 @@ class Card7 extends Card {
         super(7, '賢者', field);
     }
 
-    async play(player) {
+    async play(player, roomId) {
         console.log('playCard7')
         this.move(player);
         player.get = 3;
@@ -274,11 +277,11 @@ class Card8 extends Card {
         super(8, '精霊', field);
     }
 
-    async play(player) {
+    async play(player, roomId) {
         console.log('playCard8')
         const choice = player.choice;
         this.move(player);
-        const opponent = await this.opponentChoice(player);
+        const opponent = await this.opponentChoice(player, roomId);
         
         if (opponent && player.hands.length > 0 && opponent.hands.length > 0) {
             const copySelf = player.hands.pop();
@@ -300,16 +303,16 @@ class Card9 extends Card {
         super(9, '皇帝', field);
     }
 
-    async play(player) {
+    async play(player, roomId) {
         console.log('playCard9')
         const choice = player.choice;
         this.move(player);
-        const opponent = await this.opponentChoice(player);
+        const opponent = await this.opponentChoice(player, roomId);
         
         if (opponent && this.field.deck.length > 0) {
             const getNumber = opponent.get;
             opponent.get = 1;
-            this.field.draw(player);
+            this.field.draw(player, roomId);
             opponent.get = getNumber;
             
             const opponentHands = [...opponent.hands];
@@ -323,7 +326,8 @@ class Card9 extends Card {
                 createData(this.field, player),
                 choices,
                 'trush',
-                player.socketId
+                player.socketId,
+                roomId
             )
             const choiceNumber = parseInt(responce);
             createLog(createData(this.field, player), choices, 'trush', this.field, player, choiceNumber);
