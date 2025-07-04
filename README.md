@@ -61,4 +61,4 @@
 
 
 # 開発者向け
-[./contribute.md]
+[作業ガイド](./contribute.md)
