@@ -255,7 +255,7 @@ io.on('connection', (socket) => {
       console.log(`kind: ${kind}`)
       const util = require('util');
       console.log(util.inspect(choices, { depth: null }));
-      io.timeout(50000).to(socketId).emit('yourTurn', {now: now, choices: choices, kind: kind}, (err, responses) => {
+      io.timeout(5*60000).to(socketId).emit('yourTurn', {now: now, choices: choices, kind: kind}, (err, responses) => {
         if (err) {
           reject(err);
         } else {
