@@ -4,7 +4,8 @@ const { shuffle } =  require('./card.js');
 const { createData, createLog } = require('./card.js');
 
 class Game {
-    constructor(playerNumber, funcs, gameData) {
+    constructor(playerNumber, funcs, gameData, roomId) {
+        this.roomId = roomId;
         // プレイヤーの生成
         const players = [];
         for (let i = 0; i < playerNumber; i++) {
@@ -119,7 +120,8 @@ class Game {
                 createData(this.field, player),
                 hands,
                 'play_card',
-                player.socketId
+                player.socketId,
+                this.roomId
             );
             const cardNumber = parseInt(response);
 
@@ -133,7 +135,7 @@ class Game {
             );
 
             const cardIndex = player.hands.findIndex(card => card.number === cardNumber);
-            await player.hands[cardIndex].play(player);
+            await player.hands[cardIndex].play(player, this.roomId);
         }
     }
 
@@ -144,7 +146,7 @@ class Game {
 
             // 初期手札の配布
             for (const player of players) {
-                await this.field.draw(player);
+                await this.field.draw(player, this.roomId);
             }
 
             // ゲームループ
@@ -160,7 +162,7 @@ class Game {
                     }
                 }
             }
-            
+            console.log('gameDone')
 
             return [true, this.log];
         } catch (e) {

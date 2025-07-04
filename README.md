@@ -60,5 +60,5 @@
 [https://www.happybrainwash.com/xeno](https://www.happybrainwash.com/xeno)
 
 
-# ゲーム起動
-./run_server
+# 開発者向け
+[作業ガイド](./contribute.md)

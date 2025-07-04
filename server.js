@@ -255,7 +255,7 @@ io.on('connection', (socket) => {
       console.log(`kind: ${kind}`)
       const util = require('util');
       console.log(util.inspect(choices, { depth: null }));
-      io.timeout(50000).to(socketId).emit('yourTurn', {now: now, choices: choices, kind: kind}, (err, responses) => {
+      io.timeout(5*60000).to(socketId).emit('yourTurn', {now: now, choices: choices, kind: kind}, (err, responses) => {
         if (err) {
           reject(err);
         } else {
@@ -277,9 +277,10 @@ io.on('connection', (socket) => {
   }
 
   // CPUプレイヤーの選択関数
-  async function choice(now, choices, kind, socketId) {
+  async function choice(now, choices, kind, socketId, roomId) {
     try {
-      const response = await emitWithAck(now, choices, kind, socketId);
+      const response = await emitWithAck(now, choices, kind, socketId, roomId);
+      io.to(roomId).except(socketId).emit('onatherTurn', {now: now, choices: choices, kind: kind, choice: response})
       console.log(`responce: ${response}`)
       return response
     } catch (e) {
@@ -300,7 +301,7 @@ io.on('connection', (socket) => {
   ];
 
   // 全てのプレイヤーのreadyを判定
-  socket.on("ready", (data) => {
+  socket.on("ready", async (data) => {
     loadData();
     jsonData.players[data.playerId].ready = 1
     saveData(jsonData);
@@ -317,9 +318,21 @@ io.on('connection', (socket) => {
         socketIdList.push(jsonData.players[jsonData.rooms[data.roomId].players[i]].socketId)
       }
       const gameData = {roomId: data.roomId, players: socketIdList};
-      const game = new Game(2, funcs, gameData);
-      const result = game.game();
-      console.log(`result: ${result}`)
+      const game = new Game(2, funcs, gameData, data.roomId);
+      const result = await game.game();
+      if(result[0]){
+        const gameLog = result[1]
+        for(let i=0; i<jsonData.rooms[data.roomId].players.length; i++){
+          const player = jsonData.players[jsonData.rooms[data.roomId].players[i]]
+          const result = gameLog[i][gameLog[i].length - 1]
+          io.to(player.socketId).emit('result', {result: result})
+          console.log(`${player.name}: ${result}`)
+        }
+
+      }else{
+        console.log(`err: ${result[1]}`)
+        console.log(`log: ${result[2]}`)
+      }
     }
   })
 
