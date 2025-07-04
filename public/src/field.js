@@ -25,8 +25,10 @@ class Field {
         let deck = [];
         for (let number = 0; number < 10; number++) {
             if (number + 1 <= 8) {
-                for (let _ = 0; _ < 2; _++) {
-                    deck.push(cards[number]);
+                if (number != 4){
+                    for (let _ = 0; _ < 2; _++) {
+                        deck.push(cards[number]);
+                    }
                 }
             } else {
                 deck.push(cards[number]);
@@ -38,7 +40,7 @@ class Field {
         this.reincarnation = [reincarnationCard];
     }
 
-    async draw(player) {
+    async draw(player, roomId) {
         const choiceFunc = player.choice;
         player.affected = true;
         const cards = this.deck.slice(0, player.get);
@@ -49,7 +51,8 @@ class Field {
                 createData(this, player),
                 choices,
                 'draw',
-                player.socketId
+                player.socketId,
+                roomId
             );
             const choiceNumber = parseInt(responce);
             

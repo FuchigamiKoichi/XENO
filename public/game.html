@@ -427,6 +427,19 @@
             align-items: center;
             z-index: 99;
         }
+
+        #showResult{
+            position: fixed;
+            top: 20%;
+            left: 30%;
+            width: 50vw;
+            height: 50vh;
+            background-color: rgba(0, 0, 0, 0);
+            justify-content: center;
+            align-items: center;
+            z-index: 99;
+            display: none;
+        }
     </style>
 </head>
 <body>
@@ -454,6 +467,7 @@
         </div>
 
         <div id="select-container"></div>
+        <div id="showResult"></div>
     
         <!-- 相手のプレイエリアと手札 -->
         <div id="opponent-center-area">
@@ -1157,72 +1171,48 @@
             return chosenCard
         }
         // playCard関数を呼び出す部分
-        function playCard_cpu(card) {
-            if (isPlayerTurn == true) {
-                alert("何もしなくてくさ");
-                return;
-            } else {
-                
-                console.log(card)
-                let imgSrc = card.name; // カードの画像を取得
-                opponentUsedCards.push(imgSrc); // 使用済みリストに追加
+        function playCard_cpu(cardNumber) {
+            let imgSrc = `../images/${cardNumber}.jpg`; // カードの画像を取得
 
-                // 拡大表示エリア
-                let zoomArea = document.getElementById("cardZoom");
-                let zoomedCard = document.getElementById("zoomedCard");
-                let effectText = document.getElementById("effectDescription"); // ←★ 効果説明テキストの要素
+            // 拡大表示エリア
+            let zoomArea = document.getElementById("cardZoom");
+            let zoomedCard = document.getElementById("zoomedCard");
+            let effectText = document.getElementById("effectDescription"); // ←★ 効果説明テキストの要素
 
-                // character名が含まれていれば効果表示、それ以外は空文字
-                if (card.character) {
-                    effectText.textContent = getEffectDescription(card.character);
-                } else {
-                    effectText.textContent = "";
-                }
+            const cardName = getCharacterName(cardNumber);
+            effectText.textContent = getEffectDescription(cardName)
 
+            // 画像を設定し、拡大エリアを表示
+            zoomedCard.src = cardName;
+            zoomArea.classList.add("show");
 
+            // 1秒後にフェードアウト
+            setTimeout(() => {
+                zoomArea.classList.remove("show");
+            }, 3000);
 
-                // 画像を設定し、拡大エリアを表示
-                zoomedCard.src = card.name;
-                zoomArea.classList.add("show");
+            // 1.5秒後（アニメーション完了後）にプレイエリアに移動
+            setTimeout(() => {
+                let playArea = document.getElementById("opponent-playArea");
 
-                // 1秒後にフェードアウト
-                setTimeout(() => {
-                    zoomArea.classList.remove("show");
-                }, 3000);
+                // 新しいカードをプレイエリアに追加
+                let newCard = document.createElement("img");
+                console.log('cardName：'+cardName)
+                newCard.src = imgSrc;  // 表面画像に変更
+                newCard.classList.add("played-card");
 
-                // 1.5秒後（アニメーション完了後）にプレイエリアに移動
-                setTimeout(() => {
-                    let playArea = document.getElementById("opponent-playArea");
+                // 既に出されているカードの数を使って、位置と重なり順を調整
+                const index = playArea.children.length;
+                newCard.style.position = "absolute";
+                newCard.style.left = `${index * 40}px`;  // 横方向に10pxずつずらす
+                newCard.style.zIndex = index;
 
-                    // 新しいカードをプレイエリアに追加
-                    let newCard = document.createElement("img");
-                    console.log('card.name：'+card.name)
-                    newCard.src = card.name;  // 表面画像に変更
-                    newCard.classList.add("played-card");
-
-                    // 既に出されているカードの数を使って、位置と重なり順を調整
-                    const index = playArea.children.length;
-                    newCard.style.position = "absolute";
-                    newCard.style.left = `${index * 40}px`;  // 横方向に10pxずつずらす
-                    newCard.style.zIndex = index;
-
-                    // スムーズなアニメーションのためのスタイル設定
-                    newCard.style.width = "100px";
-                    newCard.style.height = "150px";
-                    newCard.style.transition = "transform 0.5s ease-in-out";
-                    playArea.appendChild(newCard);
-                    // 手札からカードを削除
-                    console.log('card：'+card)
-                    document.getElementById("opponent-hand").firstElementChild.remove();
-                    for(let i=0;i<opponentHand.length;i++){
-                        if(opponentHand[i].name === card.name){
-                            opponentHand.splice(i,1)
-                            break
-                        }
-                    }
-                    addLog("CPUが" + card.character + "を使用しました");
-                }, 3000);
-            }
+                // スムーズなアニメーションのためのスタイル設定
+                newCard.style.width = "100px";
+                newCard.style.height = "150px";
+                newCard.style.transition = "transform 0.5s ease-in-out";
+                playArea.appendChild(newCard);
+            }, 3000);
         }
 
 
@@ -1303,27 +1293,10 @@
             logMessages.scrollTop = logMessages.scrollHeight;
         }
 
-        function checkDeckEmpty(){
-            if(deck.length == 0){
-                // 両者の手札を公開
-                showBothHands();
-                // 手札の value を取得
-                let playerCard = playerHand[0];
-                let cpuCard = opponentHand[0];
-
-                 // 勝敗判定
-                if (playerCard.value > cpuCard.value) {
-                    showResult("あなたの勝ち！");
-                } else if (playerCard.value < cpuCard.value) {
-                    showResult("CPUの勝ち！");
-                } else {
-                    showResult("引き分け！");
-                }
-            }
-        }
-
         function showResult(message){
-            alert(message);
+            const showResultElement = document.getElementById("showResult")
+            showResultElement.innerHTML = message;
+            showResultElement.style.display = "block";
         }
 
         async function select(choices) {
@@ -1384,6 +1357,17 @@
                     console.log(error)
                 }
             }
+        })
+
+        socket.on('onatherTurn', (data) => {
+            console.log(`相手のターン: ${data.kind} -> ${data.choice}`)
+            if(data.kind=='play_card'){
+                playCard_cpu(parseInt(data.choice));
+            }
+        })
+
+        socket.on('result', (data) => {
+            showResult(data.result)
         })
     </script>
 </body>
