@@ -632,8 +632,8 @@
                     const playedImg = document.createElement("img");
                     playedImg.src = `../images/${card}.jpg`;
                     playedImg.classList.add("played-card");
-                    playedImg.position = "absolute";
-                    playedImg.left = `${index * 40}px`;
+                    playedImg.style.position = "absolute";
+                    playedImg.style.left = `${index * 40}px`;
                     playedImg.zIndex = index;
                     playedImg.style.width = "100px";
                     playedImg.style.height = "150px";
