@@ -106,7 +106,7 @@ class Card1 extends Card {
                 
                 const trushIndex = opponent.hands.findIndex(card => card.number === cardNumber);
                 const trushCard = opponent.hands.splice(trushIndex, 1)[0];
-                field.played[player.turnNumber - 1].push(trushCard);
+                field.played[opponent.turnNumber - 1].push(trushCard);
                 
                 if (trushCard.number === 10) {
                     this.kill10(opponent);
@@ -341,7 +341,7 @@ class Card9 extends Card {
             
             const choiceIndex = opponent.hands.findIndex(card => card.number === choiceNumber);
             const trushCard = opponent.hands.splice(choiceIndex, 1)[0];
-            this.field.played[player.turnNumber - 1].push(trushCard);
+            this.field.played[opponent.turnNumber - 1].push(trushCard);
             
             if (trushCard.number === 10) {
                 this.kill(opponent);
