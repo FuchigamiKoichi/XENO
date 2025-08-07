@@ -312,7 +312,7 @@ class Card9 extends Card {
         if (opponent && this.field.deck.length > 0) {
             const getNumber = opponent.get;
             opponent.get = 1;
-            this.field.draw(player, roomId);
+            await this.field.draw(opponent, roomId);
             opponent.get = getNumber;
             
             const opponentHands = [...opponent.hands];
