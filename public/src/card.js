@@ -213,7 +213,7 @@ class Card5 extends Card {
         if (opponent && this.field.deck.length > 0) {
             const getNumber = opponent.get;
             opponent.get = 1;
-            this.field.draw(player, roomId);
+            this.field.draw(opponent, roomId);
             opponent.get = getNumber;
             
             const randomIndex = Math.floor(Math.random() * opponent.hands.length);
