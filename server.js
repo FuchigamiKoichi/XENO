@@ -322,10 +322,13 @@ io.on('connection', (socket) => {
       const result = await game.game();
       if(result[0]){
         const gameLog = result[1]
-        for(let i=0; i<jsonData.rooms[data.roomId].players.length; i++){
-          const player = jsonData.players[jsonData.rooms[data.roomId].players[i]]
+        for(let i=0; i<game.field.players.length; i++){
+          const player = game.field.players[i]
           const result = gameLog[i][gameLog[i].length - 1]
           io.to(player.socketId).emit('result', {result: result})
+          for(let k=0; k<gameLog[i].length; k++){
+            console.log(gameLog[i][k])
+          }
           console.log(`${player.name}: ${result}`)
         }
 
