@@ -1322,11 +1322,14 @@
             console.log(data.kind)
             if(data.kind=='draw'){
                 if(data.choices.length>2){
-                    let playerSelect =  await select(data.choices);
+                    let playerSelectNumber =  await select(data.choices);
                     selectContainer.style.display = 'none';
-                    const done = await drawCardToHand(playerSelect)
+                    console.log('playerSelectNumber');
+                    console.log(playerSelectNumber);
+                    let playerSelectCard = data.choices[playerSelectNumber];
+                    const done = await drawCardToHand(playerSelectCard)
                     if(done == 'done'){
-                        callback([playerSelect])
+                        callback([playerSelectNumber])
                     }
                 }else{
                     const done = await drawCardToHand(data.choices[0])
