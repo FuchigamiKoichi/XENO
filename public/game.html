@@ -1345,6 +1345,8 @@
                     callback([playerSelect])
                 }
                 console.log(`playerSelect: ${playerSelect}`)
+            }else if(data.kind == 'update'){
+                callback([0])
             }else{
                 try {
                     let playerSelect = await select(data.choices);
