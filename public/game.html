@@ -644,6 +644,7 @@
 
             // 相手の場に出されたカード
             const otherPlayedKeys = Object.keys(now.otherPlayed)
+            console.log(`otherPlayedKeys：${otherPlayedKeys}`)
             if(otherPlayedKeys){
                 if(otherPlayedKeys.length > 0){
                     index = 0;
@@ -652,8 +653,8 @@
                         const playedImg = document.createElement("img");
                         playedImg.src = `../images/${card}.jpg`;
                         playedImg.classList.add("played-card");
-                        playedImg.position = "absolute";
-                        playedImg.left = `${index * 40}px`;
+                        playedImg.style.position = "absolute";
+                        playedImg.style.left = `${index * 40}px`;
                         playedImg.zIndex = index;
                         playedImg.style.width = "100px";
                         playedImg.style.height = "150px";
@@ -1193,8 +1194,6 @@
 
             // 1.5秒後（アニメーション完了後）にプレイエリアに移動
             setTimeout(() => {
-                let playArea = document.getElementById("opponent-playArea");
-
                 // 新しいカードをプレイエリアに追加
                 let newCard = document.createElement("img");
                 console.log('cardName：'+cardName)
@@ -1211,7 +1210,6 @@
                 newCard.style.width = "100px";
                 newCard.style.height = "150px";
                 newCard.style.transition = "transform 0.5s ease-in-out";
-                playArea.appendChild(newCard);
             }, 3000);
         }
 
