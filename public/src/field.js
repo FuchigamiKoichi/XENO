@@ -25,10 +25,8 @@ class Field {
         let deck = [];
         for (let number = 0; number < 10; number++) {
             if (number + 1 <= 8) {
-                if (number != 100){
-                    for (let _ = 0; _ < 2; _++) {
-                        deck.push(cards[number]);
-                    }
+                for (let _ = 0; _ < 2; _++) {
+                    deck.push(cards[number]);
                 }
             } else {
                 deck.push(cards[number]);
