@@ -83,7 +83,7 @@ class Card1 extends Card {
             if (opponent && this.field.deck.length > 0) {
                 const getNumber = opponent.get;
                 opponent.get = 1;
-                field.draw(opponent, roomId);
+                await field.draw(opponent, roomId);
                 opponent.get = getNumber;
                 
                 const opponentHands = [...opponent.hands];
