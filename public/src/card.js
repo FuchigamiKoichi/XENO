@@ -293,6 +293,13 @@ class Card8 extends Card {
             player.look.push({ opponent, card: opponent.hands[0] });
             opponent.looked.push({ subject: player, card: opponent.hands[0] });
             player.looked.push({ subject: opponent, card: player.hands[0] });
+            const responce = await choice(
+                createData(this.field, player),
+                ["", ""],
+                'update',
+                player.socketId,
+                roomId
+            )
         }
     }
 }
