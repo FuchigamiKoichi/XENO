@@ -123,13 +123,6 @@ let rooms = {};
 io.on('connection', (socket) => {
   console.log('ユーザが接続しました:', socket.id);
 
-  //　プレイヤーを登録する
-  socket.on('registPlayer', (data) => {
-    let playerData = {id: socket.id, name: data.name, ready: 0}
-    addPlayer(playerData)
-    console.log(`registPlayer:${playerData.name}`)
-  })
-
   // ルームを確認する
   socket.on('showRooms', (data, callback) => {
     rooms = showRooms();
@@ -141,15 +134,23 @@ io.on('connection', (socket) => {
 
   // socketidを変更する
   socket.on('changeSocketid', (data) => {
+    console.log(`--- [DEBUG] changeSocketidイベント開始: socket.id=${socket.id}, playerId=${data.id}, roomId=${data.roomId} ---`);
     loadData()
     let playerData = {id: data.id, name: jsonData.players[data.id], socketid: socket.id}
     console.log(`ユーザーのsocketidを変更しました: ${jsonData.players[data.id].name}, new: ${playerData.socketid}`)
     changeSocketId(playerData)
     socket.join(data.roomId)
   })
+  //プレイヤーを登録する
+  socket.on('registPlayer', (data) => {
+    let playerData = {id: socket.id, name: data.name, ready: 0}
+    addPlayer(playerData)
+    console.log(`registPlayer:${playerData.name}`)
+  })
 
   // ルームを作成する
   socket.on('createRoom', (data, callback) => {
+    
     // 任意の方法で一意の roomId を生成する（例: ソケット ID + 乱数など）
     const roomId = generateRoomId();
     let roomData = {id: roomId, owner: socket.id, players: [socket.id]}
@@ -191,6 +192,8 @@ io.on('connection', (socket) => {
     if (callback) {
       callback({ success: true, roomId, players: room.players, playerId: `${socket.id}` });
     }
+
+    
   });
 
   // プレイヤー情報を返す
@@ -312,7 +315,7 @@ io.on('connection', (socket) => {
     console.log(`ready: ${ready}`);
     if(ready==2){
       loadData()
-      console.log('準備完了！')
+      console.log('準備完了！ゲームを開始します')
       let socketIdList = []
       for(let i=0; i<2; i++){
         socketIdList.push(jsonData.players[jsonData.rooms[data.roomId].players[i]].socketId)
