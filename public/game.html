@@ -454,12 +454,7 @@
     </div>
     <div class="game-screen" id="gameScreen" style = "display: flex;">
         <!-- 待機中の部屋ID表示 -->
-        <div id="waiting-info">
-            <p>対戦相手を待っています...</p>
-            <p id="room-id-display"></p>
-            <button id="copy-room-id-btn">コピー</button>
-            <p>このIDを参加者に伝えてください。</p>
-        </div>
+        
         <!-- ログエリア -->
         <div id="left-column">
             <!-- ログエリア -->
@@ -1382,59 +1377,7 @@
             showResult(data.result)
         })
 
-        // サーバーから「対戦相手を待つ」指示を受け取ったときの処理
-        // socket.on('waitingForOpponent', (data) => {
-        //     console.log("*** ブラウザ：サーバーから 'waitingForOpponent' を受信しました！ ***", data);
-
-        //     const waitingInfoDiv = document.getElementById('waiting-info');
-        //     const roomIdDisplayP = document.getElementById('room-id-display');
-
-        //     // pタグにルームID設定
-        //     if (waitingInfoDiv && roomIdDisplayP) {
-        //         roomIdDisplayP.textContent = data.roomId;
-        //         // 待機情報divを表示する
-        //         waitingInfoDiv.style.display = 'block';
-        //     } 
-        // });
-
-        // // サーバーから「待機表示を消せ」という指示を受け取ったときの処理
-        // socket.on('hideWaitingInfo', () => {
-        //     console.log("***ブラウザ：サーバーから 'hideWaitingInfo' を受信しました！ ***");
-        //     const waitingInfoDiv = document.getElementById('waiting-info');
-            
-        //     // 待機情報divを非表示にする
-        //     if (waitingInfoDiv) {
-        //         waitingInfoDiv.style.display = 'none';
-        //     }
-        // });
-
-    //     // コピーの機能を追加
-    //     document.addEventListener('DOMContentLoaded', () => {
-    //     const copyBtn = document.getElementById('copy-room-id-btn');
-    //     if (copyBtn) {
-    //         copyBtn.addEventListener('click', () => {
-    //             const roomIdDisplay = document.getElementById('room-id-display');
-    //             const roomId = roomIdDisplay.textContent;
-
-    //             //コピーを実行
-    //             if (roomId) {
-    //                 navigator.clipboard.writeText(roomId).then(() => {
-                        
-    //                     const originalText = copyBtn.textContent;
-    //                     copyBtn.textContent = 'コピーしました！';
-    //                     copyBtn.style.backgroundColor = '#28a745'; // 成功したので緑色に
-
-    //                     // 2秒後に元の表示に戻す
-    //                     setTimeout(() => {
-    //                         copyBtn.textContent = originalText;
-    //                         copyBtn.style.backgroundColor = '#007bff'; 
-    //                     }, 2000);
-
-    //                 })
-    //             }
-    //         });
-    //     }
-    // });
+        
     </script>
 </body>
 </html>
