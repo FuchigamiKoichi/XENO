@@ -442,7 +442,40 @@
         }
         
     /* 部屋ID表示のcss追加 */
-        
+        #waiting-info {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(0, 0, 0, 0.85);
+            padding: 150px 100px;
+            border-radius: 15px;
+            border: 2px solid #ffcc00;
+            z-index: 5000;
+            text-align: center;
+            display: none; /* 最初は非表示 */
+        }
+        #room-id-display {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: #ffcc00;
+            margin: 15px 0;
+            user-select: all; 
+        }
+
+        #copy-room-id-btn {
+            font-size: 16px;
+            padding: 8px 15px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.2s; 
+        }
+        #copy-room-id-btn:hover {
+            background-color: #0056b3; /* マウスを乗せたときの色 */
+        }    
         
     </style>
 </head>
@@ -454,7 +487,13 @@
     </div>
     <div class="game-screen" id="gameScreen" style = "display: flex;">
         <!-- 待機中の部屋ID表示 -->
-        
+        <div id="waiting-info">
+            <p>対戦相手を待っています...</p>
+            <p id="room-id-display"></p>
+            <button id="copy-room-id-btn">部屋IDをコピー</button>
+            <p>このIDを参加者に伝えてください。</p>
+        </div>
+
         <!-- ログエリア -->
         <div id="left-column">
             <!-- ログエリア -->
@@ -1377,7 +1416,57 @@
             showResult(data.result)
         })
 
-        
+        // サーバーから「対戦相手を待つ」指示を受け取ったときの処理
+        socket.on('waitingForOpponent', (data) => {
+            console.log("*** ブラウザ：サーバーから 'waitingForOpponent' を受信しました！ ***", data);
+
+            const waitingInfoDiv = document.getElementById('waiting-info');
+            const roomIdDisplayP = document.getElementById('room-id-display');
+
+            // pタグにルームIDを設定
+            if (waitingInfoDiv && roomIdDisplayP) {
+                roomIdDisplayP.textContent = data.roomId;
+                // 待機情報divを表示する
+                waitingInfoDiv.style.display = 'block';
+            } 
+        });
+
+        // サーバーから「待機表示を消せ」という指示を受け取ったときの処理
+        socket.on('hideWaitingInfo', () => {
+            console.log("***ブラウザ：サーバーから 'hideWaitingInfo' を受信しました！ ***");
+            const waitingInfoDiv = document.getElementById('waiting-info');
+
+            // 待機情報divを非表示にする
+            if (waitingInfoDiv) {
+                waitingInfoDiv.style.display = 'none';
+            }
+        });
+
+        // コピーの機能を追加
+        document.addEventListener('DOMContentLoaded', () => {
+        const copyBtn = document.getElementById('copy-room-id-btn');
+        if (copyBtn) {
+            copyBtn.addEventListener('click', () => {
+                const roomIdDisplay = document.getElementById('room-id-display');
+                const roomId = roomIdDisplay.textContent;
+                // --- クリップボードにコピー ---
+                if (roomId) {
+                    navigator.clipboard.writeText(roomId).then(() => {
+                        const originalText = copyBtn.textContent;
+                        copyBtn.textContent = 'コピーしました！';
+                        copyBtn.style.backgroundColor = '#28a745'; 
+                        // 2秒後に元の表示に戻す
+                        setTimeout(() => {
+                            copyBtn.textContent = originalText;
+                            copyBtn.style.backgroundColor = '#007bff'; 
+                        }, 2000);
+
+                    });
+                }
+            });
+        }
+    });
+
     </script>
 </body>
 </html>
