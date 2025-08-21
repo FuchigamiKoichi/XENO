@@ -336,31 +336,37 @@ io.on('connection', (socket) => {
 
   // CPUの命名関数
   function getName_cpu(roomId, index) {
-    loadData();
-    return `${jsonData.players[jsonData.rooms[roomId].players[index]].name}`;
+    return `cpu_${index}`;
   }
-
-  // 使用例
-  const funcs = [
-      { get_name: getName, choice: choice },
-      { get_name: getName, choice: choice }
-  ];
 
   // 全てのプレイヤーのreadyを判定
   socket.on("ready", async (data) => {
-    loadData();
-    jsonData.players[data.playerId].ready = 1
-    saveData(jsonData);
     let ready = 0;
-    for(let i=0; i<jsonData.rooms[data.roomId].players.length; i++){
-      ready += jsonData.players[jsonData.rooms[data.roomId].players[i]].ready;
+    let funcs = []
+    if (data.playerId == "cpu"){
+      ready = 2;
+      funcs = [
+          { get_name: getName, choice: choice },
+          { get_name: getName_cpu, choice: choice_cpu }
+      ];
+    }else{
+      loadData();
+      jsonData.players[data.playerId].ready = 1
+      saveData(jsonData);
+      for(let i=0; i<jsonData.rooms[data.roomId].players.length; i++){
+        ready += jsonData.players[jsonData.rooms[data.roomId].players[i]].ready;
+      }
+      console.log(`ready: ${ready}`);
+      funcs = [
+          { get_name: getName, choice: choice },
+          { get_name: getName, choice: choice }
+      ];
     }
-    console.log(`ready: ${ready}`);
     if(ready==2){
       loadData()
       console.log('準備完了！ゲームを開始します')
       let socketIdList = []
-      for(let i=0; i<2; i++){
+      for(let i=0; i<jsonData.rooms[data.roomId].players.length; i++){
         socketIdList.push(jsonData.players[jsonData.rooms[data.roomId].players[i]].socketId)
       }
       const gameData = {roomId: data.roomId, players: socketIdList};
