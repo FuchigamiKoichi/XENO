@@ -129,12 +129,38 @@ io.on('connection', (socket) => {
 
   // socketidを変更する
   socket.on('changeSocketid', (data) => {
-    console.log(`--- [DEBUG] changeSocketidイベント開始: socket.id=${socket.id}, playerId=${data.id}, roomId=${data.roomId} ---`);
     loadData()
-    let playerData = {id: data.id, name: jsonData.players[data.id], socketid: socket.id}
-    console.log(`ユーザーのsocketidを変更しました: ${jsonData.players[data.id].name}, new: ${playerData.socketid}`)
-    changeSocketId(playerData)
-    socket.join(data.roomId)
+
+    if (jsonData.players[data.id]) {
+        let playerData = {id: data.id, socketid: socket.id};
+        changeSocketId(playerData);
+        socket.join(data.roomId);
+        console.log(`ユーザーのsocketidを変更しました: ${jsonData.players[data.id].name}, new: ${socket.id}`);
+
+        const room = jsonData.rooms[data.roomId];
+        if (room) {
+            const currentPlayers = room.players;
+            console.log(`[待機チェック] ルーム ${data.roomId} の現在人数: ${currentPlayers.length}人`);
+
+            // オーナーが待機中
+            if (currentPlayers.length === 1) {
+                // 参加者本人にだけ「待機せよ」というイベントを送る
+                socket.emit('waitingForOpponent', { roomId: data.roomId });
+                console.log(`--> 'waitingForOpponent' を送信しました`);
+            }
+            //参加者が2人になったら
+            else if (currentPlayers.length === 2) {
+                // ルームにいる全員に「待機表示を消せ」というイベントを送る
+                io.to(data.roomId).emit('hideWaitingInfo');
+                console.log(`--> 'hideWaitingInfo' を送信しました`);
+            }
+        }
+
+    } 
+    // let playerData = {id: data.id, name: jsonData.players[data.id], socketid: socket.id}
+    // console.log(`ユーザーのsocketidを変更しました: ${jsonData.players[data.id].name}, new: ${playerData.socketid}`)
+    // changeSocketId(playerData)
+    // socket.join(data.roomId)
   })
   //プレイヤーを登録する
   socket.on('registPlayer', (data) => {
@@ -183,6 +209,7 @@ io.on('connection', (socket) => {
     io.to(roomId).emit('updateRoomMembers', {
       players: room.players,
     });
+
 
     if (callback) {
       callback({ success: true, roomId, players: room.players, playerId: `${socket.id}` });
