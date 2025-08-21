@@ -428,6 +428,18 @@
             z-index: 99;
         }
 
+        #show-container{
+            position: fixed;
+            top: 20%;
+            left: 30%;
+            width: 50vw;
+            height: 50vh;
+            background-color: rgba(0, 0, 0, 0);
+            justify-content: center;
+            align-items: center;
+            z-index: 99;
+        }
+
         #showResult{
             position: fixed;
             top: 20%;
@@ -507,6 +519,7 @@
         </div>
 
         <div id="select-container"></div>
+        <div id="show-container"></div>
         <div id="showResult"></div>
     
         <!-- 相手のプレイエリアと手札 -->
@@ -599,6 +612,9 @@
 
         const selectContainer = document.getElementById('select-container')
         selectContainer.style.display = 'none';
+
+        const showContainer = document.getElementById('show-container')
+        showContainer.style.display = 'none';
 
         let urls = String(window.location.href).split('?')
         const roomId = urls[1].substr(7,urls[1].length)
@@ -1353,6 +1369,27 @@
             })
         }
 
+        async function show(data) {
+            return new Promise((resolve) => {
+                showContainer.innerHTML = ""
+                console.log(data[0]["cards"])
+                for(let i=0; i<data[0]["cards"].length; i++){
+                    let card_number = data[0]["cards"][i]
+                    let card = document.createElement("img");
+                    card.src = `../images/${card_number}.jpg`;
+                    card.width = 140;
+                    card.height = 210;
+                    card.zIndex = 100;
+                    card.classList.add('show-card');
+                    showContainer.appendChild(card);
+                }
+                showContainer.style.display = 'block';
+                setTimeout(() => {
+                    resolve(0)
+                }, 3000);
+            })
+        }
+
         socket.on('yourTurn', async (data, callback) => {
             await updateGameView(data.now)
             console.log(data.kind)
@@ -1386,6 +1423,15 @@
                 console.log(`playerSelect: ${playerSelect}`)
             }else if(data.kind == 'update'){
                 callback([0])
+            }else if(data.kind == 'show'){
+                try {
+                    console.log(data.choices)
+                    let showBoard = await show(data.choices);
+                    showContainer.style.display = 'none';
+                    callback([0])
+                } catch (error) {
+                    console.log(error)
+                }
             }else{
                 try {
                     let playerSelect = await select(data.choices);

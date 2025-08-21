@@ -177,10 +177,19 @@ class Card3 extends Card {
         const opponent = await this.opponentChoice(player, roomId);
         
         if (opponent) {
+            let cards = [];
             for (const card of opponent.hands) {
                 player.look.push({ opponent, card });
                 opponent.looked.push({ subject: player, card });
+                cards.push(card.number);
             }
+            const responce = await choice(
+                createData(this.field, player),
+                [{"opponent":opponent.name, "cards":cards}],
+                'show',
+                player.socketId,
+                roomId
+            )
         }
     }
 }
