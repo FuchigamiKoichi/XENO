@@ -1,5 +1,6 @@
 const { Game } = require('./public/src/game.js');
 const { Player } = require('./public/src/player.js');
+// const { score } = require('./model.js');
 
 // dataManager.js
 const fs = require('fs');
