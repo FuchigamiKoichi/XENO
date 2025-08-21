@@ -9,13 +9,13 @@
 <body>
   <h1>XENO</h1>
 
-  <div class="regist_name", id="regist_name">
-    <input type="text" id="name" placeholder="プレイヤー名">
-    <button id="registName">プレイヤー名を登録</button>
-  </div>
-
   <div class="select_rooms", id="selectRooms">
-    <div class="Rooms">
+    <!-- プレイヤー名 -->
+    <input type="text" id="name" placeholder="プレイヤー名">
+
+    <hr>
+    <!-- ルーム選択 -->
+
       <div id="rooms"></div>
       <div class="room_buttons">
         <div>
@@ -38,16 +38,8 @@
 
     // プレイヤー名の登録
     const select_room = document.getElementById('selectRooms');
-    const regist_nameBtn = document.getElementById('registName');
-    const regist_name = document.getElementById('regist_name');
     const text_name = document.getElementById('name');
-    select_room.style.display = 'none';
-    regist_nameBtn.addEventListener('click', () => {
-      const player_name = text_name.value;
-      socket.emit('registPlayer', {name:player_name})
-      select_room.style.display = 'block';
-      regist_name.style.display = 'none';
-    });
+    
 
     // ルームの選択
     const createRoomBtn = document.getElementById('createRoomBtn');
@@ -65,13 +57,15 @@
         if (!response || !response.success) {
           alert(response ? response.message : 'ルーム参加に失敗しました');
         } else {
-          window.location.replace(`room.html?roomid=${roomId}?playerid=${response.playerId}?players=${response.players}`)
+          window.location.replace(`game.html?roomid=${roomId}?playerid=${response.playerId}?players=${response.players}`)
         }
       });
     }
 
     // ルームを確認する
     showRoomsBtn.addEventListener('click', () => {
+      const player_name = text_name.value;
+      socket.emit('registPlayer', {name: player_name});
       socket.emit('showRooms', { maxPlayers: 4 }, (response) => {
         if (response && response.rooms) {
           let room_list = Object.keys(response.rooms);
@@ -92,6 +86,11 @@
 
     // ルームを作成する
     createRoomBtn.addEventListener('click', () => {
+      
+      const player_name = text_name.value;
+      socket.emit('registPlayer', {name: player_name});
+      select_room.style.display = 'block';
+
       socket.emit('createRoom', { maxPlayers: 4 }, (response) => {
         if (response && response.roomId) {
           joinRoom(response.roomId)
@@ -103,6 +102,7 @@
     // 既存のルームに参加する
     joinRoomBtn.addEventListener('click', () => {
       const roomId = roomIdInput.value;
+      
       socket.emit('joinRoom', roomId, (response) => {
         if (!response || !response.success) {
           alert(response ? response.message : 'ルーム参加に失敗しました');
