@@ -113,12 +113,7 @@ app.use(express.static('public'));
 let players = {};
 // ルーム情報を管理するためのオブジェクト（簡易実装）
 let rooms = {}; 
-// 例: rooms[roomId] = { 
-//   id: roomId, 
-//   players: [], 
-//   maxPlayers: 4, 
-//   ...ゲーム状態など 
-// };
+
 
 io.on('connection', (socket) => {
   console.log('ユーザが接続しました:', socket.id);
@@ -362,21 +357,6 @@ io.on('connection', (socket) => {
   socket.on('disconnect', () => {
     console.log('ユーザが切断しました:', socket.id);
 
-    // // 参加していたルームからプレイヤーを取り除く
-    // for (const [roomId, room] of Object.entries(rooms)) {
-    //   const index = room.players.indexOf(socket.id);
-    //   if (index !== -1) {
-    //     room.players.splice(index, 1);
-    //     // ルームメンバーにアナウンス
-    //     io.to(roomId).emit('updateRoomMembers', {
-    //       players: room.players,
-    //     });
-    //   }
-    //   // もし誰も居なくなったらルームを削除するなどのロジックを追加可能
-    //   if (room.players.length === 0) {
-    //     delete rooms[roomId];
-    //   }
-    // }
   });
 });
 
