@@ -499,6 +499,7 @@
             <p id="room-id-display"></p>
             <button id="copy-room-id-btn">部屋IDをコピー</button>
             <p>このIDを参加者に伝えてください。</p>
+            <button id="select-cpu-btn">CPUと対戦</button>
         </div>
 
         <!-- ログエリア -->
@@ -616,12 +617,20 @@
         const showContainer = document.getElementById('show-container')
         showContainer.style.display = 'none';
 
+        const waitingInfoDiv = document.getElementById('waiting-info');
+
         let urls = String(window.location.href).split('?')
         const roomId = urls[1].substr(7,urls[1].length)
         const playerId = urls[2].substr(9,urls[1].length)
         let players = urls[3].substr(8,urls[3].length).split(',')
 
         socket.emit('changeSocketid', {id:playerId, roomId: roomId})
+
+        const selectCpuBtn = document.getElementById("select-cpu-btn")
+        selectCpuBtn.addEventListener('click', () => {
+            socket.emit("ready", {roomId: roomId, playerId: "cpu"});
+            waitingInfoDiv.style.display = 'none';
+        })
         
         // プレイヤーと相手の手札
         let playerHand = [];
@@ -1459,7 +1468,6 @@
         socket.on('waitingForOpponent', (data) => {
             console.log("*** ブラウザ：サーバーから 'waitingForOpponent' を受信しました！ ***", data);
 
-            const waitingInfoDiv = document.getElementById('waiting-info');
             const roomIdDisplayP = document.getElementById('room-id-display');
 
             // pタグにルームIDを設定
