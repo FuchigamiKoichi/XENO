@@ -480,11 +480,6 @@
     </style>
 </head>
 <body>
-    <div class="container" id="startScreen" style="display: none;">
-        <h1>XENO</h1>
-        <button onclick="startGame()">ゲーム開始</button>
-
-    </div>
     <div class="game-screen" id="gameScreen" style = "display: flex;">
         <!-- 待機中の部屋ID表示 -->
         <div id="waiting-info">
@@ -637,9 +632,7 @@
 
         function startGame() {
             socket.emit("ready", {roomId: roomId, playerId: playerId});
-            console.log("サーバーに準備完了を通知しました。"); // 動作確認用のログ
-            // document.getElementById("startScreen").style.display = "none";
-            // document.getElementById("gameScreen").style.display = "flex";
+            
         }
 
         function showRules() {
