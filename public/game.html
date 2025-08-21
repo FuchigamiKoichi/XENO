@@ -443,11 +443,7 @@
     </style>
 </head>
 <body>
-    <div class="container" id="startScreen" style="display: none;">
-        <h1>XENO</h1>
-        <button onclick="startGame()">ゲーム開始</button>
-        <button onclick="showRules()">ルール説明</button>
-    </div>
+    
     <div class="game-screen" id="gameScreen" style = "display: flex;">
         <!-- ログエリア -->
         <div id="left-column">
@@ -593,13 +589,6 @@
         function startGame() {
             socket.emit("ready", {roomId: roomId, playerId: playerId});
             console.log("サーバーに準備完了を通知しました。"); // 動作確認用のログ
-            // document.getElementById("startScreen").style.display = "none";
-            // document.getElementById("gameScreen").style.display = "flex";
-            //socket.emit("ready", {roomId: roomId, playerId: playerId});
-            // ゲーム開始時に手札を初期化
-            // playerHand = [];
-            // opponentHand = [];
-            // dealInitialHands(); // 最初の手札を配る処理
         }
 
         function showRules() {
