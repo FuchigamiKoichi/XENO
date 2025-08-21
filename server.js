@@ -303,11 +303,9 @@ io.on('connection', (socket) => {
     });
   }
 
-  // CPUプレイヤーの選択関数
+  // プレイヤーの選択関数
   async function choice(now, choices, kind, socketId, roomId) {
     try {
-      const best = await selectBestChoice(choices, now, kind); // model.js の score を自動使用
-      console.log("best:", best);
       const response = await emitWithAck(now, choices, kind, socketId, roomId);
       io.to(roomId).except(socketId).emit('onatherTurn', {now: now, choices: choices, kind: kind, choice: response})
       console.log(`responce: ${response}`)
@@ -319,6 +317,25 @@ io.on('connection', (socket) => {
 
   // CPUプレイヤーの命名関数
   function getName(roomId, index) {
+    loadData();
+    return `${jsonData.players[jsonData.rooms[roomId].players[index]].name}`;
+  }
+
+  // CPUの選択関数
+  async function choice_cpu(now, choices, kind, socketId, roomId) {
+    try {
+      const best = await selectBestChoice(choices, now, kind); // model.js の score を自動使用
+      console.log(`kind: ${kind}`)
+      console.log(`choices: ${choices}`)
+      console.log("best:", best);
+      return best
+    } catch (e) {
+      console.error("choice (yourTurn) failed:", e);
+    }
+  }
+
+  // CPUの命名関数
+  function getName_cpu(roomId, index) {
     loadData();
     return `${jsonData.players[jsonData.rooms[roomId].players[index]].name}`;
   }
