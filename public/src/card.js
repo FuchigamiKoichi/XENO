@@ -216,7 +216,7 @@ class Card5 extends Card {
             await this.field.draw(opponent, roomId);
             opponent.get = getNumber;
             
-            const randomIndex = Math.floor(Math.random() * opponent.hands.length + 1); // opponent.hands.length分ランダムにするためには+1が必要
+            const randomIndex = Math.floor(Math.random() * opponent.hands.length + 1) - 1; // opponent.hands.length分ランダムにするためには+1が必要
             const dropCard = opponent.hands.splice(randomIndex, 1)[0];
             opponent.looked.push({ subject: player, card: dropCard });
             this.field.played[opponent.turnNumber - 1].push(dropCard);
