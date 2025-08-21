@@ -1,6 +1,7 @@
 const { Game } = require('./public/src/game.js');
 const { Player } = require('./public/src/player.js');
-// const { score } = require('./model.js');
+// import { selectBestChoice } from "./select.js";
+const { selectBestChoice } = require('./select.js');
 
 // dataManager.js
 const fs = require('fs');
@@ -280,6 +281,8 @@ io.on('connection', (socket) => {
   // CPUプレイヤーの選択関数
   async function choice(now, choices, kind, socketId, roomId) {
     try {
+      const best = await selectBestChoice(choices, now, kind); // model.js の score を自動使用
+      console.log("best:", best);
       const response = await emitWithAck(now, choices, kind, socketId, roomId);
       io.to(roomId).except(socketId).emit('onatherTurn', {now: now, choices: choices, kind: kind, choice: response})
       console.log(`responce: ${response}`)
