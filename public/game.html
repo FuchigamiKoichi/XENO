@@ -1403,6 +1403,7 @@
             await updateGameView(data.now)
             console.log(data.kind)
             if(data.kind=='draw'){
+                addLog(`あなたが${playerSelectNumber}をドロー！`)
                 if(data.choices.length>2){
                     let playerSelectNumber =  await select(data.choices);
                     selectContainer.style.display = 'none';
@@ -1424,6 +1425,7 @@
                 callback([0])
             }else if(data.kind == 'play_card'){
                 let playerSelect = await select(data.choices);
+                addLog(`あなたが${data.choices[playerSelect]}を場に出す！`)
                 selectContainer.style.display = 'none';
                 const done = await playCard(data.choices[playerSelect])
                 if(done == 'done'){
@@ -1436,6 +1438,7 @@
                 try {
                     console.log(data.choices)
                     let showBoard = await show(data.choices);
+                    addLog(`相手の持っているカードは${data.choices[0]}だった！`)
                     showContainer.style.display = 'none';
                     callback([0])
                 } catch (error) {
@@ -1457,6 +1460,7 @@
             console.log(`相手のターン: ${data.kind} -> ${data.choice}`)
             if(data.kind=='play_card'){
                 playCard_cpu(parseInt(data.choice));
+                addLog(`相手が${data.choice}を場に出す！`)
             }
         })
 
