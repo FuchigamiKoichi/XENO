@@ -91,7 +91,7 @@ function selectBestChoice(choices, now, kind, scoreFn = score) {
 
     // 9) choice
     if (kind === "opponentChoice") {
-      input.push(Number(choice?.select_number ?? 0));
+      input.push(Number(choice?.selectNumber ?? 0));
     } else {
       input.push(Number(choice ?? 0));
     }
@@ -103,7 +103,7 @@ function selectBestChoice(choices, now, kind, scoreFn = score) {
 
     // スコアを choices 用のキーで保持（原文に合わせる）
     const key = (kind === "opponentChoice")
-      ? String(choice?.select_number)
+      ? choices[String(choice?.selectNumber)].player
       : String(choice);
     scores.set(key, y);
   }
