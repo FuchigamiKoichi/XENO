@@ -475,12 +475,33 @@
         }
         #copy-room-id-btn:hover {
             background-color: #0056b3; /* マウスを乗せたときの色 */
-        }    
+        }
+        
+        #turn-timer-container {
+            position: fixed; /* 画面に固定 */
+            top: 5;
+            left: 0;
+            width: 100%;
+            height: 10px; 
+            background-color: #555; 
+            z-index: 9999; 
+        }
+
+        #turn-timer-bar {
+            width: 100%;
+            height: 100%;
+            background-color: #4CAF50; 
+            /*アニメーションの設定 */
+            transition: width 300s linear; 
+        }
         
     </style>
 </head>
 <body>
     <div class="game-screen" id="gameScreen" style = "display: flex;">
+        <div id="turn-timer-container">
+            <div id="turn-timer-bar"></div>
+        </div>
         <!-- 待機中の部屋ID表示 -->
         <div id="waiting-info">
             <p>対戦相手を待っています...</p>
@@ -632,7 +653,6 @@
 
         function startGame() {
             socket.emit("ready", {roomId: roomId, playerId: playerId});
-            
         }
 
         function showRules() {
@@ -1353,11 +1373,37 @@
             })
         }
 
+        const timerBar = document.getElementById('turn-timer-bar');
+
+        // ターンタイマーのアニメーションを開始する関数
+        function startTurnTimer() {
+            console.log('ターンタイマーを開始します。');
+            // まず、アニメーションをリセットするために一度transitionを無くす
+            timerBar.style.transition = 'none';
+            // 幅を瞬時に100%に戻す
+            timerBar.style.width = '100%';
+
+            // ブラウザが上記の変更を確実に描画した後でアニメーションを開始する
+            setTimeout(() => {
+                // 5分かけてバーが0%になるアニメーションを設定
+                timerBar.style.transition = 'width 300s linear';
+                timerBar.style.width = '0%';
+            }, 50); // わずかな遅延
+        }
+
+        // ターンタイマーのアニメーションを停止・リセットする関数
+        function stopTurnTimer() {
+            console.log('ターンタイマーを停止します。');
+            timerBar.style.transition = 'none';
+            timerBar.style.width = '100%';
+        }
+
         socket.on('yourTurn', async (data, callback) => {
             await updateGameView(data.now)
             console.log(data.kind)
             if(data.kind=='draw'){
                 if(data.choices.length>2){
+                    await startTurnTimer();
                     let playerSelectNumber =  await select(data.choices);
                     selectContainer.style.display = 'none';
                     console.log('playerSelectNumber');
@@ -1365,34 +1411,43 @@
                     let playerSelectCard = data.choices[playerSelectNumber];
                     const done = await drawCardToHand(playerSelectCard)
                     if(done == 'done'){
+                        await stopTurnTimer();
                         callback([playerSelectNumber])
                     }
                 }else{
                     const done = await drawCardToHand(data.choices[0])
                     if(done == 'done'){
+                        await stopTurnTimer();
                         callback([0])
                     }
                 }
             }else if(data.kind=='opponentChoice'){
                 console.log('opponentChoice')
+                await stopTurnTimer();
                 callback([0])
             }else if(data.kind == 'play_card'){
+                await startTurnTimer();
                 let playerSelect = await select(data.choices);
                 selectContainer.style.display = 'none';
                 const done = await playCard(data.choices[playerSelect])
                 if(done == 'done'){
+                    await stopTurnTimer();
                     callback([playerSelect])
                 }
                 console.log(`playerSelect: ${playerSelect}`)
             }else if(data.kind == 'update'){
+                await stopTurnTimer();
                 callback([0])
             }else{
                 try {
+                    await startTurnTimer();
                     let playerSelect = await select(data.choices);
                     selectContainer.style.display = 'none';
-                    console.log(playerSelect)
-                    callback([playerSelect])   
+                    console.log(playerSelect)  
+                    await stopTurnTimer();
+                    callback([playerSelect]) 
                 } catch (error) {
+                    await stopTurnTimer();
                     console.log(error)
                 }
             }
@@ -1400,12 +1455,16 @@
 
         socket.on('onatherTurn', (data) => {
             console.log(`相手のターン: ${data.kind} -> ${data.choice}`)
+            console.log('相手のターンです。タイマーをリセットします。');
+            stopTurnTimer();
             if(data.kind=='play_card'){
                 playCard_cpu(parseInt(data.choice));
             }
         })
 
         socket.on('result', (data) => {
+            console.log('ゲーム終了。タイマーをリセットします。');
+            stopTurnTimer();
             showResult(data.result)
         })
 
@@ -1433,6 +1492,10 @@
             if (waitingInfoDiv) {
                 waitingInfoDiv.style.display = 'none';
             }
+        });
+
+        socket.on('forceStopTurnTimer', () => {
+            stopTurnTimer();
         });
 
         // コピーの機能を追加

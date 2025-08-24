@@ -106,6 +106,8 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
 
+let roomTimers = {}; // { roomId: timerId, ... }
+
 // 静的ファイルの配信（public フォルダを用意する想定）
 app.use(express.static('public'));
 
@@ -303,13 +305,47 @@ io.on('connection', (socket) => {
 
   // CPUプレイヤーの選択関数
   async function choice(now, choices, kind, socketId, roomId) {
+    let timerId = null; // タイマーIDを管理する変数
+    if (roomTimers[roomId]) {
+        clearTimeout(roomTimers[roomId]);
+    }
+    //5分タイマーを開始
+    roomTimers[roomId] = setTimeout(() => {
+        console.log(`ルーム ${roomId} で時間切れが発生しました。`);
+        // 時間切れになったプレイヤーを探す
+        const playersInRoom = jsonData.rooms[roomId].players;
+        const loserId = playersInRoom.find(pid => jsonData.players[pid].socketId === socketId);
+        const winnerId = playersInRoom.find(pid => jsonData.players[pid].socketId !== socketId);
+        
+        // 両プレイヤーに結果を送信
+        if (loserId) {
+            io.to(jsonData.players[loserId].socketId).emit('result', { result: 'LOSE(時間切れ)' });
+        }
+        if (winnerId) {
+            io.to(jsonData.players[winnerId].socketId).emit('result', { result: 'WIN(相手の時間切れ)' });
+        }
+    }, 300000);
+    roomTimers[roomId] = timerId;
     try {
       const response = await emitWithAck(now, choices, kind, socketId, roomId);
+      // プレイヤーが時間内に応答した場合、タイマーを停止
+      if (timerId) {
+          console.log(`ルーム ${roomId} のタイマーを停止しました。`);
+          clearTimeout(timerId);
+          delete roomTimers[roomId];
+      }
+
+
       io.to(roomId).except(socketId).emit('onatherTurn', {now: now, choices: choices, kind: kind, choice: response})
       console.log(`responce: ${response}`)
       return response
     } catch (e) {
       console.error("choice (yourTurn) failed:", e);
+      // 応答がなかった場合もタイマーをクリア
+      if (timerId) {
+            clearTimeout(timerId);
+            delete roomTimers[roomId];
+      }
     }
   }
 
