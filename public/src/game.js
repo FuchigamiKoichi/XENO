@@ -109,7 +109,7 @@ class Game {
 
     async turn(player) {
         const choice = player.choice;
-        await this.field.draw(player);
+        await this.field.draw(player, this.roomId);
         
         if (player.hands.length > 1) {
             const hands = player.hands
