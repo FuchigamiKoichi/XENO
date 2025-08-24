@@ -31,6 +31,12 @@ function addPlayer(playerData) {
     }
 }
 
+// プレイヤー情報の取得
+function showPlayers(playerData) {
+  loadData();
+  return jsonData.players
+}
+
 // プレイヤーのsocketidの更新
 function changeSocketId(playerData) {
     loadData();
@@ -123,9 +129,10 @@ io.on('connection', (socket) => {
   // ルームを確認する
   socket.on('showRooms', (data, callback) => {
     rooms = showRooms();
+    players = showPlayers();
     console.log(`roomsKeys: ${Object.keys(rooms)}`)
     if (callback) {
-        callback({ rooms });
+        callback({ rooms, players });
     }
   });
 
