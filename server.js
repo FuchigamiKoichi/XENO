@@ -44,7 +44,7 @@ function changeSocketId(playerData) {
 function addRoom(roomData) {
     loadData();
     if (!jsonData.rooms[roomData.id]) {
-        jsonData.rooms[roomData.id] = { owner: roomData.owner, players: [] };
+        jsonData.rooms[roomData.id] = { owner: roomData.owner, players: [], maxPlayers: roomData.maxPlayers };
         saveData(jsonData);
     }
 }
@@ -114,7 +114,8 @@ app.use(express.static('public'));
 // プレイヤー情報を管理するためのオブジェクト
 let players = {};
 // ルーム情報を管理するためのオブジェクト（簡易実装）
-let rooms = {}; 
+let rooms = {};
+const max_player_number = 2;
 
 
 io.on('connection', (socket) => {
@@ -122,8 +123,14 @@ io.on('connection', (socket) => {
 
   // ルームを確認する
   socket.on('showRooms', (data, callback) => {
-    rooms = showRooms();
-    console.log(`roomsKeys: ${Object.keys(rooms)}`)
+    roomsData = showRooms();
+    rooms = {};
+    console.log(`roomsKeys: ${Object.keys(roomsData)}`)
+    for (key of Object.keys(roomsData)){
+      if (roomsData[key].players.length < roomsData[key].maxPlayers){
+        rooms[key] = roomsData[key];
+      }
+    }
     if (callback) {
         callback({ rooms });
     }
@@ -176,7 +183,7 @@ io.on('connection', (socket) => {
     
     // 任意の方法で一意の roomId を生成する（例: ソケット ID + 乱数など）
     const roomId = generateRoomId();
-    let roomData = {id: roomId, owner: socket.id, players: [socket.id]}
+    let roomData = {id: roomId, owner: socket.id, players: [socket.id], maxPlayers: max_player_number}
     addRoom(roomData)
     // ソケットをそのルームにジョインさせる
     // socket.join(roomId);
@@ -193,6 +200,8 @@ io.on('connection', (socket) => {
   socket.on('joinRoom', (roomId, callback) => {
     loadData();
     const room = jsonData.rooms[roomId];
+    console.log('room')
+    console.log(room)
     if (!room) {
       if (callback) callback({ success: false, message: 'ルームが存在しません。' });
       return;
