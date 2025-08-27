@@ -315,10 +315,14 @@ io.on('connection', (socket) => {
   // プレイヤーの選択関数
   async function choice(now, choices, kind, socketId, roomId) {
     try {
+      console.log(`choice関数が呼び出されました: kind=${kind}, socketId=${socketId}`);
       const response = await emitWithAck(now, choices, kind, socketId, roomId);
-      io.to(roomId).except(socketId).emit('onatherTurn', {now: now, choices: choices, kind: kind, choice: response})
-      console.log(`responce: ${response}`)
-      return response
+      io.to(roomId).except(socketId).emit('onatherTurn', {now: now, choices: choices, kind: kind, choice: response});
+      console.log(`emitWithAckの結果: ${response}`);
+
+      // ログを追加して送信データを確認
+      console.log(`onatherTurnイベント送信: roomId=${roomId}, kind=${kind}, choice=${response}, now=${JSON.stringify(now)}, choices=${JSON.stringify(choices)}`);
+      return response;
     } catch (e) {
       console.error("choice (yourTurn) failed:", e);
     }
