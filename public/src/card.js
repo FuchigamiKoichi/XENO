@@ -168,6 +168,14 @@ class Card2 extends Card {
                     this.kill10(opponent);
                 }
             }
+
+            await choice(
+                createData(this.field, player),
+                ["", ""],
+                'update',
+                player.socketId,
+                roomId
+            )
         }
     }
 }
@@ -249,6 +257,14 @@ class Card5 extends Card {
             if (dropCard.number === 10) {
                 this.kill10(opponent);
             }
+
+            await choice(
+                createData(this.field, player),
+                ["", ""],
+                'update',
+                player.socketId,
+                roomId
+            )
         }
     }
 }
@@ -279,6 +295,14 @@ class Card6 extends Card {
             player.look.push({ opponent, card: opponent.hands[0] });
             opponent.looked.push({ subject: player, card: opponent.hands[0] });
             opponent.look.push({ opponent: player, card: player.hands[0] });
+
+            await choice(
+                createData(this.field, player),
+                ["", ""],
+                'update',
+                player.socketId,
+                roomId
+            )
         }
     }
 }
