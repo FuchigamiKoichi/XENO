@@ -81,6 +81,14 @@ class Card1 extends Card {
             this.move(player);
             const opponent = await this.opponentChoice(player, roomId);
             if (opponent && this.field.deck.length > 0) {
+                await choice(
+                    createData(this.field, player),
+                    ["", ""],
+                    'update',
+                    player.socketId,
+                    roomId
+                )
+
                 const getNumber = opponent.get;
                 opponent.get = 1;
                 await field.draw(opponent, roomId);
@@ -220,6 +228,14 @@ class Card5 extends Card {
         const opponent = await this.opponentChoice(player, roomId);
         
         if (opponent && this.field.deck.length > 0) {
+            await choice(
+                createData(this.field, player),
+                ["", ""],
+                'update',
+                player.socketId,
+                roomId
+            )
+
             const getNumber = opponent.get;
             opponent.get = 1;
             await this.field.draw(opponent, roomId);
@@ -326,6 +342,14 @@ class Card9 extends Card {
         const opponent = await this.opponentChoice(player, roomId);
         
         if (opponent && this.field.deck.length > 0) {
+            await choice(
+                createData(this.field, player),
+                ["", ""],
+                'update',
+                player.socketId,
+                roomId
+            )
+
             const getNumber = opponent.get;
             opponent.get = 1;
             await this.field.draw(opponent, roomId);
@@ -441,6 +465,14 @@ function createData(field, player) {
     }
     pred.push(...allPreds);
 
+    const playersHandsLengths = []
+    for (const player of players){
+        playersHandsLengths.push({
+            turnNumber: player.turnNumber,
+            length: player.hands.length
+        })
+    }
+
     return {
         playersLength: players.length,
         myTurnNumber: player.turnNumber,
@@ -452,6 +484,7 @@ function createData(field, player) {
         lookHands,
         lookedHands,
         pred,
+        playersHandsLengths,
         reincarnation: field.reincarnation.length > 0
     };
 }
