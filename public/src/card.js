@@ -81,13 +81,6 @@ class Card1 extends Card {
             this.move(player);
             const opponent = await this.opponentChoice(player, roomId);
             if (opponent && this.field.deck.length > 0) {
-                await choice(
-                    createData(this.field, player),
-                    ["", ""],
-                    'update',
-                    player.socketId,
-                    roomId
-                )
                 const getNumber = opponent.get;
                 opponent.get = 1;
                 await field.draw(opponent, roomId);
@@ -118,13 +111,6 @@ class Card1 extends Card {
                 if (trushCard.number === 10) {
                     this.kill10(opponent);
                 }
-                await choice(
-                    createData(field, player),
-                    choices,
-                    'trush',
-                    player.socketId,
-                    roomId
-                )
             }
         } else {
             this.move(player);
@@ -234,13 +220,6 @@ class Card5 extends Card {
         const opponent = await this.opponentChoice(player, roomId);
         
         if (opponent && this.field.deck.length > 0) {
-            await choice(
-                createData(this.field, player),
-                ["", ""],
-                'update',
-                player.socketId,
-                roomId
-            )
             const getNumber = opponent.get;
             opponent.get = 1;
             await this.field.draw(opponent, roomId);
@@ -254,15 +233,6 @@ class Card5 extends Card {
             if (dropCard.number === 10) {
                 this.kill10(opponent);
             }
-            setTimeout(async () => {
-                await choice(
-                    createData(this.field, player),
-                    ["", ""],
-                    'update',
-                    player.socketId,
-                    roomId
-                );
-            }, 3000); // 3秒 (3000ミリ秒)
         }
     }
 }
@@ -356,13 +326,6 @@ class Card9 extends Card {
         const opponent = await this.opponentChoice(player, roomId);
         
         if (opponent && this.field.deck.length > 0) {
-            await choice(
-                createData(this.field, player),
-                ["", ""],
-                'update',
-                player.socketId,
-                roomId
-            )
             const getNumber = opponent.get;
             opponent.get = 1;
             await this.field.draw(opponent, roomId);
@@ -382,14 +345,6 @@ class Card9 extends Card {
                 player.socketId,
                 roomId
             )
-            await choice(
-                createData(this.field, player),
-                ["", ""],
-                'update',
-                player.socketId,
-                roomId
-            )
-
             const choiceNumber = parseInt(responce);
             createLog(createData(this.field, player), choices, 'trush', this.field, player, choiceNumber);
             
@@ -486,14 +441,6 @@ function createData(field, player) {
     }
     pred.push(...allPreds);
 
-    const playersHandsLengths = []
-    for (const player of players){
-        playersHandsLengths.push({
-            turnNumber: player.turnNumber,
-            length: player.hands.length
-        })
-    }
-
     return {
         playersLength: players.length,
         myTurnNumber: player.turnNumber,
@@ -505,7 +452,6 @@ function createData(field, player) {
         lookHands,
         lookedHands,
         pred,
-        playersHandsLengths,
         reincarnation: field.reincarnation.length > 0
     };
 }
