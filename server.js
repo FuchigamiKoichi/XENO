@@ -50,7 +50,7 @@ function changeSocketId(playerData) {
 function addRoom(roomData) {
     loadData();
     if (!jsonData.rooms[roomData.id]) {
-        jsonData.rooms[roomData.id] = { owner: roomData.owner, players: [] };
+        jsonData.rooms[roomData.id] = { owner: roomData.owner, players: [], maxPlayers: roomData.maxPlayers };
         saveData(jsonData);
     }
 }
@@ -120,7 +120,8 @@ app.use(express.static('public'));
 // プレイヤー情報を管理するためのオブジェクト
 let players = {};
 // ルーム情報を管理するためのオブジェクト（簡易実装）
-let rooms = {}; 
+let rooms = {};
+const max_player_number = 2;
 
 
 io.on('connection', (socket) => {
@@ -128,9 +129,15 @@ io.on('connection', (socket) => {
 
   // ルームを確認する
   socket.on('showRooms', (data, callback) => {
-    rooms = showRooms();
     players = showPlayers();
-    console.log(`roomsKeys: ${Object.keys(rooms)}`)
+    roomsData = showRooms();
+    rooms = {};
+    console.log(`roomsKeys: ${Object.keys(roomsData)}`)
+    for (key of Object.keys(roomsData)){
+      if (roomsData[key].players.length < roomsData[key].maxPlayers){
+        rooms[key] = roomsData[key];
+      }
+    }
     if (callback) {
         callback({ rooms, players });
     }
@@ -183,7 +190,7 @@ io.on('connection', (socket) => {
     
     // 任意の方法で一意の roomId を生成する（例: ソケット ID + 乱数など）
     const roomId = generateRoomId();
-    let roomData = {id: roomId, owner: socket.id, players: [socket.id]}
+    let roomData = {id: roomId, owner: socket.id, players: [socket.id], maxPlayers: max_player_number}
     addRoom(roomData)
     // ソケットをそのルームにジョインさせる
     // socket.join(roomId);
@@ -200,6 +207,8 @@ io.on('connection', (socket) => {
   socket.on('joinRoom', (roomId, callback) => {
     loadData();
     const room = jsonData.rooms[roomId];
+    console.log('room')
+    console.log(room)
     if (!room) {
       if (callback) callback({ success: false, message: 'ルームが存在しません。' });
       return;
@@ -313,10 +322,14 @@ io.on('connection', (socket) => {
   // プレイヤーの選択関数
   async function choice(now, choices, kind, socketId, roomId) {
     try {
+      console.log(`choice関数が呼び出されました: kind=${kind}, socketId=${socketId}`);
       const response = await emitWithAck(now, choices, kind, socketId, roomId);
-      io.to(roomId).except(socketId).emit('onatherTurn', {now: now, choices: choices, kind: kind, choice: response})
-      console.log(`responce: ${response}`)
-      return response
+      io.to(roomId).except(socketId).emit('onatherTurn', {now: now, choices: choices, kind: kind, choice: response});
+      console.log(`emitWithAckの結果: ${response}`);
+
+      // ログを追加して送信データを確認
+      console.log(`onatherTurnイベント送信: roomId=${roomId}, kind=${kind}, choice=${response}, now=${JSON.stringify(now)}, choices=${JSON.stringify(choices)}`);
+      return response;
     } catch (e) {
       console.error("choice (yourTurn) failed:", e);
     }
