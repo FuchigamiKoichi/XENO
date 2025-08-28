@@ -109,7 +109,7 @@
             back.appendChild(contentOwnerName);
             // item.textContent = room_list[i];
             item.addEventListener('click', () => {
-              joinRoom(item.value)
+              joinRoom(room_list[i])
             });
             item.appendChild(back);
             rooms.appendChild(item);
