@@ -1,0 +1,44 @@
+body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+    background-color: #222;
+    color: white;
+    font-family: Arial, sans-serif;
+    }
+.result-content {
+    text-align: center;
+}
+#result-text {
+    font-size: 8em;
+    font-weight: bold;
+    margin: 0;
+    text-shadow: 0 0 20px currentColor; /* 文字を光らせる効果 */
+}
+#result-reason {
+    font-size: 1.5em;
+    margin-top: 10px;
+    margin-bottom: 50px;
+    color: #ccc;
+}
+.win-text {
+    color: #ffd700; /* 金色 */
+}
+.lose-text {
+    color: #aaaaaa; /* グレー */
+}
+#return-to-lobby-btn {
+    font-size: 22px;
+    padding: 15px 40px;
+    background-color: #007bff;
+    border: none;
+    border-radius: 8px;
+    color: white;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+#return-to-lobby-btn:hover {
+    transform: scale(1.05); /* 少し大きくする */
+}

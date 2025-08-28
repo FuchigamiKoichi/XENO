@@ -393,6 +393,42 @@ io.on('connection', (socket) => {
       const gameData = {roomId: data.roomId, players: socketIdList};
       const game = new Game(2, funcs, gameData, data.roomId);
       const result = await game.game();
+      // if(result[0]){
+      //   const gameLog = result[1];
+      //   for(let i=0; i<game.field.players.length; i++){
+      //     const player = game.field.players[i];
+      //     const resultString = gameLog[i][gameLog[i].length - 1].toString();
+
+      //     // 1. 結果（WINかLOSEか）を判定
+      //     let outcome = 'LOSE';
+      //     if (resultString.includes('WIN')) {
+      //         outcome = 'WIN';
+      //     }
+
+      //     // 2. 理由（括弧の中身）を取得
+      //     let reason = '';
+      //     if (resultString.includes('(')) {
+      //         const match = resultString.match(/\((.*)\)/);
+      //         if (match) {
+      //             reason = match[1];
+      //         }
+      //     }
+
+      //     // 3. 日本語などをURLで安全に扱えるようにエンコード
+      //     const encodedReason = encodeURIComponent(reason);
+          
+      //     // 4. 遷移先のURLをサーバー側で組み立てる
+      //     const url = `result.html?outcome=${outcome}&reason=${encodedReason}`;
+
+      //     // 5. 'redirectToResult' という新しいイベントで、完成したURLを送信
+      //     io.to(player.socketId).emit('redirectToResult', { url: url });
+          
+      //     console.log(`${player.name} にリダイレクト指示を送信: ${url}`);
+      //   }
+      // } else {
+      //   console.log(`err: ${result[1]}`)
+      //   console.log(`log: ${result[2]}`)
+      // }
       if(result[0]){
         const gameLog = result[1]
         for(let i=0; i<game.field.players.length; i++){
