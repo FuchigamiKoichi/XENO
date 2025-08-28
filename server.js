@@ -334,8 +334,6 @@ io.on('connection', (socket) => {
           clearTimeout(timerId);
           delete roomTimers[roomId];
       }
-
-
       io.to(roomId).except(socketId).emit('onatherTurn', {now: now, choices: choices, kind: kind, choice: response})
       console.log(`responce: ${response}`)
       return response
