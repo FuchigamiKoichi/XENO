@@ -1466,8 +1466,39 @@
         })
 
         socket.on('result', (data) => {
-            showResult(data.result)
+            //showResult(data.result)
+            console.log('ゲーム終了。結果ページに遷移します:', data);
+            //console.log(date.result);
+            // --- ここからがリダイレクト処理 ---
+            const resultString = data.result.toString();
+            console.log(resultString);
+            // 理由（括弧の中身）を取得
+            let reason = 'Noreason';
+            if (resultString.includes('(')) {
+                // 正規表現で括弧の中身を抽出
+                const match = resultString.match(/\((.*)\)/);
+                if (match) {
+                    reason = match[1];
+                }
+            }
+            // URLエンコードして、日本語などがURLで安全に扱えるようにする
+            const encodedReason = encodeURIComponent(reason);
+
+            // 新しいURLを組み立てて、結果ページに画面遷移
+            window.location.replace(`result.html?result=${resultString}&reason=${encodedReason}`);
         })
+
+        socket.on('redirectToResult', (data) => {
+            console.log('サーバーからリダイレクト指示を受け取りました:', data.url);
+            
+            // dataオブジェクトと、その中のurlプロパティが存在することを確認
+            if (data && data.url) {
+                // サーバーから指定されたURLに画面を遷移させる
+                window.location.replace(data.url);
+            } else {
+                console.error('無効なリダイレクト指示を受け取りました。');
+            }
+        });
 
         // サーバーから「対戦相手を待つ」指示を受け取ったときの処理
         socket.on('waitingForOpponent', (data) => {

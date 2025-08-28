@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>XENO - ゲーム結果</title>
+
+    <link rel="stylesheet" href="./result.css">
+    <style>
+        
+    </style>
+</head>
+<body>
+    <div class="result-content">
+        <h1 id="result-text"></h1>
+        <p id="result-reason"></p>
+        <button id="return-to-lobby-btn">ロビーに戻る</button>
+    </div>
+
+    <script>
+        // (1) ページが読み込まれたら、すぐに実行
+        window.addEventListener('DOMContentLoaded', () => {
+            
+            // (2) URLからパラメータを取得
+            const params = new URLSearchParams(window.location.search);
+            const outcome = params.get('result'); // 'WIN' または 'LOSE'
+            const reason = params.get('reason');
+
+            const resultText = document.getElementById('result-text');
+            const resultReason = document.getElementById('result-reason');
+
+            // (3) 取得したパラメータに応じて、表示を更新
+            if (outcome === 'win') {
+                resultText.textContent = 'YOU WIN';
+                resultText.className = 'win-text';
+            } else {
+                resultText.textContent = 'YOU LOSE';
+                resultText.className = 'lose-text';
+            }
+
+            resultReason.textContent = reason;
+        });
+
+        // (4) 「ロビーに戻る」ボタン
+        document.getElementById('return-to-lobby-btn').addEventListener('click', () => {
+            window.location.href = '/'; // ルートURL（index.html）に
+        });
+    </script>
+</body>
+</html>
