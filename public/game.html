@@ -1403,7 +1403,6 @@
             await updateGameView(data.now)
             console.log(data.kind)
             if(data.kind=='draw'){
-                addLog(`あなたが${playerSelectNumber}をドロー！`)
                 if(data.choices.length>2){
                     let playerSelectNumber =  await select(data.choices);
                     selectContainer.style.display = 'none';
@@ -1412,11 +1411,13 @@
                     let playerSelectCard = data.choices[playerSelectNumber];
                     const done = await drawCardToHand(playerSelectCard)
                     if(done == 'done'){
+                        addLog(`あなたが${playerSelectNumber}をドロー！`)
                         callback([playerSelectNumber])
                     }
                 }else{
                     const done = await drawCardToHand(data.choices[0])
                     if(done == 'done'){
+                        addLog(`あなたが${data.choices[0]}をドロー！`)
                         callback([0])
                     }
                 }
