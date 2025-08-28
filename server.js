@@ -335,7 +335,7 @@ io.on('connection', (socket) => {
     }
   }
 
-  // CPUプレイヤーの命名関数
+  // プレイヤーの命名関数
   function getName(roomId, index) {
     loadData();
     return `${jsonData.players[jsonData.rooms[roomId].players[index]].name}`;
@@ -345,6 +345,7 @@ io.on('connection', (socket) => {
   async function choice_cpu(now, choices, kind, socketId, roomId) {
     try {
       const best = await selectBestChoice(choices, now, kind); // model.js の score を自動使用
+      io.to(roomId).emit('onatherTurn', {now: now, choices: choices, kind: kind, choice: best})
       console.log(`kind: ${kind}`)
       console.log(`choices: ${choices}`)
       console.log("best:", best);
