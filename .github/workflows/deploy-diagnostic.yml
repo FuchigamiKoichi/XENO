@@ -1,0 +1,85 @@
+name: Deploy Diagnostic
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+concurrency:
+  group: staging-diagnostic
+  cancel-in-progress: true
+
+jobs:
+  diag:
+    runs-on: self-hosted
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Compute image names (lowercase)
+        run: |
+          echo "IMAGE=ghcr.io/${GITHUB_REPOSITORY,,}" >> "$GITHUB_ENV"
+          echo "IMAGE_TEST=ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/xeno-e2e" >> "$GITHUB_ENV"
+          echo "IMAGE=$IMAGE"
+          echo "IMAGE_TEST=$IMAGE_TEST"
+
+      - name: Print runner & docker info
+        run: |
+          uname -a || true
+          docker version || true
+          docker compose version || true
+
+      # まず PAT が設定されているか確認（未設定ならここで明確に落とす）
+      - name: Sanity check GHCR_PAT secret
+        run: |
+          echo "::add-mask::${{ secrets.GHCR_PAT }}"
+          if [ -z "${{ secrets.GHCR_PAT }}" ]; then
+            echo "::error ::GHCR_PAT is empty (Repo → Settings → Secrets → Actions に write:packages の PAT を作成してください)"
+            exit 1
+          fi
+
+      - name: Log in to GHCR (with PAT)
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GHCR_PAT }}
+
+      # PAT で push できるかを最小構成で検証（新しいパッケージ名：xeno-e2e）
+      - name: Smoke push to test package (xeno-e2e)
+        run: |
+          set -euxo pipefail
+          docker pull busybox:latest
+          docker tag busybox:latest "${IMAGE_TEST}:${GITHUB_SHA}"
+          docker push "${IMAGE_TEST}:${GITHUB_SHA}"
+          echo "OK: pushed ${IMAGE_TEST}:${GITHUB_SHA}"
+
+      # 本命（既存の xeno へ push できるか）
+      - name: Smoke push to real package (xeno)
+        run: |
+          set -euxo pipefail
+          docker tag busybox:latest "${IMAGE}:diag-${GITHUB_SHA}"
+          docker push "${IMAGE}:diag-${GITHUB_SHA}"
+          echo "OK: pushed ${IMAGE}:diag-${GITHUB_SHA}"
+
+      # ここまで通ったら、実ビルド→push も通る見込み
+      - name: Build & Push real image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: |
+            ${{ env.IMAGE }}:main
+            ${{ env.IMAGE }}:${{ github.sha }}
+          provenance: false
+
+      - name: Pull & Restart via Compose (server)
+        run: |
+          cd /srv/dev
+          docker compose pull app
+          docker compose up -d
+          docker image prune -f
