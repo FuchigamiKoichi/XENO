@@ -282,8 +282,16 @@ io.on('connection', (socket) => {
       console.log(`kind: ${kind}`)
       const util = require('util');
       console.log(util.inspect(choices, { depth: null }));
-      io.timeout(5*60000).to(socketId).emit('yourTurn', {now: now, choices: choices, kind: kind}, (err, responses) => {
+      io.timeout(5 * 60000).to(socketId).emit('yourTurn', {now: now, choices: choices, kind: kind}, (err, responses) => {
         if (err) {
+          // タイムアウトが発生した瞬間に、そのプレイヤーがまだ接続しているかを確認
+          const targetSocket = io.sockets.sockets.get(socketId);
+          if (!targetSocket) {
+            // 既に切断済みのプレイヤーに対するタイムアウトだった場合
+            console.log(`既に切断済みのソケット (${socketId}) に対するタイムアウトのため、エラー処理をスキップ。`);
+            // rejectせずに、nullを返すことで、game.js側で通常のタイムアウトとして処理させる
+            return resolve(null); 
+          }
           reject(err);
         } else {
           if(responses && responses.length>0){
@@ -303,49 +311,68 @@ io.on('connection', (socket) => {
     });
   }
 
-  // CPUプレイヤーの選択関数
-  async function choice(now, choices, kind, socketId, roomId) {
-    let timerId = null; // タイマーIDを管理する変数
-    if (roomTimers[roomId]) {
-        clearTimeout(roomTimers[roomId]);
-    }
-    //5分タイマーを開始
-    roomTimers[roomId] = setTimeout(() => {
-        console.log(`ルーム ${roomId} で時間切れが発生しました。`);
-        // 時間切れになったプレイヤーを探す
-        const playersInRoom = jsonData.rooms[roomId].players;
-        const loserId = playersInRoom.find(pid => jsonData.players[pid].socketId === socketId);
-        const winnerId = playersInRoom.find(pid => jsonData.players[pid].socketId !== socketId);
+  //プレイヤーの選択関数
+  // async function choice(now, choices, kind, socketId, roomId) {
+  //   let timerId = null; // タイマーIDを管理する変数
+  //   if (roomTimers[roomId]) {
+  //       clearTimeout(roomTimers[roomId]);
+  //   }
+  //   //5分タイマーを開始
+  //   roomTimers[roomId] = setTimeout(() => {
+  //       console.log(`ルーム ${roomId} で時間切れが発生しました。`);
+  //       // 時間切れになったプレイヤーを探す
+  //       const playersInRoom = jsonData.rooms[roomId].players;
+  //       const loserId = playersInRoom.find(pid => jsonData.players[pid].socketId === socketId);
+  //       const winnerId = playersInRoom.find(pid => jsonData.players[pid].socketId !== socketId);
         
-        // 両プレイヤーに結果を送信
-        if (loserId) {
-            io.to(jsonData.players[loserId].socketId).emit('result', { result: 'LOSE(時間切れ)' });
-        }
-        if (winnerId) {
-            io.to(jsonData.players[winnerId].socketId).emit('result', { result: 'WIN(相手の時間切れ)' });
-        }
-    }, 300000);
-    roomTimers[roomId] = timerId;
+  //       // 両プレイヤーに結果を送信
+  //       if (loserId) {
+  //           io.to(jsonData.players[loserId].socketId).emit('result', { result: 'LOSE(時間切れ)' });
+  //       }
+  //       if (winnerId) {
+  //           io.to(jsonData.players[winnerId].socketId).emit('result', { result: 'WIN(相手の時間切れ)' });
+  //       }
+  //   }, 300000);
+  //   roomTimers[roomId] = timerId;
+  //   try {
+  //     const response = await emitWithAck(now, choices, kind, socketId, roomId);
+  //     // プレイヤーが時間内に応答した場合、タイマーを停止
+  //     if (timerId) {
+  //         console.log(`ルーム ${roomId} のタイマーを停止しました。`);
+  //         clearTimeout(timerId);
+  //         delete roomTimers[roomId];
+  //     }
+  //     io.to(roomId).except(socketId).emit('onatherTurn', {now: now, choices: choices, kind: kind, choice: response})
+  //     console.log(`responce: ${response}`)
+  //     return response
+  //   } catch (e) {
+  //     console.error("choice (yourTurn) failed:", e);
+  //     // 応答がなかった場合もタイマーをクリア
+  //     if (timerId) {
+  //           clearTimeout(timerId);
+  //           delete roomTimers[roomId];
+  //     }
+  //   }
+  // }
+
+  async function choice(now, choices, kind, socketId, roomId) {
     try {
+      // emitWithAckがプレイヤーの応答を待つ。
+      // タイムアウトした場合は、emitWithAckがエラーを投げ(rejectし)、catchブロックに移行。
+      console.log(`choice関数が呼び出されました: kind=${kind}, socketId=${socketId}`);
       const response = await emitWithAck(now, choices, kind, socketId, roomId);
-      // プレイヤーが時間内に応答した場合、タイマーを停止
-      if (timerId) {
-          console.log(`ルーム ${roomId} のタイマーを停止しました。`);
-          clearTimeout(timerId);
-          delete roomTimers[roomId];
-      }
+      // プレイヤーが時間内に応答した場合
       io.to(roomId).except(socketId).emit('onatherTurn', {now: now, choices: choices, kind: kind, choice: response})
-      console.log(`responce: ${response}`)
-      return response
+      console.log(`emitWithAckの結果: ${response}`);
+
+      console.log(`onatherTurnイベント送信: roomId=${roomId}, kind=${kind}, choice=${response}, now=${JSON.stringify(now)}, choices=${JSON.stringify(choices)}`);
+      return response;
+
     } catch (e) {
+      // emitWithAckでタイムアウトエラーが発生した場合
       console.error("choice (yourTurn) failed:", e);
-      // 応答がなかった場合もタイマーをクリア
-      if (timerId) {
-            clearTimeout(timerId);
-            delete roomTimers[roomId];
-      }
     }
-  }
+}
 
   // CPUプレイヤーの命名関数
   function getName(roomId, index) {
