@@ -1,5 +1,7 @@
 const { Game } = require('./public/src/game.js');
 const { Player } = require('./public/src/player.js');
+// import { selectBestChoice } from "./select.js";
+const { selectBestChoice } = require('./select.js');
 
 // dataManager.js
 const fs = require('fs');
@@ -29,6 +31,12 @@ function addPlayer(playerData) {
     }
 }
 
+// プレイヤー情報の取得
+function showPlayers(playerData) {
+  loadData();
+  return jsonData.players
+}
+
 // プレイヤーのsocketidの更新
 function changeSocketId(playerData) {
     loadData();
@@ -42,7 +50,7 @@ function changeSocketId(playerData) {
 function addRoom(roomData) {
     loadData();
     if (!jsonData.rooms[roomData.id]) {
-        jsonData.rooms[roomData.id] = { owner: roomData.owner, players: [] };
+        jsonData.rooms[roomData.id] = { owner: roomData.owner, players: [], maxPlayers: roomData.maxPlayers };
         saveData(jsonData);
     }
 }
@@ -114,18 +122,26 @@ app.use(express.static('public'));
 // プレイヤー情報を管理するためのオブジェクト
 let players = {};
 // ルーム情報を管理するためのオブジェクト（簡易実装）
-let rooms = {}; 
-
+let rooms = {};
+const max_player_number = 2;
+let ready = 0;
 
 io.on('connection', (socket) => {
   console.log('ユーザが接続しました:', socket.id);
 
   // ルームを確認する
   socket.on('showRooms', (data, callback) => {
-    rooms = showRooms();
-    console.log(`roomsKeys: ${Object.keys(rooms)}`)
+    players = showPlayers();
+    roomsData = showRooms();
+    rooms = {};
+    console.log(`roomsKeys: ${Object.keys(roomsData)}`)
+    for (key of Object.keys(roomsData)){
+      if (roomsData[key].players.length < roomsData[key].maxPlayers){
+        rooms[key] = roomsData[key];
+      }
+    }
     if (callback) {
-        callback({ rooms });
+        callback({ rooms, players });
     }
   });
 
@@ -176,7 +192,7 @@ io.on('connection', (socket) => {
     
     // 任意の方法で一意の roomId を生成する（例: ソケット ID + 乱数など）
     const roomId = generateRoomId();
-    let roomData = {id: roomId, owner: socket.id, players: [socket.id]}
+    let roomData = {id: roomId, owner: socket.id, players: [socket.id], maxPlayers: max_player_number}
     addRoom(roomData)
     // ソケットをそのルームにジョインさせる
     // socket.join(roomId);
@@ -193,6 +209,8 @@ io.on('connection', (socket) => {
   socket.on('joinRoom', (roomId, callback) => {
     loadData();
     const room = jsonData.rooms[roomId];
+    console.log('room')
+    console.log(room)
     if (!room) {
       if (callback) callback({ success: false, message: 'ルームが存在しません。' });
       return;
@@ -216,8 +234,6 @@ io.on('connection', (socket) => {
     if (callback) {
       callback({ success: true, roomId, players: room.players, playerId: `${socket.id}` });
     }
-
-    
   });
 
   // プレイヤー情報を返す
@@ -311,50 +327,6 @@ io.on('connection', (socket) => {
     });
   }
 
-  //プレイヤーの選択関数
-  // async function choice(now, choices, kind, socketId, roomId) {
-  //   let timerId = null; // タイマーIDを管理する変数
-  //   if (roomTimers[roomId]) {
-  //       clearTimeout(roomTimers[roomId]);
-  //   }
-  //   //5分タイマーを開始
-  //   roomTimers[roomId] = setTimeout(() => {
-  //       console.log(`ルーム ${roomId} で時間切れが発生しました。`);
-  //       // 時間切れになったプレイヤーを探す
-  //       const playersInRoom = jsonData.rooms[roomId].players;
-  //       const loserId = playersInRoom.find(pid => jsonData.players[pid].socketId === socketId);
-  //       const winnerId = playersInRoom.find(pid => jsonData.players[pid].socketId !== socketId);
-        
-  //       // 両プレイヤーに結果を送信
-  //       if (loserId) {
-  //           io.to(jsonData.players[loserId].socketId).emit('result', { result: 'LOSE(時間切れ)' });
-  //       }
-  //       if (winnerId) {
-  //           io.to(jsonData.players[winnerId].socketId).emit('result', { result: 'WIN(相手の時間切れ)' });
-  //       }
-  //   }, 300000);
-  //   roomTimers[roomId] = timerId;
-  //   try {
-  //     const response = await emitWithAck(now, choices, kind, socketId, roomId);
-  //     // プレイヤーが時間内に応答した場合、タイマーを停止
-  //     if (timerId) {
-  //         console.log(`ルーム ${roomId} のタイマーを停止しました。`);
-  //         clearTimeout(timerId);
-  //         delete roomTimers[roomId];
-  //     }
-  //     io.to(roomId).except(socketId).emit('onatherTurn', {now: now, choices: choices, kind: kind, choice: response})
-  //     console.log(`responce: ${response}`)
-  //     return response
-  //   } catch (e) {
-  //     console.error("choice (yourTurn) failed:", e);
-  //     // 応答がなかった場合もタイマーをクリア
-  //     if (timerId) {
-  //           clearTimeout(timerId);
-  //           delete roomTimers[roomId];
-  //     }
-  //   }
-  // }
-
   async function choice(now, choices, kind, socketId, roomId) {
     try {
       // emitWithAckがプレイヤーの応答を待つ。
@@ -374,50 +346,88 @@ io.on('connection', (socket) => {
     }
 }
 
-  // CPUプレイヤーの命名関数
+  // プレイヤーの命名関数
   function getName(roomId, index) {
     loadData();
     return `${jsonData.players[jsonData.rooms[roomId].players[index]].name}`;
   }
 
-  // 使用例
-  const funcs = [
-      { get_name: getName, choice: choice },
-      { get_name: getName, choice: choice }
-  ];
+  // CPUの選択関数
+  async function choice_cpu(now, choices, kind, socketId, roomId) {
+    try {
+      const best = await selectBestChoice(choices, now, kind); // model.js の score を自動使用
+      io.to(roomId).emit('onatherTurn', {now: now, choices: choices, kind: kind, choice: best})
+      console.log(`kind: ${kind}`)
+      console.log(`choices: ${choices}`)
+      console.log("best:", best);
+      return best
+    } catch (e) {
+      console.error("choice (yourTurn) failed:", e);
+    }
+  }
+
+  // CPUの命名関数
+  function getName_cpu(roomId, index) {
+    return `cpu_${index}`;
+  }
 
   // 全てのプレイヤーのreadyを判定
   socket.on("ready", async (data) => {
-    loadData();
-    jsonData.players[data.playerId].ready = 1
-    saveData(jsonData);
     let ready = 0;
-    for(let i=0; i<jsonData.rooms[data.roomId].players.length; i++){
-      ready += jsonData.players[jsonData.rooms[data.roomId].players[i]].ready;
+    let funcs = []
+    if (data.playerId == "cpu"){
+      ready = 2;
+      funcs = [
+          { get_name: getName, choice: choice },
+          { get_name: getName_cpu, choice: choice_cpu }
+      ];
+    }else{
+      loadData();
+      jsonData.players[data.playerId].ready = 1
+      saveData(jsonData);
+      for(let i=0; i<jsonData.rooms[data.roomId].players.length; i++){
+        ready += jsonData.players[jsonData.rooms[data.roomId].players[i]].ready;
+      }
+      console.log(`ready: ${ready}`);
+      funcs = [
+          { get_name: getName, choice: choice },
+          { get_name: getName, choice: choice }
+      ];
     }
-    console.log(`ready: ${ready}`);
     if(ready==2){
       loadData()
       console.log('準備完了！ゲームを開始します')
       let socketIdList = []
-      for(let i=0; i<2; i++){
+      for(let i=0; i<jsonData.rooms[data.roomId].players.length; i++){
         socketIdList.push(jsonData.players[jsonData.rooms[data.roomId].players[i]].socketId)
       }
       const gameData = {roomId: data.roomId, players: socketIdList};
       const game = new Game(2, funcs, gameData, data.roomId);
       const result = await game.game();
+      
       if(result[0]){
         const gameLog = result[1]
         for(let i=0; i<game.field.players.length; i++){
           const player = game.field.players[i]
           const result = gameLog[i][gameLog[i].length - 1]
+          const currentPlayerId = jsonData.rooms[data.roomId].players[i];
+          jsonData.players[currentPlayerId].ready = 0;
+
+          console.log(`[サーバー送信前チェック] 送信するplayerId: ${currentPlayerId}`);
+
           io.to(player.socketId).emit('result', {result: result})
+          io.to(player.socketId).emit('gameEnded', { 
+              result: result,
+              roomId: data.roomId,
+              playerId: currentPlayerId 
+          });
           for(let k=0; k<gameLog[i].length; k++){
             console.log(gameLog[i][k])
           }
           console.log(`${player.name}: ${result}`)
         }
-
+        // 変更を保存
+        saveData(jsonData);
       }else{
         console.log(`err: ${result[1]}`)
         console.log(`log: ${result[2]}`)
@@ -425,6 +435,53 @@ io.on('connection', (socket) => {
     }
   })
 
+    // result.htmlにいるクライアントをルームに参加させる
+    socket.on('identifyResultPage', (data) => {
+        const { roomId, playerId } = data;
+        if (roomId && playerId) {
+            console.log(`リザルトページのクライアント ${playerId} をルーム ${roomId} に参加させます。`);
+            socket.join(roomId);
+        }
+    });
+
+    socket.on('requestRematch', (data) => {
+        const { roomId, playerId } = data;
+        
+        // データが正常に送られてきたか確認
+        if (!roomId || !playerId) {
+            console.error('無効な再戦リクエストを受け取りました。');
+            return;
+        }
+
+        console.log(`${playerId} からルーム ${roomId} への再戦リクエストを受け取りました。`);
+        const room = jsonData.rooms[roomId];
+
+        if (room.players.length >= 2) {
+            console.log(`ルーム ${roomId} の初回再戦リクエスト。プレイヤーリストをリセットします。`);
+            room.players = []; // ここで部屋を空にする
+        }
+        room.players.push(playerId);
+        console.log(`ルーム ${roomId} に ${playerId} が参加。現在のメンバー:`, room.players)
+
+        // このプレイヤーのsocket.idを最新のものに更新し、再度ルームに参加させる
+        // (game.htmlに遷移した後、changeSocketidが呼ばれるので、ここでのjoinは必須ではないが一応行う)
+        socket.join(roomId);
+        if (jsonData.players[playerId]) {
+            console.log(`プレイヤー ${playerId} の socketId を更新: ${socket.id}`);
+            jsonData.players[playerId].socketId = socket.id;
+            saveData(jsonData);
+        }
+        const playersString = room.players.join(','); 
+
+        // リクエストを送ってきた本人以外に、ルーム内の全員に通知を送る
+        socket.broadcast.to(roomId).emit('opponentRequestedRematch', { name: jsonData.players[playerId].name });
+        console.log('--> ルーム内の全員に "opponentRequestedRematch" を送信しました');
+        const url = `game.html?roomId=${roomId}&playerId=${playerId}&players=${playersString}`;
+        
+        // リクエストを送ってきた本人にだけ「ゲーム画面へ移動せよ」と指示を送る
+        socket.emit('navigateToGame', { url: url });
+        console.log(`${playerId} に遷移指示を送信: ${url}`);
+    });
   // ゲーム中のプレイヤー操作を受け取る例
   socket.on('playerAction', (roomId, actionData) => {
     const room = rooms[roomId];
