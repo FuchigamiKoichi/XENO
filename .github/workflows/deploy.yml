@@ -1,4 +1,4 @@
-name: Deploy to Staging (dev.shigenoki.com)
+name: Deploy to Staging
 
 on:
   push:
@@ -8,9 +8,8 @@ permissions:
   contents: read
   packages: write
 
-concurrency:
-  group: staging-deploy
-  cancel-in-progress: true
+env:
+  IMAGE: ghcr.io/fuchigamikoichi/xeno
 
 jobs:
   deploy:
@@ -31,8 +30,8 @@ jobs:
           context: .
           push: true
           tags: |
-            ghcr.io/${{ github.repository }}:main
-            ghcr.io/${{ github.repository }}:${{ github.sha }}
+            ${{ env.IMAGE }}:main
+            ${{ env.IMAGE }}:${{ github.sha }}
           provenance: false
 
       - name: Pull & Restart via Compose
