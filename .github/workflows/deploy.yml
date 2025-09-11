@@ -1,4 +1,4 @@
-name: Deploy to Staging (dev.example.com)
+name: Deploy to Staging (dev.shigenoki.com)
 
 on:
   push:
