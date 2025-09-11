@@ -122,7 +122,7 @@ let players = {};
 // ルーム情報を管理するためのオブジェクト（簡易実装）
 let rooms = {};
 const max_player_number = 2;
-
+let ready = 0;
 
 io.on('connection', (socket) => {
   console.log('ユーザが接続しました:', socket.id);
@@ -232,8 +232,6 @@ io.on('connection', (socket) => {
     if (callback) {
       callback({ success: true, roomId, players: room.players, playerId: `${socket.id}` });
     }
-
-    
   });
 
   // プレイヤー情報を返す
@@ -393,54 +391,30 @@ io.on('connection', (socket) => {
       const gameData = {roomId: data.roomId, players: socketIdList};
       const game = new Game(2, funcs, gameData, data.roomId);
       const result = await game.game();
-      // if(result[0]){
-      //   const gameLog = result[1];
-      //   for(let i=0; i<game.field.players.length; i++){
-      //     const player = game.field.players[i];
-      //     const resultString = gameLog[i][gameLog[i].length - 1].toString();
-
-      //     // 1. 結果（WINかLOSEか）を判定
-      //     let outcome = 'LOSE';
-      //     if (resultString.includes('WIN')) {
-      //         outcome = 'WIN';
-      //     }
-
-      //     // 2. 理由（括弧の中身）を取得
-      //     let reason = '';
-      //     if (resultString.includes('(')) {
-      //         const match = resultString.match(/\((.*)\)/);
-      //         if (match) {
-      //             reason = match[1];
-      //         }
-      //     }
-
-      //     // 3. 日本語などをURLで安全に扱えるようにエンコード
-      //     const encodedReason = encodeURIComponent(reason);
-          
-      //     // 4. 遷移先のURLをサーバー側で組み立てる
-      //     const url = `result.html?outcome=${outcome}&reason=${encodedReason}`;
-
-      //     // 5. 'redirectToResult' という新しいイベントで、完成したURLを送信
-      //     io.to(player.socketId).emit('redirectToResult', { url: url });
-          
-      //     console.log(`${player.name} にリダイレクト指示を送信: ${url}`);
-      //   }
-      // } else {
-      //   console.log(`err: ${result[1]}`)
-      //   console.log(`log: ${result[2]}`)
-      // }
+      
       if(result[0]){
         const gameLog = result[1]
         for(let i=0; i<game.field.players.length; i++){
           const player = game.field.players[i]
           const result = gameLog[i][gameLog[i].length - 1]
+          const currentPlayerId = jsonData.rooms[data.roomId].players[i];
+          jsonData.players[currentPlayerId].ready = 0;
+
+          console.log(`[サーバー送信前チェック] 送信するplayerId: ${currentPlayerId}`);
+
           io.to(player.socketId).emit('result', {result: result})
+          io.to(player.socketId).emit('gameEnded', { 
+              result: result,
+              roomId: data.roomId,
+              playerId: currentPlayerId 
+          });
           for(let k=0; k<gameLog[i].length; k++){
             console.log(gameLog[i][k])
           }
           console.log(`${player.name}: ${result}`)
         }
-
+        // 変更を保存
+        saveData(jsonData);
       }else{
         console.log(`err: ${result[1]}`)
         console.log(`log: ${result[2]}`)
@@ -448,6 +422,53 @@ io.on('connection', (socket) => {
     }
   })
 
+    // result.htmlにいるクライアントをルームに参加させる
+    socket.on('identifyResultPage', (data) => {
+        const { roomId, playerId } = data;
+        if (roomId && playerId) {
+            console.log(`リザルトページのクライアント ${playerId} をルーム ${roomId} に参加させます。`);
+            socket.join(roomId);
+        }
+    });
+
+    socket.on('requestRematch', (data) => {
+        const { roomId, playerId } = data;
+        
+        // データが正常に送られてきたか確認
+        if (!roomId || !playerId) {
+            console.error('無効な再戦リクエストを受け取りました。');
+            return;
+        }
+
+        console.log(`${playerId} からルーム ${roomId} への再戦リクエストを受け取りました。`);
+        const room = jsonData.rooms[roomId];
+
+        if (room.players.length >= 2) {
+            console.log(`ルーム ${roomId} の初回再戦リクエスト。プレイヤーリストをリセットします。`);
+            room.players = []; // ここで部屋を空にする
+        }
+        room.players.push(playerId);
+        console.log(`ルーム ${roomId} に ${playerId} が参加。現在のメンバー:`, room.players)
+
+        // このプレイヤーのsocket.idを最新のものに更新し、再度ルームに参加させる
+        // (game.htmlに遷移した後、changeSocketidが呼ばれるので、ここでのjoinは必須ではないが一応行う)
+        socket.join(roomId);
+        if (jsonData.players[playerId]) {
+            console.log(`プレイヤー ${playerId} の socketId を更新: ${socket.id}`);
+            jsonData.players[playerId].socketId = socket.id;
+            saveData(jsonData);
+        }
+        const playersString = room.players.join(','); 
+
+        // リクエストを送ってきた本人以外に、ルーム内の全員に通知を送る
+        socket.broadcast.to(roomId).emit('opponentRequestedRematch', { name: jsonData.players[playerId].name });
+        console.log('--> ルーム内の全員に "opponentRequestedRematch" を送信しました');
+        const url = `game.html?roomId=${roomId}&playerId=${playerId}&players=${playersString}`;
+        
+        // リクエストを送ってきた本人にだけ「ゲーム画面へ移動せよ」と指示を送る
+        socket.emit('navigateToGame', { url: url });
+        console.log(`${playerId} に遷移指示を送信: ${url}`);
+    });
   // ゲーム中のプレイヤー操作を受け取る例
   socket.on('playerAction', (roomId, actionData) => {
     const room = rooms[roomId];
