@@ -1,15 +1,22 @@
-name: Deploy to Staging
+name: Deploy to Staging (dev.shigenoki.com)
 
 on:
   push:
     branches: [ "main" ]
 
+# リポジトリ設定側（Settings → Actions → General）でも
+# 「Workflow permissions: Read and write」を必ず有効に。
 permissions:
   contents: read
   packages: write
 
+# 画像名を常に小文字化してタグ生成
 env:
-  IMAGE: ghcr.io/fuchigamikoichi/xeno
+  IMAGE: ghcr.io/${{ toLower(github.repository) }}
+
+concurrency:
+  group: staging-deploy
+  cancel-in-progress: true
 
 jobs:
   deploy:
@@ -24,8 +31,8 @@ jobs:
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          username: ${{ github.actor }}          # ← 文字列 'actor' ではなく式
+          password: ${{ secrets.GITHUB_TOKEN }}  # ← GITHUB_TOKEN でOK（上の permissions が必要）
 
       - name: Build & Push image
         uses: docker/build-push-action@v6
