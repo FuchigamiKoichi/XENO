@@ -25,29 +25,23 @@ jobs:
       - name: Compute lowercase image name
         run: echo "IMAGE=ghcr.io/${GITHUB_REPOSITORY,,}" >> "$GITHUB_ENV"
 
-      # Secret が空だと即わかるように
-      - name: Sanity check GHCR_PAT
-        run: |
-          [ -n "${{ secrets.GHCR_PAT }}" ] || { echo "::error ::GHCR_PAT is empty (Repo → Settings → Secrets → Actions に write:packages の PAT を作成してください)"; exit 1; }
+      # （必要なら）最初だけ busybox で :main を作るブートストラップ
+      # パッケージが完全に空なら有効化すると楽です。普段は省略OK。
+      # - name: Bootstrap :main tag (optional)
+      #   run: |
+      #     set -eux
+      #     docker pull busybox:latest
+      #     docker tag busybox:latest "${IMAGE}:main"
+      #     docker push "${IMAGE}:main"
 
-      # ★ GHCR に PAT でログイン（まずは確実に通す）
-      - name: Log in to GHCR (with PAT)
+      - name: Log in to GHCR
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
-          username: ${{ github.repository_owner }}
-          password: ${{ secrets.GHCR_PAT }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
-      # ❶ スモーク：busybox を :main に再タグして push（GHCR 側の受け入れ確認）
-      - name: Smoke push to package (:main)
-        run: |
-          set -euxo pipefail
-          docker pull busybox:latest
-          docker tag busybox:latest "${IMAGE}:main"
-          docker push "${IMAGE}:main"
-
-      # ❷ 本番ビルド → :main / :<sha> を push
-      - name: Build & Push real image
+      - name: Build & Push image (:main and :sha)
         uses: docker/build-push-action@v6
         with:
           context: .
@@ -57,14 +51,29 @@ jobs:
             ${{ env.IMAGE }}:${{ github.sha }}
           provenance: false
 
-      # ❸ :main の存在を検証（ここまで来れば Pull してOK）
-      - name: Verify :main tag exists on GHCR
-        run: docker buildx imagetools inspect "${IMAGE}:main" >/dev/null
-
-      # ❹ サーバ反映
-      - name: Pull & Restart via Compose
+      # ← ここで “本当にあるか” を検証。無ければこの時点で止める（原因がログに出る）
+      - name: Verify tags exist on GHCR
         run: |
+          set -eux
+          docker buildx imagetools inspect "${IMAGE}:${GITHUB_SHA}" >/dev/null
+          docker buildx imagetools inspect "${IMAGE}:main" >/dev/null || echo "::warning ::':main' is missing (deploy will use :sha)"
+
+      # ここが肝：サーバの compose を “今回の :sha を指す override” で確実にデプロイ
+      - name: Deploy with SHA pin (compose override)
+        run: |
+          set -eux
           cd /srv/dev
+          cat > docker-compose.override.yml <<EOF
+          services:
+            app:
+              image: ${IMAGE}:${GITHUB_SHA}
+          EOF
           docker compose pull app
-          docker compose up -d
+          docker compose up -d --no-deps app
           docker image prune -f
+
+      # 必要なら最後に :main を使う運用へ戻す（今はコメントアウト推奨）
+      # - name: Remove override (back to :main)
+      #   if: always()
+      #   run: |
+      #     rm -f /srv/dev/docker-compose.override.yml || true
