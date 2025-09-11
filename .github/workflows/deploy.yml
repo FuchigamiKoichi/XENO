@@ -21,21 +21,43 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Compute lowercase image name
-        run: echo "IMAGE=ghcr.io/${GITHUB_REPOSITORY,,}" >> "$GITHUB_ENV"
-
-      - name: Sanity check secret
+      # 小文字タグを生成
+      - name: Compute image names (lowercase)
         run: |
-          [ -n "${{ secrets.GHCR_PAT }}" ] || { echo "GHCR_PAT is empty"; exit 1; }
+          echo "IMAGE=ghcr.io/${GITHUB_REPOSITORY,,}" >> "$GITHUB_ENV"
+          echo "IMAGE_TEST=ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/xeno-e2e" >> "$GITHUB_ENV"
+          echo "Computed IMAGE=$IMAGE and IMAGE_TEST=$IMAGE_TEST"  # 表示用
+        env: {}  # (暗号情報は出さない)
 
+      # デバッグログを有効化（UIのログが詳しくなる）
+      - name: Enable step debug
+        if: ${{ github.event_name == 'push' }}
+        run: echo "ACTIONS_STEP_DEBUG=true" >> "$GITHUB_ENV"
+
+      # ここで PAT が空なら即原因判明（ログに "GHCR_PAT is empty" が出ます）
+      - name: Sanity check GHCR_PAT
+        run: |
+          [ -n "${{ secrets.GHCR_PAT }}" ] || { echo "::error ::GHCR_PAT is empty (repo secret not set?)"; exit 1; }
+
+      # PAT で GHCR にログイン（切り分け用）
       - name: Log in to GHCR (with PAT)
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
-          username: ${{ github.repository_owner }}
+          username: ${{ github.repository_owner }}     # PAT の所有者
           password: ${{ secrets.GHCR_PAT }}
 
-      - name: Build & Push image
+      # 実際に push できるか “最小” の検証（busybox を再タグして push）
+      - name: Smoke test push (test package)
+        run: |
+          set -euxo pipefail
+          docker pull busybox:latest
+          docker tag busybox:latest "${IMAGE_TEST}:${GITHUB_SHA}"
+          docker push "${IMAGE_TEST}:${GITHUB_SHA}"
+          echo "OK: pushed ${IMAGE_TEST}:${GITHUB_SHA}"
+
+      # 上のスモークが通れば、本番のイメージを build & push
+      - name: Build & Push image (real)
         uses: docker/build-push-action@v6
         with:
           context: .
