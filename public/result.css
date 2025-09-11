@@ -15,7 +15,7 @@ body {
     font-size: 8em;
     font-weight: bold;
     margin: 0;
-    text-shadow: 0 0 20px currentColor; /* 文字を光らせる効果 */
+    text-shadow: 0 0 20px currentColor; 
 }
 #result-reason {
     font-size: 1.5em;
@@ -24,10 +24,14 @@ body {
     color: #ccc;
 }
 .win-text {
-    color: #ffd700; /* 金色 */
+    color: #ffd700; 
 }
 .lose-text {
-    color: #aaaaaa; /* グレー */
+    color: #aaaaaa; 
+}
+.draw-text {
+    color: #f0f0f0; 
+    text-shadow: 0 0 20px #ffffff;
 }
 #return-to-lobby-btn {
     font-size: 22px;
@@ -40,5 +44,23 @@ body {
     transition: transform 0.2s;
 }
 #return-to-lobby-btn:hover {
-    transform: scale(1.05); /* 少し大きくする */
+    transform: scale(1.05);
+}
+.button-container {
+    display: flex;
+    justify-content: center;
+    gap: 20px; 
+}
+
+.opponent-status-text {
+    color: #00ffdd; 
+    font-size: 1.2em;
+    height: 1.5em; 
+    margin-top: 20px;
+    font-weight: bold;
+    opacity: 0;
+    transition: opacity 0.5s ease-in-out;
+}
+.opponent-status-text.show {
+    opacity: 1;
 }

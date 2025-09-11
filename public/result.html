@@ -14,36 +14,102 @@
     <div class="result-content">
         <h1 id="result-text"></h1>
         <p id="result-reason"></p>
-        <button id="return-to-lobby-btn">ロビーに戻る</button>
+        <div class="button-container">
+            <button id="play-again-btn">replay</button>
+            <button id="return-to-lobby-btn">back to Lobby</button>
+        </div>
+        <p id="opponent-status" class="opponent-status-text"></p>
     </div>
-
+    <script src="/socket.io/socket.io.js"></script>
     <script>
+        const socket = io();
+
+        let roomId = null;
+        let playerId = null;
+        let players = {};
+        let response = {};
+        socket.emit('changeSocketid', {id:playerId, roomId: roomId})
         // (1) ページが読み込まれたら、すぐに実行
         window.addEventListener('DOMContentLoaded', () => {
             
             // (2) URLからパラメータを取得
             const params = new URLSearchParams(window.location.search);
-            const outcome = params.get('result'); // 'WIN' または 'LOSE'
+            const outcome = params.get('result'); // 'win' または 'lose'
             const reason = params.get('reason');
+
+            roomId = params.get('roomId');
+            playerId = params.get('playerId');
+            players = params.get('players');
+            response = {roomId: roomId, playerId: playerId, players: players}
+
+            console.log(`[result.html読み取りチェック] roomId: ${roomId}, playerId: ${playerId}`);
+
+            if (roomId && playerId) {
+                socket.emit('identifyResultPage', { roomId: roomId, playerId: playerId });
+            }
+
 
             const resultText = document.getElementById('result-text');
             const resultReason = document.getElementById('result-reason');
 
-            // (3) 取得したパラメータに応じて、表示を更新
             if (outcome === 'win') {
                 resultText.textContent = 'YOU WIN';
                 resultText.className = 'win-text';
-            } else {
+            } else if (outcome === 'lose') {
                 resultText.textContent = 'YOU LOSE';
                 resultText.className = 'lose-text';
+            }else{
+                resultText.textContent = 'DRAW';
+                resultText.className = 'draw-text';
             }
 
             resultReason.textContent = reason;
         });
 
+        // 「もう1度遊ぶ」ボタンの処理
+        document.getElementById('play-again-btn').addEventListener('click', () => {
+            // IDが取得できていれば、room.htmlにIDを付けて戻る
+            if (roomId) {
+                console.log(`再戦リクエストを送信: roomId=${roomId}, playerId=${playerId}`);
+                socket.emit('requestRematch', { roomId: roomId, playerId: playerId });
+
+                // ユーザーへのフィードバック
+                event.target.textContent = '相手を待っています...';
+                event.target.disabled = true; 
+                document.getElementById('return-to-lobby-btn').disabled = true;
+
+            } else {
+                alert('ルーム情報が取得できませんでした。ロビーに戻ります。');
+                window.location.href = '/';
+            }
+        });
+
+        socket.on('opponentRequestedRematch', (data) => {
+            console.log('相手が再戦を希望しました:', data);
+            
+            const statusEl = document.getElementById('opponent-status');
+            if(statusEl) {
+                statusEl.textContent = `${data.name} さんが再戦を希望しています。`;
+                statusEl.classList.add('show'); // CSSでフェードイン
+            }
+
+            const lobbyBtn = document.getElementById('return-to-lobby-btn');
+            if (lobbyBtn) {
+                lobbyBtn.textContent = '再戦を待っています';
+                lobbyBtn.disabled = true;
+            }
+        });
+
+        // (4) サーバーから「ゲーム画面に移動せよ」という指示を受け取る
+        socket.on('navigateToGame', (data) => {
+            console.log('サーバーからゲーム画面への遷移指示を受け取りました:', data.url);
+            if (data && data.url) {
+                window.location.replace(data.url);
+            }
+        });
         // (4) 「ロビーに戻る」ボタン
         document.getElementById('return-to-lobby-btn').addEventListener('click', () => {
-            window.location.href = '/'; // ルートURL（index.html）に
+            window.location.href = '/'; 
         });
     </script>
 </body>

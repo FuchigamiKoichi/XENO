@@ -619,10 +619,11 @@
 
         const waitingInfoDiv = document.getElementById('waiting-info');
 
-        let urls = String(window.location.href).split('?')
-        const roomId = urls[1].substr(7,urls[1].length)
-        const playerId = urls[2].substr(9,urls[1].length)
-        let players = urls[3].substr(8,urls[3].length).split(',')
+        // let urls = String(window.location.href).split('?')
+        const params = new URLSearchParams(window.location.search);
+        const roomId = params.get('roomId');
+        const playerId = params.get('playerId');
+        const players = params.get('players').split(',');
 
         socket.emit('changeSocketid', {id:playerId, roomId: roomId})
 
@@ -1465,14 +1466,15 @@
             }
         })
 
-        socket.on('result', (data) => {
+        socket.on('gameEnded', (data) => {
             //showResult(data.result)
             console.log('ゲーム終了。結果ページに遷移します:', data);
-            //console.log(date.result);
-            // --- ここからがリダイレクト処理 ---
+            console.log('[game.html受信チェック] サーバーから受け取ったデータ:', data);
+            console.log(`[game.html変数チェック] roomId: ${roomId}, playerId: ${playerId}`);
+            
             const resultString = data.result.toString();
             console.log(resultString);
-            // 理由（括弧の中身）を取得
+            // 理由を取得
             let reason = 'Noreason';
             if (resultString.includes('(')) {
                 // 正規表現で括弧の中身を抽出
@@ -1481,11 +1483,11 @@
                     reason = match[1];
                 }
             }
-            // URLエンコードして、日本語などがURLで安全に扱えるようにする
+            // 日本語などがURLで安全に扱えるようにする
             const encodedReason = encodeURIComponent(reason);
 
             // 新しいURLを組み立てて、結果ページに画面遷移
-            window.location.replace(`result.html?result=${resultString}&reason=${encodedReason}`);
+            window.location.replace(`result.html?roomId=${roomId}&playerId=${playerId}&players=${players}&result=${resultString}&reason=${encodedReason}`);
         })
 
         socket.on('redirectToResult', (data) => {
