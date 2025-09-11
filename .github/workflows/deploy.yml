@@ -4,15 +4,11 @@ on:
   push:
     branches: [ "main" ]
 
-# リポジトリ設定側（Settings → Actions → General）でも
-# 「Workflow permissions: Read and write」を必ず有効に。
+# リポジトリ設定側（Settings → Actions → General）で
+# Workflow permissions は Read and write に設定済みとのこと → OK
 permissions:
   contents: read
   packages: write
-
-# 画像名を常に小文字化してタグ生成
-env:
-  IMAGE: ghcr.io/${{ toLower(github.repository) }}
 
 concurrency:
   group: staging-deploy
@@ -27,12 +23,16 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # ← ここで "ghcr.io/<owner>/<repo>" を常に小文字にして環境変数に設定
+      - name: Compute lowercase image name
+        run: echo "IMAGE=ghcr.io/${GITHUB_REPOSITORY,,}" >> "$GITHUB_ENV"
+
       - name: Log in to GHCR
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
-          username: ${{ github.actor }}          # ← 文字列 'actor' ではなく式
-          password: ${{ secrets.GITHUB_TOKEN }}  # ← GITHUB_TOKEN でOK（上の permissions が必要）
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build & Push image
         uses: docker/build-push-action@v6
