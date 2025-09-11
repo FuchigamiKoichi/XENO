@@ -114,6 +114,8 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
 
+let roomTimers = {}; // { roomId: timerId, ... }
+
 // 静的ファイルの配信（public フォルダを用意する想定）
 app.use(express.static('public'));
 
@@ -296,8 +298,16 @@ io.on('connection', (socket) => {
       console.log(`kind: ${kind}`)
       const util = require('util');
       console.log(util.inspect(choices, { depth: null }));
-      io.timeout(5*60000).to(socketId).emit('yourTurn', {now: now, choices: choices, kind: kind}, (err, responses) => {
+      io.timeout(5 * 60000).to(socketId).emit('yourTurn', {now: now, choices: choices, kind: kind}, (err, responses) => {
         if (err) {
+          // タイムアウトが発生した瞬間に、そのプレイヤーがまだ接続しているかを確認
+          const targetSocket = io.sockets.sockets.get(socketId);
+          if (!targetSocket) {
+            // 既に切断済みのプレイヤーに対するタイムアウトだった場合
+            console.log(`既に切断済みのソケット (${socketId}) に対するタイムアウトのため、エラー処理をスキップ。`);
+            // rejectせずに、nullを返すことで、game.js側で通常のタイムアウトとして処理させる
+            return resolve(null); 
+          }
           reject(err);
         } else {
           if(responses && responses.length>0){
@@ -317,21 +327,24 @@ io.on('connection', (socket) => {
     });
   }
 
-  // プレイヤーの選択関数
   async function choice(now, choices, kind, socketId, roomId) {
     try {
+      // emitWithAckがプレイヤーの応答を待つ。
+      // タイムアウトした場合は、emitWithAckがエラーを投げ(rejectし)、catchブロックに移行。
       console.log(`choice関数が呼び出されました: kind=${kind}, socketId=${socketId}`);
       const response = await emitWithAck(now, choices, kind, socketId, roomId);
-      io.to(roomId).except(socketId).emit('onatherTurn', {now: now, choices: choices, kind: kind, choice: response});
+      // プレイヤーが時間内に応答した場合
+      io.to(roomId).except(socketId).emit('onatherTurn', {now: now, choices: choices, kind: kind, choice: response})
       console.log(`emitWithAckの結果: ${response}`);
 
-      // ログを追加して送信データを確認
       console.log(`onatherTurnイベント送信: roomId=${roomId}, kind=${kind}, choice=${response}, now=${JSON.stringify(now)}, choices=${JSON.stringify(choices)}`);
       return response;
+
     } catch (e) {
+      // emitWithAckでタイムアウトエラーが発生した場合
       console.error("choice (yourTurn) failed:", e);
     }
-  }
+}
 
   // プレイヤーの命名関数
   function getName(roomId, index) {

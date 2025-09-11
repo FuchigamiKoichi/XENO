@@ -123,6 +123,28 @@ class Game {
                 player.socketId,
                 this.roomId
             );
+
+            console.log(response)
+
+            if (!response) {
+                console.log(`${player.name} がタイムアウトしました。`);
+                player.live = false;
+
+                const playerIndex = this.field.players.findIndex(p => p.id === player.id);
+                if (playerIndex !== -1) {
+                    this.log[playerIndex].push('LOSE (by timeout)');
+                }
+                
+                const opponent = this.field.players.find(p => p.id !== player.id && p.live);
+                if (opponent) {
+                    const opponentIndex = this.field.players.findIndex(p => p.id === opponent.id);
+                    if (opponentIndex !== -1) {
+                        this.log[opponentIndex].push('WIN (opponent timeout)');
+                    }
+                }
+                return;
+            }
+
             const cardNumber = parseInt(response);
 
             createLog(
@@ -152,7 +174,14 @@ class Game {
             // ゲームループ
             while (state[0]) {
                 for (const player of players) {
+                    //脱落したプレイヤーのターンはスキップする
+                    if (!player.live) {
+                        console.log(`> ${player.name} は脱落済みのため、ターンをスキップします。`);
+                        continue;
+                    }
+                    console.log(`[ループ内チェック] 現在のプレイヤー: ${player.name}, 生存状態: ${player.live}`);
                     state = this.isContinue();
+                    console.log(`[isContinue判定結果] ゲームを継続しますか？ -> ${state[0]}`);
                     if (state[0]) {
                         await this.turn(player);
                     } else {
@@ -162,11 +191,12 @@ class Game {
                     }
                 }
             }
-            console.log('gameDone')
+            console.log('gameDone: ゲームループが正常に終了しました。')
 
             return [true, this.log];
         } catch (e) {
             const info = e.stack;
+            console.error("ゲームループ中にエラーが発生しました:", info);
             return [false, info, this.log];
         }
     }
