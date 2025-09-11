@@ -428,6 +428,18 @@
             z-index: 99;
         }
 
+        #show-container{
+            position: fixed;
+            top: 20%;
+            left: 30%;
+            width: 50vw;
+            height: 50vh;
+            background-color: rgba(0, 0, 0, 0);
+            justify-content: center;
+            align-items: center;
+            z-index: 99;
+        }
+
         #showResult{
             position: fixed;
             top: 20%;
@@ -508,6 +520,7 @@
             <p id="room-id-display"></p>
             <button id="copy-room-id-btn">部屋IDをコピー</button>
             <p>このIDを参加者に伝えてください。</p>
+            <button id="select-cpu-btn">CPUと対戦</button>
         </div>
 
         <!-- ログエリア -->
@@ -528,6 +541,7 @@
         </div>
 
         <div id="select-container"></div>
+        <div id="show-container"></div>
         <div id="showResult"></div>
     
         <!-- 相手のプレイエリアと手札 -->
@@ -621,12 +635,24 @@
         const selectContainer = document.getElementById('select-container')
         selectContainer.style.display = 'none';
 
-        let urls = String(window.location.href).split('?')
-        const roomId = urls[1].substr(7,urls[1].length)
-        const playerId = urls[2].substr(9,urls[1].length)
-        let players = urls[3].substr(8,urls[3].length).split(',')
+        const showContainer = document.getElementById('show-container')
+        showContainer.style.display = 'none';
+
+        const waitingInfoDiv = document.getElementById('waiting-info');
+
+        // let urls = String(window.location.href).split('?')
+        const params = new URLSearchParams(window.location.search);
+        const roomId = params.get('roomId');
+        const playerId = params.get('playerId');
+        const players = params.get('players').split(',');
 
         socket.emit('changeSocketid', {id:playerId, roomId: roomId})
+
+        const selectCpuBtn = document.getElementById("select-cpu-btn")
+        selectCpuBtn.addEventListener('click', () => {
+            socket.emit("ready", {roomId: roomId, playerId: "cpu"});
+            waitingInfoDiv.style.display = 'none';
+        })
         
         // プレイヤーと相手の手札
         let playerHand = [];
@@ -645,6 +671,8 @@
         let ruleButton = document.getElementById("ruleButton");
         let ruleModal = document.getElementById("ruleModal");
         let closeRule = document.getElementById("clothRule");
+
+        const opponentHandZone = document.getElementById("opponent-hand");
 
         const playerHandZone = document.getElementById("player-hand");
         const playArea = document.getElementById("playArea");
@@ -667,6 +695,7 @@
             deckContainer.innerHTML = "<div id='deck-count'></div><div id='side-card-container'></div>";
             const sideContainer = document.getElementById("side-card-container");
             sideContainer.innerHTML = "";
+            opponentHandZone.innerHTML = "";
 
             // 手札表示を更新
             if(now.myHands.length>0){
@@ -720,12 +749,18 @@
             }
 
             // 相手の手札（裏向き）
-            const opponentHandZone = document.getElementById("opponent-hand");
-            opponentHandZone.innerHTML = "";
-            const backCard = document.createElement("img");
-            backCard.src = `../images/0.jpg`;
-            backCard.classList.add("card");
-            opponentHandZone.appendChild(backCard);
+            for (let i=0; i<now.playersLength; i++){
+                const playerTurnNumber = now.playersHandsLengths[i];
+                if (playerTurnNumber.turnNumber != now.myTurnNumber){
+                    opponentHandZone.innerHTML = "";
+                    for (let j=0; j<playerTurnNumber.length; j++){
+                        const backCard = document.createElement("img");
+                        backCard.src = `../images/0.jpg`;
+                        backCard.classList.add("card");
+                        opponentHandZone.appendChild(backCard);
+                    }
+                }
+            }
 
             // 転生札
             console.log(`reincarnatin: ${now.reincarnation}`)
@@ -1010,63 +1045,47 @@
         
         // CPUが山札からカードを引く
         function cpuDrawCardToHand() {
-            let deckElement = document.getElementById("deck"); // 山札の要素
-            let deckCountElement = document.getElementById("deck-count"); // 残り枚数表示
-            let cpuHand = document.getElementById("opponent-hand"); // CPUの手札エリア
-            
-            if (decks.length === 0) {
-                // 山札が空なら非表示にする
-                deckElement.style.transition = "opacity 0.5s ease-out";
-                deckElement.style.opacity = "0";
+            return new Promise((resolve) => {
+                let deckElement = document.getElementById("deck"); // 山札の要素
+                let deckCountElement = document.getElementById("deck-count"); // 残り枚数表示
+                let cpuHand = document.getElementById("opponent-hand"); // CPUの手札エリア
+                let newCard = document.createElement("img");
+                newCard.src = `../images/0.jpg`; // 画像のパスを組み立てる
+                newCard.classList.add("card");
+
+                // cardInfoをdata属性に設定
+                newCard.dataset.cardInfo = JSON.stringify(0); // cardInfoをdata属性として格納
+
+                 // ** 初期位置（山札の位置）を取得 **
+                let deckRect = deckElement.getBoundingClientRect();
+                let cpuHandRect = cpuHand.getBoundingClientRect();
+
+                newCard.style.position = "absolute";
+                newCard.style.left = `${deckRect.left}px`;
+                newCard.style.top = `${deckRect.top}px`;
+                newCard.style.width = "100px";
+                newCard.style.height = "150px";
+                newCard.style.opacity = "0"; // 最初は透明
+
+                document.body.appendChild(newCard); // 一時的にbodyに追加
+
+                // ** 少し遅延を入れてアニメーションを開始 **
                 setTimeout(() => {
-                    deckElement.style.display = "none";
-                    deckCountElement.style.display = "none";
-                }, 500);
-                return;
-            }
+                    newCard.style.transition = "left 0.5s ease-out, top 0.5s ease-out, opacity 0.5s";
+                    newCard.style.left = `${cpuHandRect.left + 20}px`;
+                    newCard.style.top = `${cpuHandRect.top + 20}px`;
+                    newCard.style.opacity = "1";
+                }, 10);
 
-            let drawnCard = decks.pop(); // 山札からカードを1枚引く
-            let newCard = document.createElement("img");
-            newCard.src = "0.jpg";
-            alert("相手に配られたカード: " + JSON.stringify(drawnCard));
-            opponentHand.push(drawnCard); // 相手の手札に追加
-            newCard.classList.add("card");
-            
-            // cardInfoをdata属性に設定（JSON文字列として格納）
-            // newCard = JSON.stringify(drawnCard);
-            // datasetに格納されたカード情報をデバッグ用に表示
-            addLog("カード情報（dataset）: " + newCard.name);
-
-            // ** 初期位置（山札の位置）を取得 **
-            let deckRect = deckElement.getBoundingClientRect();
-            let cpuHandRect = cpuHand.getBoundingClientRect();
-            console.log('newCard',newCard)
-            newCard.style.position = "absolute";
-            newCard.style.left = `${deckRect.left}px`;
-            newCard.style.top = `${deckRect.top}px`;
-            newCard.style.width = "100px";
-            newCard.style.height = "150px";
-            newCard.style.opacity = "0"; // 最初は透明
-
-            document.body.appendChild(newCard); // 一時的にbodyに追加
-
-            // ** 少し遅延を入れてアニメーションを開始 **
-            setTimeout(() => {
-                newCard.style.transition = "left 0.5s ease-out, top 0.5s ease-out, opacity 0.5s";
-                newCard.style.left = `${cpuHandRect.left + 20}px`;
-                newCard.style.top = `${cpuHandRect.top + 20}px`;
-                newCard.style.opacity = "1";
-            }, 10);
-
-            // ** アニメーション完了後にCPUの手札に追加 **
-            setTimeout(() => {
-                newCard.style.position = "static";
-                newCard.style.transition = "none";
-                cpuHand.appendChild(newCard); // CPUの手札エリアに正式追加
-            }, 600);
-
-            // ** 山札の残り枚数を更新 **
-            deckCountElement.textContent = `残り枚数: ${decks.length}`;
+                // ** アニメーション完了後にCPUの手札に追加 **
+                setTimeout(() => {
+                    newCard.style.position = "static";
+                    newCard.style.transition = "none";
+                    cpuHand.appendChild(newCard); // CPUの手札エリアに正式追加
+                    // cpuHand.removeChild(newCard);
+                    resolve();
+                }, 600);
+            })
         }
 
         function showUsedCards() {
@@ -1397,6 +1416,26 @@
             timerBar.style.transition = 'none';
             timerBar.style.width = '100%';
         }
+        async function show(data) {
+            return new Promise((resolve) => {
+                showContainer.innerHTML = ""
+                console.log(data[0]["cards"])
+                for(let i=0; i<data[0]["cards"].length; i++){
+                    let card_number = data[0]["cards"][i]
+                    let card = document.createElement("img");
+                    card.src = `../images/${card_number}.jpg`;
+                    card.width = 140;
+                    card.height = 210;
+                    card.zIndex = 100;
+                    card.classList.add('show-card');
+                    showContainer.appendChild(card);
+                }
+                showContainer.style.display = 'block';
+                setTimeout(() => {
+                    resolve(0)
+                }, 3000);
+            })
+        }
 
         socket.on('yourTurn', async (data, callback) => {
             await updateGameView(data.now)
@@ -1412,12 +1451,14 @@
                     const done = await drawCardToHand(playerSelectCard)
                     if(done == 'done'){
                         await stopTurnTimer();
+                        addLog(`あなたが${playerSelectNumber}をドロー！`)
                         callback([playerSelectNumber])
                     }
                 }else{
                     const done = await drawCardToHand(data.choices[0])
                     if(done == 'done'){
                         await stopTurnTimer();
+                        addLog(`あなたが${data.choices[0]}をドロー！`)
                         callback([0])
                     }
                 }
@@ -1428,6 +1469,7 @@
             }else if(data.kind == 'play_card'){
                 await startTurnTimer();
                 let playerSelect = await select(data.choices);
+                addLog(`あなたが${data.choices[playerSelect]}を場に出す！`)
                 selectContainer.style.display = 'none';
                 const done = await playCard(data.choices[playerSelect])
                 if(done == 'done'){
@@ -1438,6 +1480,16 @@
             }else if(data.kind == 'update'){
                 await stopTurnTimer();
                 callback([0])
+            }else if(data.kind == 'show'){
+                try {
+                    console.log(data.choices)
+                    let showBoard = await show(data.choices);
+                    addLog(`相手の持っているカードは${data.choices[0]}だった！`)
+                    showContainer.style.display = 'none';
+                    callback([0])
+                } catch (error) {
+                    console.log(error)
+                }
             }else{
                 try {
                     await startTurnTimer();
@@ -1453,12 +1505,29 @@
             }
         })
 
-        socket.on('onatherTurn', (data) => {
+        socket.on('onatherTurn', async(data) => {
             console.log(`相手のターン: ${data.kind} -> ${data.choice}`)
             console.log('相手のターンです。タイマーをリセットします。');
             stopTurnTimer();
             if(data.kind=='play_card'){
-                playCard_cpu(parseInt(data.choice));
+                await playCard_cpu(parseInt(data.choice));
+                addLog(`相手が${data.choice}を場に出す！`)
+            }else if(data.kind == 'draw'){
+                await cpuDrawCardToHand();
+
+                // 相手の手札（裏向き）
+                for (let i=0; i<data.now.playersLength + 1; i++){
+                    const playerTurnNumber = data.now.playersHandsLengths[i];
+                    if (playerTurnNumber.turnNumber != Object.keys(data.now.otherPlayers)[0]){
+                        opponentHandZone.innerHTML = "";
+                        for (let j=0; j<playerTurnNumber.length+1; j++){
+                            const backCard = document.createElement("img");
+                            backCard.src = `../images/0.jpg`;
+                            backCard.classList.add("card");
+                            opponentHandZone.appendChild(backCard);
+                        }
+                    }
+                }
             }
         })
 
@@ -1467,12 +1536,46 @@
             stopTurnTimer();
             showResult(data.result)
         })
+        socket.on('gameEnded', (data) => {
+            //showResult(data.result)
+            console.log('ゲーム終了。結果ページに遷移します:', data);
+            console.log('[game.html受信チェック] サーバーから受け取ったデータ:', data);
+            console.log(`[game.html変数チェック] roomId: ${roomId}, playerId: ${playerId}`);
+            
+            const resultString = data.result.toString();
+            console.log(resultString);
+            // 理由を取得
+            let reason = 'Noreason';
+            if (resultString.includes('(')) {
+                // 正規表現で括弧の中身を抽出
+                const match = resultString.match(/\((.*)\)/);
+                if (match) {
+                    reason = match[1];
+                }
+            }
+            // 日本語などがURLで安全に扱えるようにする
+            const encodedReason = encodeURIComponent(reason);
+
+            // 新しいURLを組み立てて、結果ページに画面遷移
+            window.location.replace(`result.html?roomId=${roomId}&playerId=${playerId}&players=${players}&result=${resultString}&reason=${encodedReason}`);
+        })
+
+        socket.on('redirectToResult', (data) => {
+            console.log('サーバーからリダイレクト指示を受け取りました:', data.url);
+            
+            // dataオブジェクトと、その中のurlプロパティが存在することを確認
+            if (data && data.url) {
+                // サーバーから指定されたURLに画面を遷移させる
+                window.location.replace(data.url);
+            } else {
+                console.error('無効なリダイレクト指示を受け取りました。');
+            }
+        });
 
         // サーバーから「対戦相手を待つ」指示を受け取ったときの処理
         socket.on('waitingForOpponent', (data) => {
             console.log("*** ブラウザ：サーバーから 'waitingForOpponent' を受信しました！ ***", data);
 
-            const waitingInfoDiv = document.getElementById('waiting-info');
             const roomIdDisplayP = document.getElementById('room-id-display');
 
             // pタグにルームIDを設定
