@@ -394,7 +394,7 @@ io.on('connection', (socket) => {
       
       if(result[0]){
         const gameLog = result[1]
-        for(let i=0; i<game.field.players.length; i++){
+        for(let i=0; i<jsonData.rooms[data.roomId].players.length; i++){
           const player = game.field.players[i]
           const result = gameLog[i][gameLog[i].length - 1]
           const currentPlayerId = jsonData.rooms[data.roomId].players[i];
