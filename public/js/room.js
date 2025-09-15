@@ -1,0 +1,72 @@
+const socket = io();
+
+let title = document.getElementById("title")
+let urls = String(window.location.href).split('?')
+let players = urls[3].substr(8,urls[3].length).split(',')
+let myPermissionClass = 'none'
+const playerId = urls[2].substr(9,urls[1].length)
+const roomId = urls[1].substr(7,urls[1].length)
+const startBtn = document.getElementById('start')
+startBtn.style.display = 'none'
+
+// console.log(`playerId: ${playerId}`)
+
+// console.log(`players: ${players}`)
+
+title.textContent = roomId
+
+socket.emit('changeSocketid', {id:playerId, roomId: roomId})
+
+// ルームのメンバー更新を受け取る
+socket.on('updateRoomMembers', (data) => {
+    players = data.players
+    window.location.replace(`room.html?roomid=${roomId}?playerid=${playerId}?players=${players}`)
+});
+
+function createPlayerBlock(player, permissionClass) {
+    const div = document.createElement('div');
+    div.innerHTML = `
+        <div class="player-block">
+        <p>${player}：${permissionClass}</p>
+        </div>
+    `;
+    return div;
+}
+
+// プレイヤー名の取得
+socket.emit('getPlayerNames', {players: players, roomId:roomId}, (response) => {
+    if(!response || !response.success){
+        alert(response ? response.message : 'プレイヤー情報の取得に失敗しました');
+    }else{
+        let playerNames = response.playerNames
+        let playerPermissionClasses = response.playerPermissionClasses
+        const showPlayers = document.getElementById("players");
+        for(let i=0; i<playerNames.length; i++){
+            showPlayers.appendChild(createPlayerBlock(playerNames[i], playerPermissionClasses[i]))
+        }
+    }
+})
+
+// 自分のパーミッションクラスを取得
+socket.emit('getPermissionClass', {playerId: playerId, roomId: roomId}, (response) => {
+    if(!response || !response.success){
+        alert(response ? response.message : 'プレイヤー情報の取得に失敗しました');
+    }else{
+        myPermissionClass = response.permissionClass
+        console.log(myPermissionClass)
+        if(myPermissionClass == 'owner'){
+            startBtn.style.display = 'block'
+        }else{
+            startBtn.style.display = 'none'
+        }
+    }
+})
+
+// ゲームを開始する
+startBtn.addEventListener('click', () => {
+    socket.emit('startGame', roomId)
+})
+
+socket.on('startGame', (data) => { 
+    window.location.replace(`game.html?roomid=${roomId}?playerid=${playerId}?players=${data.players}`)
+})
