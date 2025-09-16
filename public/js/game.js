@@ -1,32 +1,34 @@
-// ===================
-// GSAP 設定
-// ===================
-const FX = {
-  dur: 0.5,              // 標準アニメ時間
-  ease: 'power2.out',    // 標準イージング
-  long: 300              // ターンタイマー（秒）
-};
+// game.js
+// 画面制御・ソケット・ゲームロジック。アニメは animation.js の Anim を利用。
 
-// ===================
-// ソケット & DOM
-// ===================
 const socket = io();
 
-const selectContainer = document.getElementById('select-container');
-const showContainer   = document.getElementById('show-container');
-const waitingInfoDiv  = document.getElementById('waiting-info');
-const opponentHandZone= document.getElementById('opponent-hand');
-const playerHandZone  = document.getElementById('player-hand');
-const playArea        = document.getElementById('playArea');
-const opponentArea    = document.getElementById('opponent-playArea');
-const deckContainer   = document.getElementById('deck-container');
-const ruleButton      = document.getElementById('ruleButton');
-const ruleModal       = document.getElementById('ruleModal');
-const closeRuleBtn    = document.getElementById('closeRule');
-const timerBar        = document.getElementById('turn-timer-bar');
+// DOM 参照
+const selectContainer   = document.getElementById('select-container');
+const showContainer     = document.getElementById('show-container');
+const waitingInfoDiv    = document.getElementById('waiting-info');
+const opponentHandZone  = document.getElementById('opponent-hand');
+const playerHandZone    = document.getElementById('player-hand');
+const playArea          = document.getElementById('playArea');
+const opponentArea      = document.getElementById('opponent-playArea');
+const deckContainer     = document.getElementById('deck-container');
+const ruleButton        = document.getElementById('ruleButton');
+const ruleModal         = document.getElementById('ruleModal');
+const closeRuleBtn      = document.getElementById('closeRule');
+const timerBar          = document.getElementById('turn-timer-bar');
 
 selectContainer.style.display = 'none';
 showContainer.style.display   = 'none';
+
+// Anim 初期化（アニメ側へDOMを注入）
+Anim.init({
+  playerHandZone,
+  opponentHandZone,
+  playArea,
+  opponentArea,
+  timerBar,
+  longSec: 300, // 必要に応じて変更
+});
 
 // URL パラメータ
 const params   = new URLSearchParams(window.location.search);
@@ -68,9 +70,7 @@ closeRuleBtn.addEventListener('click', () => { ruleModal.style.display = 'none';
   });
 })();
 
-// ===================
 // 画面更新
-// ===================
 function updateGameView(now) {
   playerHandZone.innerHTML = '';
   playArea.innerHTML = '';
@@ -79,7 +79,6 @@ function updateGameView(now) {
   const sideContainer = document.getElementById('side-card-container');
   opponentHandZone.innerHTML = '';
 
-  // 自分の手札
   if (now.myHands.length > 0) {
     now.myHands.forEach(card => {
       const cardImg = document.createElement('img');
@@ -90,7 +89,6 @@ function updateGameView(now) {
     });
   }
 
-  // 自分の場
   if (now.myPlayed.length > 0) {
     let idx = 0;
     now.myPlayed.forEach(card => {
@@ -107,7 +105,6 @@ function updateGameView(now) {
     });
   }
 
-  // 相手の場
   const otherPlayedKeys = Object.keys(now.otherPlayed || {});
   if (otherPlayedKeys.length > 0) {
     let idx = 0;
@@ -139,7 +136,6 @@ function updateGameView(now) {
     }
   }
 
-  // 転生札
   if (now.reincarnation) {
     const sideCard = document.createElement('img');
     sideCard.src = `../images/0.jpg`;
@@ -147,7 +143,6 @@ function updateGameView(now) {
     sideContainer.appendChild(sideCard);
   }
 
-  // デッキ
   if (now.cardNumber > 0) {
     const deckCard = document.createElement('img');
     deckCard.src = `../images/0.jpg`;
@@ -155,55 +150,16 @@ function updateGameView(now) {
     deckContainer.appendChild(deckCard);
   }
 
-  // デッキ枚数
   const deckCount = document.getElementById('deck-count');
   deckCount.textContent = `残り枚数: ${now.cardNumber}`;
 }
 
-// ===================
-// アニメーション（GSAP）
-// ===================
-function showTurnIndicator() {
-  const el = document.getElementById('turnIndicator');
-  gsap.set(el, { display: 'block', autoAlpha: 0 });
-  gsap.timeline()
-    .to(el, { duration: 0.2, autoAlpha: 1, ease: FX.ease })
-    .to(el, { duration: 0.5, autoAlpha: 0, ease: 'power1.out', delay: 1.0 })
-    .set(el, { display: 'none' });
-}
-
-function showTurnIndicator_s() {
-  const el = document.getElementById('second_turn');
-  gsap.set(el, { display: 'block', autoAlpha: 0 });
-  gsap.timeline()
-    .to(el, { duration: 0.2, autoAlpha: 1, ease: FX.ease })
-    .to(el, { duration: 0.5, autoAlpha: 0, ease: 'power1.out', delay: 1.0 })
-    .set(el, { display: 'none' });
-}
-
-function showCardZoom(imgSrc, effectText, holdSec = 1.0) {
-  const zoomArea  = document.getElementById('cardZoom');
-  const zoomedCard= document.getElementById('zoomedCard');
-  const desc      = document.getElementById('effectDescription');
-  zoomedCard.src = imgSrc;
-  desc.textContent = effectText;
-
-  gsap.set(zoomArea, { display: 'flex', autoAlpha: 0 });
-  gsap.set(zoomedCard, { scale: 0.5 });
-
-  return gsap.timeline()
-    .to(zoomArea,   { autoAlpha: 1, duration: 0.2 })
-    .to(zoomedCard, { scale: 2, duration: 0.5, ease: FX.ease }, 0)
-    .to(zoomArea,   { autoAlpha: 0, duration: 0.3, delay: holdSec })
-    .set(zoomArea,  { display: 'none' });
-}
-
+// 文字列→演出テキスト
 function getCharacterName(cardNumber) {
   cardNumber = parseInt(cardNumber, 10);
   const characterNames = ['少年','兵士','占い師','乙女','死神','貴族','賢者','精霊','皇帝','英雄'];
   return characterNames[cardNumber - 1];
 }
-
 function getEffectDescription(characterName) {
   switch (characterName) {
     case '少年': return '少年';
@@ -220,196 +176,68 @@ function getEffectDescription(characterName) {
   }
 }
 
-function playCard(cardNumber) {
-  return new Promise((resolve) => {
-    const imgSrc = `../images/${cardNumber}.jpg`;
+// カードを出す（自分）
+async function playCard(cardNumber) {
+  const imgSrc = `../images/${cardNumber}.jpg`;
 
-    // 手札から該当1枚を除去
-    const myHands = playerHandZone.querySelectorAll('img');
-    for (let i = 0; i < myHands.length; i++) {
-      if (parseInt(myHands[i].value, 10) === parseInt(cardNumber, 10)) {
-        playerHandZone.removeChild(myHands[i]);
-        break;
-      }
+  // 手札から該当1枚を除去
+  const myHands = playerHandZone.querySelectorAll('img');
+  for (let i = 0; i < myHands.length; i++) {
+    if (parseInt(myHands[i].value, 10) === parseInt(cardNumber, 10)) {
+      playerHandZone.removeChild(myHands[i]);
+      break;
     }
+  }
 
-    const cname = getCharacterName(cardNumber);
-    const text  = getEffectDescription(cname);
+  const cname = getCharacterName(cardNumber);
+  const text  = getEffectDescription(cname);
 
-    // ズーム演出 → 場にカードを並べる
-    showCardZoom(imgSrc, text, 1.0).eventCallback('onComplete', () => {
-      const newCard = document.createElement('img');
-      newCard.src = imgSrc;
-      newCard.classList.add('played-card');
+  // ズーム演出（完了待ち）
+  await Anim.zoomCard(imgSrc, text, 1.0);
 
-      const index = playArea.children.length;
-      newCard.style.position = 'absolute';
-      newCard.style.left = `${index * 40}px`;
-      newCard.style.zIndex = index;
-      newCard.style.width = '100px';
-      newCard.style.height = '150px';
+  // 場に配置
+  const newCard = document.createElement('img');
+  newCard.src = imgSrc;
+  newCard.classList.add('played-card');
 
-      playArea.appendChild(newCard);
-      gsap.from(newCard, { scale: 0.7, duration: 0.3, ease: FX.ease });
+  const index = playArea.children.length;
+  newCard.style.position = 'absolute';
+  newCard.style.left = `${index * 40}px`;
+  newCard.style.zIndex = index;
+  newCard.style.width = '100px';
+  newCard.style.height = '150px';
 
-      resolve('done');
-    });
-  });
+  playArea.appendChild(newCard);
+  Anim.popIn(newCard);
+  return 'done';
 }
 
-function playCard_cpu(cardNumber) {
+// カードを出す（相手）
+async function playCard_cpu(cardNumber) {
   const imgSrc = `../images/${cardNumber}.jpg`;
   const cname  = getCharacterName(cardNumber);
   const text   = getEffectDescription(cname);
 
-  showCardZoom(imgSrc, text, 1.5).eventCallback('onComplete', () => {
-    const newCard = document.createElement('img');
-    newCard.src = imgSrc;
-    newCard.classList.add('played-card');
+  await Anim.zoomCard(imgSrc, text, 1.5);
 
-    const index = opponentArea.children.length;
-    newCard.style.position = 'absolute';
-    newCard.style.left = `${index * 40}px`;
-    newCard.style.zIndex = index;
-    newCard.style.width = '100px';
-    newCard.style.height = '150px';
+  const newCard = document.createElement('img');
+  newCard.src = imgSrc;
+  newCard.classList.add('played-card');
 
-    opponentArea.appendChild(newCard);
-    gsap.from(newCard, { scale: 0.7, duration: 0.3, ease: FX.ease });
-  });
+  const index = opponentArea.children.length;
+  newCard.style.position = 'absolute';
+  newCard.style.left = `${index * 40}px`;
+  newCard.style.zIndex = index;
+  newCard.style.width = '100px';
+  newCard.style.height = '150px';
+
+  opponentArea.appendChild(newCard);
+  Anim.popIn(newCard);
 }
 
-// ===================
-// ★ 安全な座標取得用ヘルパ
-// ===================
-function getSafeRect(el) {
-  if (el) {
-    const r = el.getBoundingClientRect();
-    // width/height が 0 の場合は未配置の可能性がある
-    if (r && (r.width > 0 || r.height > 0)) return r;
-  }
-  // フォールバック：プレイエリア、さらにダメならビューポート中央
-  const pa = document.getElementById('playArea');
-  if (pa) {
-    const pr = pa.getBoundingClientRect();
-    return {
-      left: pr.left + 20,
-      top:  pr.bottom - 150 - 20, // プレイエリアの下に手札が来る想定
-      width: 100, height: 150
-    };
-  }
-  // どうしても無ければ画面中央
-  const vw = window.innerWidth, vh = window.innerHeight;
-  return { left: vw / 2 - 50, top: vh / 2 - 75, width: 100, height: 150 };
-}
-
-function getDeckAnchorRect() {
-  const deckEl = document.getElementById('deck');
-  if (deckEl) {
-    const r = deckEl.getBoundingClientRect();
-    if (r && (r.width > 0 || r.height > 0)) return r;
-  }
-  // #deck が未生成の瞬間は #deck-container を使用
-  const dc = document.getElementById('deck-container');
-  if (dc) {
-    const r = dc.getBoundingClientRect();
-    return { left: r.left + 10, top: r.top + 10, width: 100, height: 150 };
-  }
-  // 最終手段
-  return { left: 20, top: 20, width: 100, height: 150 };
-}
-
-function cleanupAnimTemps() {
-  document.querySelectorAll('.anim-temp').forEach(n => n.remove());
-}
-
-// ===================
-// ドロー：山札→自分手札（堅牢化）
-// ===================
-function drawCardToHand(drawnCard) {
-  return new Promise((resolve) => {
-    cleanupAnimTemps(); // ★ 前回の取り残しを掃除
-
-    const anchorFrom = getDeckAnchorRect();     // ★ 常に安全な始点
-    const anchorTo   = getSafeRect(playerHandZone); // ★ 常に安全な終点
-
-    const temp = document.createElement('img');
-    temp.src = `../images/${drawnCard}.jpg`;
-    temp.classList.add('card', 'anim-temp'); // ★ 一時ノード識別
-    document.body.appendChild(temp);
-
-    // 初期配置（viewport座標）
-    gsap.set(temp, {
-      position: 'absolute',
-      left: anchorFrom.left, top: anchorFrom.top,
-      width: 100, height: 150,
-      autoAlpha: 0, x: 0, y: 0, clearProps: 'transform'
-    });
-
-    const dx = (anchorTo.left + 20) - anchorFrom.left;
-    const dy = (anchorTo.top  + 20) - anchorFrom.top;
-
-    gsap.timeline({
-      defaults: { duration: FX.dur, ease: FX.ease },
-      onComplete() {
-        // ★ 一時ノードを手札用ノードに差し替える（transform等クリア）
-        temp.classList.remove('anim-temp');
-        temp.style.position = 'static';
-        gsap.set(temp, { clearProps: 'all' });
-        playerHandZone.appendChild(temp);
-        resolve('done');
-      }
-    })
-    .to(temp, { autoAlpha: 1 }, 0)
-    .to(temp, { x: dx, y: dy }, 0);
-  });
-}
-
-// ===================
-// CPU ドロー：山札→相手手札（堅牢化）
-// ===================
-function cpuDrawCardToHand() {
-  return new Promise((resolve) => {
-    cleanupAnimTemps(); // ★ 前回の取り残しを掃除
-
-    const anchorFrom = getDeckAnchorRect();          // ★ 安全な始点
-    const anchorTo   = getSafeRect(opponentHandZone); // ★ 安全な終点
-
-    const temp = document.createElement('img');
-    temp.src = `../images/0.jpg`;
-    temp.classList.add('card', 'anim-temp'); // ★ 一時ノード識別
-    document.body.appendChild(temp);
-
-    gsap.set(temp, {
-      position: 'absolute',
-      left: anchorFrom.left, top: anchorFrom.top,
-      width: 100, height: 150,
-      autoAlpha: 0, x: 0, y: 0, clearProps: 'transform'
-    });
-
-    const dx = (anchorTo.left + 20) - anchorFrom.left;
-    const dy = (anchorTo.top  + 20) - anchorFrom.top;
-
-    gsap.timeline({
-      defaults: { duration: FX.dur, ease: FX.ease },
-      onComplete() {
-        // ★ 一時ノードを相手手札へ移動し、transform/positionをクリア
-        temp.classList.remove('anim-temp');
-        temp.style.position = 'static';
-        gsap.set(temp, { clearProps: 'all' });
-        opponentHandZone.appendChild(temp);
-        resolve();
-      }
-    })
-    .to(temp, { autoAlpha: 1 }, 0)
-    .to(temp, { x: dx, y: dy }, 0);
-  });
-}
-
-// 使用済みカード表示
+// 使用済みカードモーダル
 let usedCards = [];
 let opponentUsedCards = [];
-
 function showUsedCards() {
   const modal = document.getElementById('usedCardsModal');
   const list  = document.getElementById('usedCardsList');
@@ -422,7 +250,6 @@ function showUsedCards() {
   });
   modal.style.display = 'block';
 }
-
 function showOpponentUsedCards() {
   const modal = document.getElementById('usedCardsModal');
   const list  = document.getElementById('usedCardsList');
@@ -435,13 +262,12 @@ function showOpponentUsedCards() {
   });
   modal.style.display = 'block';
 }
-
 function closeUsedCards() {
   const modal = document.getElementById('usedCardsModal');
   modal.style.display = 'none';
 }
 
-// ログ
+// ログ/結果
 function addLog(message) {
   const logMessages = document.getElementById('log-messages');
   const d = document.createElement('div');
@@ -449,15 +275,13 @@ function addLog(message) {
   logMessages.appendChild(d);
   logMessages.scrollTop = logMessages.scrollHeight;
 }
-
-// 結果表示
 function showResult(message) {
   const el = document.getElementById('showResult');
   el.innerHTML = message;
   el.style.display = 'block';
 }
 
-// セレクトUI
+// セレクトUI/公開UI
 async function select(choices) {
   return new Promise((resolve) => {
     selectContainer.innerHTML = '';
@@ -473,8 +297,6 @@ async function select(choices) {
     selectContainer.style.display = 'block';
   });
 }
-
-// 公開UI
 async function show(data) {
   return new Promise((resolve) => {
     showContainer.innerHTML = '';
@@ -491,23 +313,7 @@ async function show(data) {
   });
 }
 
-// ターンタイマー（GSAP）
-let turnTween;
-function startTurnTimer() {
-  if (turnTween) turnTween.kill();
-  gsap.set(timerBar, { width: '100%' });
-  turnTween = gsap.to(timerBar, {
-    width: '0%',
-    duration: FX.long,
-    ease: 'none'
-  });
-}
-function stopTurnTimer() {
-  if (turnTween) turnTween.kill();
-  gsap.set(timerBar, { width: '100%' });
-}
-
-// surrender / reset / title
+// surrender/reset/title
 function surrender() {
   if (confirm('本当に投降しますか？')) {
     alert('あなたは投降しました。CPUの勝ちです。');
@@ -516,7 +322,7 @@ function surrender() {
   }
 }
 
-// デッキ定義（演出用）
+// デッキ（演出用）
 let decks = [
   { name: 'boy.jpg',     value: 1,  character: '少年' },
   { name: 'boy.jpg',     value: 1,  character: '少年' },
@@ -544,46 +350,23 @@ function shuffle(array) {
     [array[i], array[j]] = [array[j], array[i]];
   }
 }
-
 function setupSideCard() {
   if (decks.length === 0) return;
   const index = Math.floor(Math.random() * decks.length);
-  decks.splice(index, 1)[0]; // 1枚消費
+  decks.splice(index, 1)[0];
   const sideCard = document.createElement('img');
   sideCard.src = '0.jpg';
   sideCard.classList.add('side-card');
   const sideContainer = document.getElementById('side-card-container');
   sideContainer.appendChild(sideCard);
 }
-
 function resetGame() {
-  decks = [
-    { name: 'boy.jpg',     value: 1,  character: '少年' },
-    { name: 'boy.jpg',     value: 1,  character: '少年' },
-    { name: 'soldier.jpg', value: 2,  character: '兵士' },
-    { name: 'soldier.jpg', value: 2,  character: '兵士' },
-    { name: 'diviner.jpg', value: 3,  character: '占い師' },
-    { name: 'diviner.jpg', value: 3,  character: '占い師' },
-    { name: 'noble.jpg',   value: 6,  character: '貴族' },
-    { name: 'noble.jpg',   value: 6,  character: '貴族' },
-    { name: 'maiden.jpg',  value: 4,  character: '乙女' },
-    { name: 'maiden.jpg',  value: 4,  character: '乙女' },
-    { name: 'sage.jpg',    value: 7,  character: '賢者' },
-    { name: 'sage.jpg',    value: 7,  character: '賢者' },
-    { name: 'reaper.jpg',  value: 5,  character: '死神' },
-    { name: 'reaper.jpg',  value: 5,  character: '死神' },
-    { name: 'spirit.jpg',  value: 8,  character: '精霊' },
-    { name: 'spirit.jpg',  value: 8,  character: '精霊' },
-    { name: 'kaizer.jpg',  value: 9,  character: '皇帝' },
-    { name: 'hero.jpg',    value:10,  character: '英雄' },
-  ];
+  decks = [...decks]; // 実際は初期配列を再構築してください
   shuffle(decks);
-
   playerHandZone.innerHTML = '';
   opponentHandZone.innerHTML = '';
   playArea.innerHTML = '';
   opponentArea.innerHTML = '';
-
   const deckEl = document.getElementById('deck');
   const deckCount = document.getElementById('deck-count');
   if (deckEl) deckEl.style.display = 'block';
@@ -592,63 +375,58 @@ function resetGame() {
     deckCount.textContent = decks.length;
   }
   setupSideCard();
-
   const ti = document.getElementById('turnIndicator');
   if (ti) ti.textContent = 'ゲームをリセットしました';
 }
-
 function goToTitle() {
   const game = document.getElementById('gameScreen');
-  const start = document.getElementById('startScreen'); // ない場合もある
+  const start = document.getElementById('startScreen');
   if (game) game.style.display = 'none';
   if (start) start.style.display = 'block';
   resetGame();
 }
 
-// ボタン等
 function hideSelect() { selectContainer.style.display = 'none'; }
 function hideShow()   { showContainer.style.display = 'none'; }
 
-// ===================
-// ソケットイベント
-// ===================
+// ===== ソケット =====
 socket.on('yourTurn', async (data, callback) => {
   await updateGameView(data.now);
   if (data.kind === 'draw') {
     if (data.choices.length > 2) {
-      startTurnTimer();
+      Anim.startTurnTimer();
       const idx = await select(data.choices);
       hideSelect();
       const chosen = data.choices[idx];
-      const done = await drawCardToHand(chosen);
+      const done = await Anim.drawCardToHand(chosen);
       if (done === 'done') {
-        stopTurnTimer();
+        Anim.stopTurnTimer();
         addLog(`あなたが${idx}をドロー！`);
         callback([idx]);
       }
     } else {
-      const done = await drawCardToHand(data.choices[0]);
+      const done = await Anim.drawCardToHand(data.choices[0]);
       if (done === 'done') {
-        stopTurnTimer();
+        Anim.stopTurnTimer();
         addLog(`あなたが${data.choices[0]}をドロー！`);
         callback([0]);
       }
     }
   } else if (data.kind === 'opponentChoice') {
-    stopTurnTimer();
+    Anim.stopTurnTimer();
     callback([0]);
   } else if (data.kind === 'play_card') {
-    startTurnTimer();
+    Anim.startTurnTimer();
     const idx = await select(data.choices);
     addLog(`あなたが${data.choices[idx]}を場に出す！`);
     hideSelect();
     const done = await playCard(data.choices[idx]);
     if (done === 'done') {
-      stopTurnTimer();
+      Anim.stopTurnTimer();
       callback([idx]);
     }
   } else if (data.kind === 'update') {
-    stopTurnTimer();
+    Anim.stopTurnTimer();
     callback([0]);
   } else if (data.kind === 'show') {
     try {
@@ -661,26 +439,25 @@ socket.on('yourTurn', async (data, callback) => {
     }
   } else {
     try {
-      startTurnTimer();
+      Anim.startTurnTimer();
       const idx = await select(data.choices);
       hideSelect();
-      stopTurnTimer();
+      Anim.stopTurnTimer();
       callback([idx]);
     } catch (e) {
-      stopTurnTimer();
+      Anim.stopTurnTimer();
       console.log(e);
     }
   }
 });
 
 socket.on('onatherTurn', async (data) => {
-  stopTurnTimer();
+  Anim.stopTurnTimer();
   if (data.kind === 'play_card') {
     await playCard_cpu(parseInt(data.choice, 10));
     addLog(`相手が${data.choice}を場に出す！`);
   } else if (data.kind === 'draw') {
-    await cpuDrawCardToHand();
-    // 裏向き手札の再描画
+    await Anim.cpuDrawCardToHand();
     for (let i = 0; i < data.now.playersLength + 1; i++) {
       const playerTurnNumber = data.now.playersHandsLengths[i];
       if (playerTurnNumber.turnNumber !== Object.keys(data.now.otherPlayers)[0]) {
@@ -697,12 +474,12 @@ socket.on('onatherTurn', async (data) => {
 });
 
 socket.on('result', (data) => {
-  stopTurnTimer();
+  Anim.stopTurnTimer();
   showResult(data.result);
 });
 
 socket.on('gameEnded', (data) => {
-  stopTurnTimer();
+  Anim.stopTurnTimer();
   const resultString = data.result.toString();
   let reason = 'Noreason';
   const match = resultString.match(/\((.*)\)/);
@@ -729,7 +506,7 @@ socket.on('hideWaitingInfo', () => {
   if (waitingInfoDiv) waitingInfoDiv.style.display = 'none';
 });
 
-socket.on('forceStopTurnTimer', () => stopTurnTimer());
+socket.on('forceStopTurnTimer', () => Anim.stopTurnTimer());
 
 // クリップボードコピー
 (() => {
