@@ -67,7 +67,7 @@
           <button class="tab-btn" data-target="page3">勝利条件</button>
         </div>
         <div class="tab-content active" id="page1">
-          <p>カードには強さを示す1〜10までの数字が…（略）</p>
+          <p>カードには強さを示す1〜10までの数字が書いてあります…（略）</p>
         </div>
         <div class="tab-content" id="page2">
           <h2>少年</h2>
@@ -101,6 +101,8 @@
     </div>
   </div>
 
+  <!-- GSAP（CDN）→ socket.io → ゲームJS の順 -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
   <script src="/socket.io/socket.io.js"></script>
   <script defer src="./js/game.js"></script>
 </body>
