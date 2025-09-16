@@ -1,3 +1,4 @@
+/* ベース */
 body {
   font-family: Arial, sans-serif;
   text-align: center;
@@ -5,14 +6,6 @@ body {
   color: white;
 }
 .container { margin-top: 20vh; }
-
-button {
-  background-color: #ffcc00;
-  border: none;
-  padding: 10px 20px;
-  font-size: 20px;
-  cursor: pointer;
-}
 
 /* 右上ボタン群 */
 #buttonGroup {
@@ -43,25 +36,7 @@ button {
   align-items: center;
 }
 
-/* 先行/後攻のオーバーレイ（未使用ならそのまま） */
-#turnSelection {
-  position: fixed;
-  top: 50%; left: 50%;
-  transform: translate(-50%, -50%);
-  background-color: rgba(0,0,0,0.8);
-  padding: 20px;
-  border-radius: 10px;
-  text-align: center;
-  z-index: 1000;
-}
-#turnSelection button {
-  font-size: 18px;
-  padding: 10px 20px;
-  margin: 10px;
-  cursor: pointer;
-}
-
-/* ターン表示（自分/相手） */
+/* ターン表示（表示/非表示は JS 側で制御） */
 #turnIndicator,
 #second_turn {
   position: fixed;
@@ -74,9 +49,6 @@ button {
   font-weight: bold;
   text-align: center;
   border-radius: 10px;
-  opacity: 0;
-  visibility: hidden;
-  transition: opacity 0.5s ease-in-out, visibility 0.5s;
   display: none;
   z-index: 4000;
 }
@@ -155,7 +127,7 @@ button {
 
 /* 手札 */
 .hand-zone { display: flex; gap: 10px; margin: 20px; }
-.card { width: 100px; height: 150px; display:block; cursor: pointer; transition: transform .3s; }
+.card { width: 100px; height: 150px; display:block; cursor: pointer; }
 
 /* モーダル */
 .modal {
@@ -202,30 +174,25 @@ button {
 .used-card { width: 80px; height: 120px; border: 2px solid #000; }
 .card-image { width: 100px; margin: 5px; border-radius: 8px; }
 
-/* カード拡大表示 */
+/* カード拡大表示（アニメは GSAP） */
 #cardZoom {
   position: fixed; top: 0; left: 0;
   width: 100vw; height: 100vh;
   background-color: rgba(0,0,0,0.8);
   display: none; justify-content: center; align-items: center;
-  z-index: 1000; opacity: 0; transition: opacity .5s;
+  z-index: 1000;
 }
-#cardZoom img {
-  width: 200px; height: 300px;
-  transform: scale(.5);
-  transition: transform .5s;
-}
+#cardZoom img { width: 200px; height: 300px; }
+
+/* 効果テキスト */
 #effectDescription {
   margin-top: 10px; padding: 10px 14px;
   background: rgba(0,0,0,0.7); color: #fff; border-radius: 10px;
   box-shadow: 0 4px 8px rgba(0,0,0,0.3);
   font-size: 60px; line-height: 1.4; display: inline-block;
-  max-width: 90%; opacity: 1; z-index: 7; transition: opacity .5s;
+  max-width: 90%;
+  z-index: 7;
 }
-#cardZoom.show { display: flex; opacity: 1; }
-#cardZoom.show img { transform: scale(2); }
-#cardZoom.show #effectDescription { opacity: 1; }
-#cardZoom:not(.show) #effectDescription { opacity: 0; }
 
 /* ログ */
 #log-area {
@@ -240,15 +207,7 @@ button {
 #log-area h3 { margin-top: 0; }
 #log-messages { color: white; display: flex; flex-direction: column; gap: 8px; }
 
-/* 任意オーバーレイ */
-#overlay {
-  position: absolute;
-  overflow-y: auto;
-  top: 50px; left: 50px; /* 単位を補完 */
-  z-index: 9999; pointer-events: auto;
-}
-
-/* セレクトUI/ショーUI */
+/* 選択/公開UI */
 #select-container, #show-container, #showResult {
   position: fixed; top: 20%; left: 30%;
   width: 50vw; height: 50vh;
@@ -270,13 +229,13 @@ button {
 }
 #copy-room-id-btn {
   font-size: 16px; padding: 8px 15px; background-color: #007bff; color: white;
-  border: none; border-radius: 5px; cursor: pointer; transition: background-color .2s;
+  border: none; border-radius: 5px; cursor: pointer;
 }
 #copy-room-id-btn:hover { background-color: #0056b3; }
 
-/* ターンタイマー */
+/* ターンタイマー（アニメは GSAP） */
 #turn-timer-container {
   position: fixed; top: 5px; left: 0;
   width: 100%; height: 10px; background-color: #555; z-index: 9999;
 }
-#turn-timer-bar { width: 100%; height: 100%; background-color: #4CAF50; transition: width 300s linear; }
+#turn-timer-bar { width: 100%; height: 100%; background-color: #4CAF50; }
