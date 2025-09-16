@@ -1,0 +1,241 @@
+/* ベース */
+body {
+  font-family: Arial, sans-serif;
+  text-align: center;
+  background-color: #222;
+  color: white;
+}
+.container { margin-top: 20vh; }
+
+/* 右上ボタン群 */
+#buttonGroup {
+  position: absolute;
+  top: 10px;
+  right: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+#buttonGroup button {
+  padding: 10px 15px;
+  font-size: 16px;
+  background-color: red;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+#surrenderButton { background-color: blue !important; }
+#ruleButton { background-color: green !important; }
+#backToTitle:hover { background-color: darkred; }
+
+.game-screen {
+  display: none;
+  position: relative;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* ターン表示（表示/非表示は JS 側で制御） */
+#turnIndicator,
+#second_turn {
+  position: fixed;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: rgba(0,0,0,0.8);
+  color: white;
+  padding: 20px 40px;
+  font-size: 24px;
+  font-weight: bold;
+  text-align: center;
+  border-radius: 10px;
+  display: none;
+  z-index: 4000;
+}
+
+/* 相手中央エリア */
+#opponent-center-area {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+}
+
+/* 相手プレイエリア */
+#opponent-playArea {
+  width: 600px; height: 150px;
+  background-color: darkred;
+  display: flex; align-items: center; justify-content: center;
+  border: 2px solid white;
+  font-size: 18px; color: white;
+  margin: 10px auto;
+  position: relative;
+}
+
+/* 相手手札 */
+#opponent-hand {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+/* 自分中央エリア */
+#center-area {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+}
+
+/* 山札 */
+#deck-container {
+  margin-right: 20px;
+  display: flex;
+  flex-direction: column;
+  text-align: center;
+  flex-shrink: 0;
+  position: relative;
+}
+#deck { width: 100px; height: 150px; cursor: pointer; z-index: 2; }
+
+/* 横向きサイドカード */
+#side-card-container {
+  position: absolute;
+  top: 130px; left: 80px;
+  z-index: 1;
+}
+.side-card {
+  width: 100px; height: 150px;
+  transform: rotate(90deg);
+  transform-origin: top right;
+  cursor: pointer; z-index: 1;
+}
+
+/* 山札の残り枚数 */
+#deck-count { margin-top: 10px; font-size: 14px; }
+
+/* 自分プレイエリア */
+#playArea {
+  width: 600px; height: 150px;
+  background-color: darkgreen;
+  display: flex; align-items: center; justify-content: center;
+  border: 2px solid white;
+  font-size: 20px; color: white;
+  margin: 20px;
+  position: relative;
+  flex-grow: 1;
+}
+
+/* 手札 */
+.hand-zone { display: flex; gap: 10px; margin: 20px; }
+.card { width: 100px; height: 150px; display:block; cursor: pointer; }
+
+/* モーダル */
+.modal {
+  display: none; position: fixed; z-index: 1000;
+  bottom: 30px; right: 40px;
+  min-width: 350px; min-height: 300px;
+  background-color: rgba(0,0,0,0.5);
+  justify-content: center; align-items: center;
+}
+.modal-content {
+  background-color: black;
+  padding: 20px;
+  border-radius: 10px;
+  width: 60%; max-width: 500px;
+  text-align: center;
+  position: relative;
+}
+
+/* ルールモーダル */
+#ruleModal {
+  position: fixed; top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: rgba(0,0,0,0.5);
+  display: flex; z-index: 3;
+  justify-content: center; align-items: center;
+}
+.rule-image {
+  width: 40%; max-width: 150px; height: auto;
+  margin: 20px 0; border-radius: 10px;
+}
+
+/* タブ */
+.tab-buttons { display: flex; justify-content: center; margin-bottom: 10px; }
+.tab-btn { padding: 10px 20px; margin: 5px; border: none; background: #ddd; cursor: pointer; }
+.tab-btn.active { background: #007bff; color: white; }
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+.close-btn { position: absolute; top: 10px; right: 15px; font-size: 24px; cursor: pointer; }
+
+/* 使用済みカード一覧 */
+#usedCardsList {
+  display: flex; flex-wrap: wrap; gap: 10px; justify-content: center;
+}
+.used-card { width: 80px; height: 120px; border: 2px solid #000; }
+.card-image { width: 100px; margin: 5px; border-radius: 8px; }
+
+/* カード拡大表示（アニメは GSAP） */
+#cardZoom {
+  position: fixed; top: 0; left: 0;
+  width: 100vw; height: 100vh;
+  background-color: rgba(0,0,0,0.8);
+  display: none; justify-content: center; align-items: center;
+  z-index: 1000;
+}
+#cardZoom img { width: 200px; height: 300px; }
+
+/* 効果テキスト */
+#effectDescription {
+  margin-top: 10px; padding: 10px 14px;
+  background: rgba(0,0,0,0.7); color: #fff; border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+  font-size: 60px; line-height: 1.4; display: inline-block;
+  max-width: 90%;
+  z-index: 7;
+}
+
+/* ログ */
+#log-area {
+  width: 180px; height: 800px; padding: 10px;
+  top: 0px; left: 2px;
+  background-color: rgba(255,255,255,.15);
+  border-right: 2px solid #ccc;
+  overflow-y: auto; position: absolute;
+  font-size: 14px; box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+  backdrop-filter: blur(4px);
+}
+#log-area h3 { margin-top: 0; }
+#log-messages { color: white; display: flex; flex-direction: column; gap: 8px; }
+
+/* 選択/公開UI */
+#select-container, #show-container, #showResult {
+  position: fixed; top: 20%; left: 30%;
+  width: 50vw; height: 50vh;
+  background-color: rgba(0,0,0,0);
+  justify-content: center; align-items: center; z-index: 99;
+}
+#showResult { display: none; }
+
+/* 待機UI（部屋ID） */
+#waiting-info {
+  position: fixed; top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: rgba(0,0,0,0.85);
+  padding: 150px 100px; border-radius: 15px; border: 2px solid #ffcc00;
+  z-index: 5000; text-align: center; display: none;
+}
+#room-id-display {
+  font-size: 2.5em; font-weight: bold; color: #ffcc00; margin: 15px 0; user-select: all;
+}
+#copy-room-id-btn {
+  font-size: 16px; padding: 8px 15px; background-color: #007bff; color: white;
+  border: none; border-radius: 5px; cursor: pointer;
+}
+#copy-room-id-btn:hover { background-color: #0056b3; }
+
+/* ターンタイマー（アニメは GSAP） */
+#turn-timer-container {
+  position: fixed; top: 5px; left: 0;
+  width: 100%; height: 10px; background-color: #555; z-index: 9999;
+}
+#turn-timer-bar { width: 100%; height: 100%; background-color: #4CAF50; }
