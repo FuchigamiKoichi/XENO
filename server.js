@@ -456,10 +456,8 @@ io.on('connection', (socket) => {
         console.log(`${playerId} からルーム ${roomId} への再戦リクエストを受け取りました。`);
         const room = jsonData.rooms[roomId];
 
-        if (room.players.length >= 2) {
-            console.log(`ルーム ${roomId} の初回再戦リクエスト。プレイヤーリストをリセットします。`);
-            room.players = []; // ここで部屋を空にする
-        }
+        console.log(`ルーム ${roomId} の初回再戦リクエスト。プレイヤーリストをリセットします。`);
+        room.players = []; // ここで部屋を空にする
         room.players.push(playerId);
         console.log(`ルーム ${roomId} に ${playerId} が参加。現在のメンバー:`, room.players)
 
