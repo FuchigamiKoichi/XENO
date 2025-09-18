@@ -335,6 +335,60 @@ async function select(choices) {
     selectContainer.style.display = 'block';
   });
 }
+
+// === 手札から選択（play_card 用）：オーバーレイなしでカードを光らせて選ばせる ===
+function selectPlayableFromHand(choices) {
+  return new Promise((resolve) => {
+    // choices の値ごとにインデックスを持っておく（同値が複数あっても安全）
+    const indicesByValue = new Map();
+    choices.forEach((v, i) => {
+      const arr = indicesByValue.get(v) || [];
+      arr.push(i);
+      indicesByValue.set(v, arr);
+    });
+
+    const imgs = Array.from(playerHandZone.querySelectorAll('img'));
+    const listeners = [];
+
+    function cleanup() {
+      listeners.forEach(({ node, handler }) => node.removeEventListener('click', handler));
+      imgs.forEach(img => img.classList.remove('selectable', 'disabled'));
+      document.removeEventListener('keydown', onKeydownEsc);
+    }
+    function onKeydownEsc(e) {
+      if (e.key === 'Escape') cleanup(); // キャンセルして resolve しない（必要なら挙動変更可）
+    }
+    document.addEventListener('keydown', onKeydownEsc);
+
+    imgs.forEach(img => {
+      const val = parseInt(img.dataset.card ?? img.value, 10);
+      if (!Number.isFinite(val)) return;
+
+      // 10（英雄）は選択不可：見た目も薄く
+      if (val === 10) {
+        img.classList.add('disabled');
+        return;
+      }
+      // choices に含まれていないカードは選択不可
+      if (!choices.includes(val)) return;
+
+      // 選択可能：枠を光らせる
+      img.classList.add('selectable');
+
+      const handler = () => {
+        // 同値が複数ある場合でも未使用のインデックスを先頭から割り当て
+        const arr = indicesByValue.get(val) || [];
+        const idx = arr.shift(); // 使ったインデックスを消費
+        indicesByValue.set(val, arr);
+        cleanup();
+        resolve(idx); // 旧 select と同じく「choices のインデックス」を返す
+      };
+      img.addEventListener('click', handler);
+      listeners.push({ node: img, handler });
+    });
+  });
+}
+
 async function show(data) {
   return new Promise((resolve) => {
     showContainer.innerHTML = '';
@@ -455,9 +509,8 @@ socket.on('yourTurn', async (data, callback) => {
     callback([0]);
   } else if (data.kind === 'play_card') {
     Anim.startTurnTimer();
-    const idx = await select(data.choices);
+    const idx = await selectPlayableFromHand(data.choices);
     addLog(`あなたが${data.choices[idx]}を場に出す！`);
-    hideSelect();
     const done = await playCard(data.choices[idx]);
     if (done === 'done') {
       Anim.stopTurnTimer();

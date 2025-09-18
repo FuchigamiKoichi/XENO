@@ -132,6 +132,8 @@
           temp.classList.remove('anim-temp');
           temp.style.position = 'static';
           gsap.set(temp, { clearProps: 'all' });
+          temp.value = drawnCard;                 
+          temp.dataset.card = String(drawnCard);
           refs.playerHandZone.appendChild(temp);
           resolve('done');
         }
