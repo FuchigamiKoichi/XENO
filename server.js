@@ -837,7 +837,6 @@ io.on('connection', (socket) => {
         console.log(`err: ${result[1]}`)
         console.log(`log: ${result[2]}`)
       }
-      ready = 0
     }
   })
 
