@@ -50,7 +50,7 @@ function changeSocketId(playerData) {
 function addRoom(roomData) {
     loadData();
     if (!jsonData.rooms[roomData.id]) {
-        jsonData.rooms[roomData.id] = { owner: roomData.owner, players: [], maxPlayers: roomData.maxPlayers };
+        jsonData.rooms[roomData.id] = { owner: roomData.owner, players: [], maxPlayers: roomData.maxPlayers, playing: false };
         saveData(jsonData);
     }
 }
@@ -131,12 +131,13 @@ io.on('connection', (socket) => {
 
   // ルームを確認する
   socket.on('showRooms', (data, callback) => {
+    loadData();
     players = showPlayers();
     roomsData = showRooms();
     rooms = {};
     console.log(`roomsKeys: ${Object.keys(roomsData)}`)
     for (key of Object.keys(roomsData)){
-      if (roomsData[key].players.length < roomsData[key].maxPlayers){
+      if (!roomsData[key].playing) {
         rooms[key] = roomsData[key];
       }
     }
@@ -192,7 +193,7 @@ io.on('connection', (socket) => {
     
     // 任意の方法で一意の roomId を生成する（例: ソケット ID + 乱数など）
     const roomId = generateRoomId();
-    let roomData = {id: roomId, owner: socket.id, players: [socket.id], maxPlayers: max_player_number}
+    let roomData = {id: roomId, owner: socket.id, players: [socket.id], maxPlayers: max_player_number, playing: false}
     addRoom(roomData)
     // ソケットをそのルームにジョインさせる
     // socket.join(roomId);
@@ -725,6 +726,8 @@ io.on('connection', (socket) => {
     }
     if(ready==2){
       loadData()
+      jsonData.rooms[data.roomId].playing = true;
+      saveData(jsonData)
       console.log('準備完了！ゲームを開始します')
       let socketIdList = []
       for(let i=0; i<jsonData.rooms[data.roomId].players.length; i++){
@@ -780,42 +783,46 @@ io.on('connection', (socket) => {
     });
 
     socket.on('requestRematch', (data) => {
-        const { roomId, playerId } = data;
-        
-        // データが正常に送られてきたか確認
-        if (!roomId || !playerId) {
-            console.error('無効な再戦リクエストを受け取りました。');
-            return;
-        }
+      loadData()
+      jsonData.rooms[data.roomId].playing = false;
+      saveData(jsonData)
+      
+      const { roomId, playerId } = data;
+      
+      // データが正常に送られてきたか確認
+      if (!roomId || !playerId) {
+          console.error('無効な再戦リクエストを受け取りました。');
+          return;
+      }
 
-        console.log(`${playerId} からルーム ${roomId} への再戦リクエストを受け取りました。`);
-        const room = jsonData.rooms[roomId];
+      console.log(`${playerId} からルーム ${roomId} への再戦リクエストを受け取りました。`);
+      const room = jsonData.rooms[roomId];
 
-        if (room.players.length >= 2) {
-            console.log(`ルーム ${roomId} の初回再戦リクエスト。プレイヤーリストをリセットします。`);
-            room.players = []; // ここで部屋を空にする
-        }
-        room.players.push(playerId);
-        console.log(`ルーム ${roomId} に ${playerId} が参加。現在のメンバー:`, room.players)
+      if (room.players.length >= 2) {
+          console.log(`ルーム ${roomId} の初回再戦リクエスト。プレイヤーリストをリセットします。`);
+          room.players = []; // ここで部屋を空にする
+      }
+      room.players.push(playerId);
+      console.log(`ルーム ${roomId} に ${playerId} が参加。現在のメンバー:`, room.players)
 
-        // このプレイヤーのsocket.idを最新のものに更新し、再度ルームに参加させる
-        // (game.htmlに遷移した後、changeSocketidが呼ばれるので、ここでのjoinは必須ではないが一応行う)
-        socket.join(roomId);
-        if (jsonData.players[playerId]) {
-            console.log(`プレイヤー ${playerId} の socketId を更新: ${socket.id}`);
-            jsonData.players[playerId].socketId = socket.id;
-            saveData(jsonData);
-        }
-        const playersString = room.players.join(','); 
+      // このプレイヤーのsocket.idを最新のものに更新し、再度ルームに参加させる
+      // (game.htmlに遷移した後、changeSocketidが呼ばれるので、ここでのjoinは必須ではないが一応行う)
+      socket.join(roomId);
+      if (jsonData.players[playerId]) {
+          console.log(`プレイヤー ${playerId} の socketId を更新: ${socket.id}`);
+          jsonData.players[playerId].socketId = socket.id;
+          saveData(jsonData);
+      }
+      const playersString = room.players.join(','); 
 
-        // リクエストを送ってきた本人以外に、ルーム内の全員に通知を送る
-        socket.broadcast.to(roomId).emit('opponentRequestedRematch', { name: jsonData.players[playerId].name });
-        console.log('--> ルーム内の全員に "opponentRequestedRematch" を送信しました');
-        const url = `game.html?roomId=${roomId}&playerId=${playerId}&players=${playersString}`;
-        
-        // リクエストを送ってきた本人にだけ「ゲーム画面へ移動せよ」と指示を送る
-        socket.emit('navigateToGame', { url: url });
-        console.log(`${playerId} に遷移指示を送信: ${url}`);
+      // リクエストを送ってきた本人以外に、ルーム内の全員に通知を送る
+      socket.broadcast.to(roomId).emit('opponentRequestedRematch', { name: jsonData.players[playerId].name });
+      console.log('--> ルーム内の全員に "opponentRequestedRematch" を送信しました');
+      const url = `game.html?roomId=${roomId}&playerId=${playerId}&players=${playersString}`;
+      
+      // リクエストを送ってきた本人にだけ「ゲーム画面へ移動せよ」と指示を送る
+      socket.emit('navigateToGame', { url: url });
+      console.log(`${playerId} に遷移指示を送信: ${url}`);
     });
   // ゲーム中のプレイヤー操作を受け取る例
   socket.on('playerAction', (roomId, actionData) => {
