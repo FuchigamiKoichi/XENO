@@ -316,9 +316,10 @@ async function show(data) {
 // surrender/reset/title
 function surrender() {
   if (confirm('本当に投降しますか？')) {
-    alert('あなたは投降しました。CPUの勝ちです。');
-    goToTitle();
-    resetGame();
+    if (roomId && playerId) {
+        console.log('降参リクエストをサーバーに送信します。');
+        socket.emit('playerSurrender', { roomId: roomId, playerId: playerId });
+    }
   }
 }
 
@@ -471,11 +472,6 @@ socket.on('onatherTurn', async (data) => {
       }
     }
   }
-});
-
-socket.on('result', (data) => {
-  Anim.stopTurnTimer();
-  showResult(data.result);
 });
 
 socket.on('gameEnded', (data) => {

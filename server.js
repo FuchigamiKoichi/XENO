@@ -8,6 +8,8 @@ const fs = require('fs');
 const DATA_FILE = './data.json';
 
 let jsonData = { rooms: {}, players: {}, logs: [] };
+let activeGames = {};
+let pendingChoices = {}; 
 
 // ファイルから読み込み（起動時）
 function loadData() {
@@ -327,23 +329,46 @@ io.on('connection', (socket) => {
     });
   }
 
+  // async function choice(now, choices, kind, socketId, roomId) {
+  //   try {
+  //     // emitWithAckがプレイヤーの応答を待つ。
+  //     // タイムアウトした場合は、emitWithAckがエラーを投げ(rejectし)、catchブロックに移行。
+  //     console.log(`choice関数が呼び出されました: kind=${kind}, socketId=${socketId}`);
+  //     const response = await emitWithAck(now, choices, kind, socketId, roomId);
+  //     // プレイヤーが時間内に応答した場合
+  //     io.to(roomId).except(socketId).emit('onatherTurn', {now: now, choices: choices, kind: kind, choice: response})
+  //     console.log(`emitWithAckの結果: ${response}`);
+
+  //     console.log(`onatherTurnイベント送信: roomId=${roomId}, kind=${kind}, choice=${response}, now=${JSON.stringify(now)}, choices=${JSON.stringify(choices)}`);
+  //     return response;
+
+  //   } catch (e) {
+  //     // emitWithAckでタイムアウトエラーが発生した場合
+  //     console.error("choice (yourTurn) failed:", e);
+  //   }
+  // }
+
   async function choice(now, choices, kind, socketId, roomId) {
-    try {
-      // emitWithAckがプレイヤーの応答を待つ。
-      // タイムアウトした場合は、emitWithAckがエラーを投げ(rejectし)、catchブロックに移行。
-      console.log(`choice関数が呼び出されました: kind=${kind}, socketId=${socketId}`);
-      const response = await emitWithAck(now, choices, kind, socketId, roomId);
-      // プレイヤーが時間内に応答した場合
-      io.to(roomId).except(socketId).emit('onatherTurn', {now: now, choices: choices, kind: kind, choice: response})
-      console.log(`emitWithAckの結果: ${response}`);
+    // Promiseでラップし、reject関数を外から呼び出せるようにする
+    return new Promise(async (resolve, reject) => {
+        // 応答待ちリストに、中断用のreject関数を登録
+        pendingChoices[socketId] = { reject };
 
-      console.log(`onatherTurnイベント送信: roomId=${roomId}, kind=${kind}, choice=${response}, now=${JSON.stringify(now)}, choices=${JSON.stringify(choices)}`);
-      return response;
+        try {
+            // emitWithAckがプレイヤーの応答を待つ。
+            const response = await emitWithAck(now, choices, kind, socketId, roomId);
 
-    } catch (e) {
-      // emitWithAckでタイムアウトエラーが発生した場合
-      console.error("choice (yourTurn) failed:", e);
-    }
+            // プレイヤーが時間内に応答した場合
+            io.to(roomId).except(socketId).emit('onatherTurn', {now: now, choices: choices, kind: kind, choice: response});
+            resolve(response); // Promiseを成功として解決
+
+        } catch (e) {
+            console.error("choice (yourTurn) failed:", e);
+            reject(e); // Promiseを失敗として解決
+        } finally {
+            delete pendingChoices[socketId];
+        }
+    });
 }
 
   // プレイヤーの命名関数
@@ -403,7 +428,9 @@ io.on('connection', (socket) => {
       }
       const gameData = {roomId: data.roomId, players: socketIdList};
       const game = new Game(2, funcs, gameData, data.roomId);
+      activeGames[data.roomId] = game; // 開始したゲームを保存
       const result = await game.game();
+      delete activeGames[data.roomId]; // 終了したゲームを削除
       
       if(result[0]){
         const gameLog = result[1]
@@ -434,6 +461,57 @@ io.on('connection', (socket) => {
       }
     }
   })
+  socket.on('playerSurrender', (data) => {
+    const { roomId, playerId } = data;
+    if (!roomId || !playerId || !jsonData.rooms[roomId] || !jsonData.players[playerId]) { return; }
+    
+    const game = activeGames[roomId]; 
+
+    const surrenderingSocketId = jsonData.players[playerId].socketId;
+    if (pendingChoices[surrenderingSocketId]) {
+        console.log(`[サーバー] 応答待ちのchoice関数を中断させます。socketId: ${surrenderingSocketId}`);
+        pendingChoices[surrenderingSocketId].reject(new Error('Player surrendered'));
+    }
+    
+    if (game) {
+        console.log(`[サーバー] ゲーム ${roomId} にforceSurrender命令を送信します。`);
+        game.forceSurrender(playerId);
+    }
+
+    console.log(`プレイヤー ${playerId} が降参しました。`);
+    
+    //ゲーム内部状態の更新
+    jsonData.players[playerId].surrendered = true;
+    console.log('降参フラグを検知しました！', jsonData.players[playerId].surrendered);
+    jsonData.players[playerId].live = false;
+    //即時リダイレクト処理
+    const room = jsonData.rooms[roomId];
+    const loserId = playerId;
+    const winnerId = room.players.find(pId => pId !== loserId);
+
+    // ready状態をリセット
+    if (jsonData.players[loserId]) jsonData.players[loserId].ready = 0;
+    if (winnerId && jsonData.players[winnerId]) jsonData.players[winnerId].ready = 0;
+    saveData(jsonData);
+
+    //敗者にリダイレクト
+    const loserSocketId = jsonData.players[loserId].socketId;
+    if (loserSocketId) {
+        const reason = encodeURIComponent('あなたが降参しました。');
+        const url = `result.html?result=lose&reason=${reason}&roomId=${roomId}&playerId=${loserId}`;
+        io.to(loserSocketId).emit('redirectToResult', { url: url });
+    }
+
+    //勝者にリダイレクト
+    if (winnerId) {
+        const winnerSocketId = jsonData.players[winnerId].socketId;
+        if (winnerSocketId) {
+            const reason = encodeURIComponent('相手が降参しました。');
+            const url = `result.html?result=win&reason=${reason}&roomId=${roomId}&playerId=${winnerId}`;
+            io.to(winnerSocketId).emit('redirectToResult', { url: url });
+        }
+    }
+});
 
     // result.htmlにいるクライアントをルームに参加させる
     socket.on('identifyResultPage', (data) => {
