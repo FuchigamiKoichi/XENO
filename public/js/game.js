@@ -120,7 +120,15 @@ document.addEventListener('keydown', (e) => {
 // メニュー項目クリック時も閉じる（操作後に自動で畳む）
 ['backToTitle', 'surrenderButton', 'ruleButton'].forEach(id => {
   const el = document.getElementById(id);
-  if (el) el.addEventListener('click', () => closeMenu());
+  if (el) {
+    el.addEventListener('click', () => {
+      closeMenu();
+      // 投降ボタンの場合は surrender 関数を実行
+      if (id === 'surrenderButton') {
+        surrender();
+      }
+    });
+  }
 });
 
 // CPU 対戦ボタン
@@ -462,10 +470,16 @@ async function show(data) {
 
 // surrender/reset/title
 function surrender() {
+  console.log('surrender関数が呼び出されました', { roomId, playerId });
   if (confirm('本当に投降しますか？')) {
-    alert('あなたは投降しました。CPUの勝ちです。');
-    goToTitle();
-    resetGame();
+    if (roomId && playerId) {
+        console.log('降参リクエストをサーバーに送信します。', { roomId, playerId });
+        socket.emit('playerSurrender', { roomId: roomId, playerId: playerId });
+    } else {
+        console.error('roomIdまたはplayerIdが設定されていません', { roomId, playerId });
+    }
+  } else {
+    console.log('投降がキャンセルされました');
   }
 }
 
@@ -617,11 +631,6 @@ socket.on('onatherTurn', async (data) => {
       }
     }
   }
-});
-
-socket.on('result', (data) => {
-  Anim.stopTurnTimer();
-  showResult(data.result);
 });
 
 socket.on('gameEnded', (data) => {
