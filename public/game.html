@@ -21,21 +21,39 @@
       <button id="select-cpu-btn">CPUと対戦</button>
     </div>
 
+    <!-- ログトグルボタン -->
+    <button id="log-toggle" class="log-toggle-btn">📝</button>
+    
     <!-- 左カラム（ログ） -->
     <div id="left-column">
       <div id="log-area">
-        <h3>ログ</h3>
+        <div class="log-header">
+          <h3>ログ</h3>
+          <button id="log-close" class="log-close-btn">&times;</button>
+        </div>
         <div id="log-messages"></div>
       </div>
     </div>
 
     <h2>対戦画面</h2>
 
-    <div id="buttonGroup">
+    <!-- <div id="buttonGroup">
       <button id="backToTitle" onclick="goToTitle()">タイトル画面に戻る</button>
       <button id="surrenderButton" onclick="surrender()">投降する</button>
       <button id="ruleButton">ルール説明</button>
-    </div>
+    </div> -->
+    <nav id="menuBar" aria-label="ゲームメニュー">
+      <button id="menuToggle" class="menu-toggle" aria-expanded="false" aria-controls="menuList" aria-label="メニューを開く">
+        <!-- シンプルなハンバーガー -->
+        <span class="menu-icon" aria-hidden="true"></span>
+      </button>
+
+      <div id="menuList" class="menu-list" role="menu">
+        <button id="backToTitle" role="menuitem" type="button" class="menu-item">タイトル画面に戻る</button>
+        <button id="surrenderButton" role="menuitem" type="button" class="menu-item">投降する</button>
+        <button id="ruleButton" role="menuitem" type="button" class="menu-item">ルール説明</button>
+      </div>
+    </nav>
 
     <div id="select-container"></div>
     <div id="show-container"></div>
