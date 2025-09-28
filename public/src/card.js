@@ -36,16 +36,24 @@ class Card {
                 me.socketId,
                 roomId
             )
-            const opponentTurnNumber = parseInt(responce);
-            let opponent = '';
-            console.log(`opponentTurnNumber: ${opponentTurnNumber}`)
+            const selectedIndex = parseInt(responce);
+            
+            // selectedIndexに対応するchoicesから実際のplayer.turnNumberを取得
+            const selectedChoice = choices.find(choice => choice.selectNumber === selectedIndex);
+            if (!selectedChoice) {
+                console.log(`[opponentChoice] 選択されたインデックス ${selectedIndex} が見つかりません`);
+                return null;
+            }
+            
+            const opponentTurnNumber = selectedChoice.player;
+            
+            let opponent = null;
             for(const player of field.players) {
-                console.log(`player: ${player}`)
-                if(player.turnNumber == opponentTurnNumber){
+                if(player.turnNumber === opponentTurnNumber){
                     opponent = player;
+                    break;
                 }
             }
-            console.log(`opponent: ${opponent.name}`)
             createLog(createData(field, me), choices, 'opponentChoice', field, me, opponentTurnNumber);
             return opponent;
         }
@@ -282,12 +290,17 @@ class Card6 extends Card {
         const opponent = await this.opponentChoice(player, roomId);
         
         if (opponent && player.hands.length > 0) {
+            console.log(`[Card6] ${player.name}の手札: ${player.hands[0].number}, ${opponent.name}の手札: ${opponent.hands[0].number}`);
+            
             if (player.hands[0].number < opponent.hands[0].number) {
+                console.log(`[Card6] ${player.name}が脱落`);
                 this.kill(player);
             } else if (player.hands[0].number === opponent.hands[0].number) {
+                console.log(`[Card6] 両方脱落`);
                 this.kill(player);
                 this.kill(opponent);
             } else {
+                console.log(`[Card6] ${opponent.name}が脱落`);
                 this.kill(opponent);
             }
             

@@ -7,7 +7,8 @@
     "ignore": ["*.json"]
   },
   "scripts": {
-    "dev": "nodemon server.js"
+    "start": "cp origin.json data.json && node server.js",
+    "dev": "cp origin.json data.json && nodemon server.js"
   },
   "keywords": [],
   "author": "",
