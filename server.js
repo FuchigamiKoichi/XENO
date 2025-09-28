@@ -131,7 +131,7 @@ io.on('connection', (socket) => {
 
   // ルームを確認する
   socket.on('showRooms', (data, callback) => {
-    loadData()
+    loadData();
     players = showPlayers();
     roomsData = showRooms();
     rooms = {};
