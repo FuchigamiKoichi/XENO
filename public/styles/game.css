@@ -16,6 +16,14 @@ body {
   position: relative;
   flex-direction: column;
   align-items: center;
+  margin-left: 0; /* ログエリアが隠れている時はマージンなし */
+  padding-left: 20px;
+  transition: margin-left 0.3s ease-in-out; /* スムーズなレイアウト変更 */
+}
+
+/* ログエリアが開いている時のメインコンテンツ調整 */
+.game-screen.log-open {
+  margin-left: 300px; /* ログエリアの幅分だけマージンを追加 */
 }
 
 /* ターン表示（表示/非表示は JS 側で制御） */
@@ -178,16 +186,115 @@ body {
 
 /* ログ */
 #log-area {
-  width: 180px; height: 800px; padding: 10px;
-  top: 0px; left: 2px;
-  background-color: rgba(255,255,255,.15);
+  width: 300px; /* 幅を少し広げる */
+  height: 100vh; /* 画面の縦いっぱいに表示 */
+  padding: 15px;
+  top: 0px; 
+  left: -300px; /* 初期状態では完全に隠す */
+  background-color: rgba(0, 0, 0, 0.9); /* 背景を濃くする */
   border-right: 2px solid #ccc;
-  overflow-y: auto; position: absolute;
-  font-size: 14px; box-shadow: 2px 0 5px rgba(0,0,0,0.1);
-  backdrop-filter: blur(4px);
+  position: fixed; /* fixedに変更して画面に固定 */
+  font-size: 14px; 
+  box-shadow: 4px 0 10px rgba(0,0,0,0.3);
+  backdrop-filter: blur(8px);
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box; /* paddingを含めた高さ計算 */
+  z-index: 2000; /* より高いz-indexで最前面に */
+  transition: left 0.3s ease-in-out; /* スライドアニメーション */
 }
-#log-area h3 { margin-top: 0; }
-#log-messages { color: white; display: flex; flex-direction: column; gap: 8px; }
+
+/* ログエリアが開いた状態 */
+#log-area.open {
+  left: 0px; /* 左端に表示 */
+}
+
+/* ログトグルボタン */
+.log-toggle-btn {
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  width: 50px;
+  height: 50px;
+  border: none;
+  border-radius: 50%;
+  background-color: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(4px);
+  color: white;
+  font-size: 20px;
+  cursor: pointer;
+  z-index: 1500;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+}
+
+.log-toggle-btn:hover {
+  background-color: rgba(255, 255, 255, 0.3);
+  transform: scale(1.1);
+}
+
+/* ログヘッダー */
+.log-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+  flex-shrink: 0;
+}
+
+.log-header h3 {
+  margin: 0;
+  color: white;
+}
+
+/* ログ閉じるボタン */
+.log-close-btn {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 24px;
+  cursor: pointer;
+  padding: 0;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: background-color 0.2s ease;
+}
+
+.log-close-btn:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+/* 削除：log-headerで管理するため */
+#log-messages { 
+  color: white; 
+  display: flex; 
+  flex-direction: column; 
+  gap: 8px; 
+  overflow-y: scroll; /* 常にスクロールバーを表示 */
+  flex-grow: 1; /* 残りのスペースを使用 */
+  padding-right: 5px; /* スクロールバー用のスペース */
+  min-height: 0; /* flexアイテムが縮むことを許可 */
+  max-height: 100%; /* 親コンテナを超えないように制限 */
+}
+
+/* スクロールバーのスタイリング（Webkit系ブラウザ用） */
+#log-messages::-webkit-scrollbar {
+  width: 8px;
+}
+#log-messages::-webkit-scrollbar-track {
+  background: rgba(255,255,255,0.1);
+  border-radius: 4px;
+}
+#log-messages::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.3);
+  border-radius: 4px;
+}
+#log-messages::-webkit-scrollbar-thumb:hover {
+  background: rgba(255,255,255,0.5);
+}
 
 /* 選択/公開UI */
 #select-container, #show-container, #showResult {
