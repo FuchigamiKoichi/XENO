@@ -38,6 +38,44 @@ const players  = (params.get('players') || '').split(',').filter(Boolean);
 
 socket.emit('changeSocketid', { id: playerId, roomId });
 
+// ==== Collapsible Menu toggle ====
+const menuBar    = document.getElementById('menuBar');
+const menuToggle = document.getElementById('menuToggle');
+const menuList   = document.getElementById('menuList');
+
+function openMenu() {
+  menuList.classList.add('open');
+  menuToggle.setAttribute('aria-expanded', 'true');
+}
+function closeMenu() {
+  menuList.classList.remove('open');
+  menuToggle.setAttribute('aria-expanded', 'false');
+}
+function toggleMenu() {
+  if (menuList.classList.contains('open')) closeMenu(); else openMenu();
+}
+
+menuToggle.addEventListener('click', (e) => {
+  e.stopPropagation(); // 外側クリック判定に食われないように
+  toggleMenu();
+});
+
+// メニュー外クリックで閉じる
+document.addEventListener('click', (e) => {
+  if (!menuBar.contains(e.target)) closeMenu();
+});
+
+// Escで閉じる
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') closeMenu();
+});
+
+// メニュー項目クリック時も閉じる（操作後に自動で畳む）
+['backToTitle', 'surrenderButton', 'ruleButton'].forEach(id => {
+  const el = document.getElementById(id);
+  if (el) el.addEventListener('click', () => closeMenu());
+});
+
 // CPU 対戦ボタン
 const selectCpuBtn = document.getElementById('select-cpu-btn');
 if (selectCpuBtn) {
