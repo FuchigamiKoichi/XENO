@@ -137,7 +137,7 @@ io.on('connection', (socket) => {
     rooms = {};
     console.log(`roomsKeys: ${Object.keys(roomsData)}`)
     for (key of Object.keys(roomsData)){
-      if (!roomsData[key].playing){
+      if (!roomsData[key].playing) {
         rooms[key] = roomsData[key];
       }
     }
