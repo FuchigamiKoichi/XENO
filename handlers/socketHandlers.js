@@ -86,7 +86,7 @@ class SocketHandlers {
   static handleRegistPlayer(socket, data) {
     const playerData = { id: socket.id, name: data.name, ready: 0 };
     DataManager.addPlayer(playerData);
-    Logger.info(`プレイヤー登録: ${playerData.name}`);
+    Logger.info(`プレイヤー登録: ${playerData.name}, ready状態: 0で初期化`);
   }
 
   /**
@@ -97,17 +97,30 @@ class SocketHandlers {
     const roomData = {
       id: roomId, 
       owner: socket.id, 
-      players: [socket.id], 
+      players: [], // 空の配列から開始
       maxPlayers: CONFIG.MAX_PLAYERS_PER_ROOM, 
       playing: false
     };
     
     RoomManager.addRoom(roomData);
     
+    // 作成者をルームに追加
+    socket.join(roomId);
+    if (RoomManager.addPlayerToRoomUnique(roomId, socket.id)) {
+      // プレイヤーのready状態を初期化
+      DataManager.loadData();
+      const jsonData = DataManager.getJsonData();
+      if (jsonData.players[socket.id]) {
+        jsonData.players[socket.id].ready = 0;
+        Logger.debug(`ルーム作成者 ${jsonData.players[socket.id].name} のready状態を0に初期化`);
+      }
+      DataManager.saveData();
+    }
+    
     DataManager.loadData();
     const jsonData = DataManager.getJsonData();
     const playerName = jsonData.players[socket.id]?.name || 'Unknown';
-    Logger.info(`ルーム作成: ${roomId}, オーナー: ${playerName}`);
+    Logger.info(`ルーム作成: ${roomId}, オーナー: ${playerName}, プレイヤー数: ${jsonData.rooms[roomId].players.length}`);
     
     if (callback) {
       callback({ roomId });
@@ -136,6 +149,11 @@ class SocketHandlers {
     socket.join(roomId);
     
     if (RoomManager.addPlayerToRoomUnique(roomId, socket.id)) {
+        // プレイヤーのready状態を初期化
+        if (jsonData.players[socket.id]) {
+          jsonData.players[socket.id].ready = 0;
+          Logger.debug(`プレイヤー ${jsonData.players[socket.id].name} のready状態を0に初期化`);
+        }
         DataManager.saveData();
     }
     
@@ -178,6 +196,13 @@ class SocketHandlers {
     if (jsonData.players[data.id]) {
       const playerData = { id: data.id, socketid: socket.id };
       DataManager.updateSocketId(playerData);
+      
+      // ready状態を初期化（ゲーム開始前の場合）
+      if (jsonData.players[data.id]) {
+        jsonData.players[data.id].ready = 0;
+        Logger.debug(`SocketID更新時にプレイヤー ${jsonData.players[data.id].name} のready状態を0に初期化`);
+      }
+      
       socket.join(data.roomId);
       
       Logger.info(`SocketID更新: ${jsonData.players[data.id].name} → ${socket.id}`);
@@ -272,6 +297,7 @@ class SocketHandlers {
     
     if (data.playerId === 'cpu') {
       Logger.info('CPU戦が選択されました');
+      // CPU戦の場合は1人でもゲーム開始可能
       const result = await GameService.startGame(data.roomId, io, activeGames);
       
       if (result[0]) {
@@ -359,22 +385,40 @@ class SocketHandlers {
       }
     } else {
       DataManager.loadData();
-      Logger.info(`プレイヤー戦: ${data.playerId} のready状態を1に設定`);
+      const jsonData = DataManager.getJsonData();
+      
+      if (!jsonData.players[data.playerId]) {
+        Logger.error(`プレイヤー ${data.playerId} が見つかりません`);
+        return;
+      }
+      
+      Logger.info(`プレイヤー戦: ${data.playerId} (${jsonData.players[data.playerId].name}) のready状態を1に設定`);
       jsonData.players[data.playerId].ready = 1;
       DataManager.saveData();
       
+      const room = jsonData.rooms[data.roomId];
+      if (!room) {
+        Logger.error(`ルーム ${data.roomId} が見つかりません`);
+        return;
+      }
+      
       let ready = 0;
-      for (let i = 0; i < jsonData.rooms[data.roomId].players.length; i++) {
-        const currentPlayerId = jsonData.rooms[data.roomId].players[i];
+      Logger.debug(`ルーム ${data.roomId} のプレイヤー数: ${room.players.length}`);
+      for (let i = 0; i < room.players.length; i++) {
+        const currentPlayerId = room.players[i];
         if (jsonData.players[currentPlayerId]) {
-          Logger.debug(`プレイヤー ${currentPlayerId} のready状態: ${jsonData.players[currentPlayerId].ready}`);
-          ready += jsonData.players[currentPlayerId].ready;
+          const playerReady = jsonData.players[currentPlayerId].ready;
+          const playerName = jsonData.players[currentPlayerId].name;
+          Logger.debug(`プレイヤー ${currentPlayerId} (${playerName}) のready状態: ${playerReady}`);
+          ready += playerReady;
+        } else {
+          Logger.debug(`プレイヤー ${currentPlayerId} のデータが見つかりません`);
         }
       }
-      Logger.debug(`total ready: ${ready}`);
-      Logger.debug(`ready合計: ${ready}, ゲーム開始判定: ${ready == 2}`);
+      Logger.debug(`ready合計: ${ready}/${room.players.length}, ゲーム開始判定: ${ready == room.players.length && room.players.length >= 2}`);
       
-      if (ready == 2) {
+      if (ready == room.players.length && room.players.length >= 2) {
+        Logger.info(`プレイヤー戦開始条件満たす: ${room.players.length}人全員がready`);
         const result = await GameService.startGame(data.roomId, io, activeGames);
         
         if (result[0]) {
@@ -452,6 +496,8 @@ class SocketHandlers {
           
           Logger.debug(`[Result] プレイヤー戦ゲーム終了結果送信完了: 勝者${winners.length}人, 敗者${losers.length}人`);
         }
+      } else {
+        Logger.debug(`ゲーム開始条件未満足: ready=${ready}/${room.players.length}, 最小人数=2`);
       }
     }
     Logger.debug('=== Ready Event Debug End ===');

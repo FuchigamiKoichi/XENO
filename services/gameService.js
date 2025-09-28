@@ -13,7 +13,17 @@ class GameService {
   static getName(roomId, index) {
     DataManager.loadData();
     const jsonData = DataManager.getJsonData();
-    return `${jsonData.players[jsonData.rooms[roomId].players[index]].name}`;
+    const room = jsonData.rooms[roomId];
+    if (room && room.players && room.players[index]) {
+      const playerId = room.players[index];
+      const player = jsonData.players[playerId];
+      if (player) {
+        Logger.debug(`getName: index=${index}, playerId=${playerId}, playerName=${player.name}`);
+        return player.name;
+      }
+    }
+    Logger.error(`getName: プレイヤーが見つかりません - roomId=${roomId}, index=${index}`);
+    return `Unknown_${index}`;
   }
 
   static getName_cpu(roomId, index) {
@@ -151,12 +161,25 @@ class GameService {
     }
     
     const gameData = { roomId: roomId, players: socketIdList };
-    const funcs = [
-      { get_name: GameService.getName, choice: GameService.createChoiceFunction(io) },
-      { get_name: GameService.getName_cpu, choice: GameService.choice_cpu }
-    ];
+    const playerCount = jsonData.rooms[roomId].players.length;
     
-    const game = new Game(2, funcs, gameData, roomId);
+    // プレイヤー数に応じて関数配列を構築
+    const funcs = [];
+    
+    if (playerCount === 1) {
+      // CPU戦（1プレイヤー + 1CPU）
+      Logger.info('CPU戦モードでゲーム開始');
+      funcs.push({ get_name: GameService.getName, choice: GameService.createChoiceFunction(io) });
+      funcs.push({ get_name: GameService.getName_cpu, choice: GameService.choice_cpu });
+    } else {
+      // マルチプレイヤー戦（全てプレイヤー）
+      Logger.info(`${playerCount}プレイヤー戦モードでゲーム開始`);
+      for (let i = 0; i < playerCount; i++) {
+        funcs.push({ get_name: GameService.getName, choice: GameService.createChoiceFunction(io) });
+      }
+    }
+    
+    const game = new Game(playerCount === 1 ? 2 : playerCount, funcs, gameData, roomId);
     activeGames[roomId] = game;
     
     const result = await game.game();
