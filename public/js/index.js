@@ -15,6 +15,10 @@ const gameArea = document.getElementById('gameArea');
 
 const rooms = document.getElementById('rooms');
 const gameStart = document.getElementById('startGameBtn');
+const searchInput = document.getElementById('searchInput');
+
+// 全ルームデータを保持する変数
+let allRoomsData = null;
 
 function joinRoom(roomId){
     socket.emit('joinRoom', roomId, (response) => {
@@ -26,15 +30,17 @@ function joinRoom(roomId){
     });
 }
 
-// ルームを確認する
-showRoomsBtn.addEventListener('click', () => {
-    const player_name = text_name.value;
-    socket.emit('registPlayer', {name: player_name});
-    socket.emit('showRooms', { maxPlayers: 4 }, (response) => {
-    if (response && response.rooms) {
-        let room_list = Object.keys(response.rooms);
-        rooms.innerHTML = "";
-        for (let i=0; i<room_list.length; i++) {
+// ルーム表示関数
+function displayRooms(roomsData, playersData, searchTerm = '') {
+    const room_list = Object.keys(roomsData);
+    rooms.innerHTML = "";
+    
+    // 検索条件でフィルタリング
+    const filteredRooms = room_list.filter(roomId => {
+        return roomId.toLowerCase().includes(searchTerm.toLowerCase());
+    });
+    
+    for (let i = 0; i < filteredRooms.length; i++) {
         let item = document.createElement('button');
         
         // シンプルなボタンスタイル
@@ -50,7 +56,7 @@ showRoomsBtn.addEventListener('click', () => {
         item.style.textAlign = "left";
         
         // ルーム情報をシンプルなテキストで表示
-        let roomInfo = `ルーム: ${room_list[i]} | オーナー: ${response.players[response.rooms[room_list[i]].owner].name}`;
+        let roomInfo = `ルーム: ${filteredRooms[i]} | オーナー: ${playersData[roomsData[filteredRooms[i]].owner].name}`;
         item.textContent = roomInfo;
         
         // ホバー効果
@@ -62,13 +68,39 @@ showRoomsBtn.addEventListener('click', () => {
         });
         
         item.addEventListener('click', () => {
-            joinRoom(room_list[i])
+            joinRoom(filteredRooms[i])
         });
         
         rooms.appendChild(item);
-        window.scrollTo(0, document.body.scrollHeight);
-        }
     }
+    
+    window.scrollTo(0, document.body.scrollHeight);
+}
+
+// 検索入力欄のイベントリスナー
+searchInput.addEventListener('input', () => {
+    if (allRoomsData) {
+        const searchTerm = searchInput.value;
+        displayRooms(allRoomsData.rooms, allRoomsData.players, searchTerm);
+    }
+});
+
+// ルームを確認する
+showRoomsBtn.addEventListener('click', () => {
+    const player_name = text_name.value;
+    socket.emit('registPlayer', {name: player_name});
+    socket.emit('showRooms', { maxPlayers: 4 }, (response) => {
+        if (response && response.rooms) {
+            // 全ルームデータを保存
+            allRoomsData = {
+                rooms: response.rooms,
+                players: response.players
+            };
+            
+            // 現在の検索条件でルームを表示
+            const searchTerm = searchInput.value;
+            displayRooms(response.rooms, response.players, searchTerm);
+        }
     })
 })
 
