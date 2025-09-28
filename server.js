@@ -335,9 +335,13 @@ io.on('connection', (socket) => {
       const response = await emitWithAck(now, choices, kind, socketId, roomId);
       
       // フォールバック処理: responseが無効な値の場合
-      let finalChoice = response;
-      if (!isValidChoice(finalChoice, choices)) {
+      let finalChoice;
+      if (response === null || response === undefined) {
+        finalChoice = getFallbackChoice(choices, `null or undefined player response`, kind);
+      } else if (!isValidChoice(response, choices)) {
         finalChoice = getFallbackChoice(choices, `invalid player response: ${response}`, kind);
+      } else {
+        finalChoice = response;
       }
       
       // プレイヤーが時間内に応答した場合
