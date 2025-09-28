@@ -15,6 +15,10 @@ const gameArea = document.getElementById('gameArea');
 
 const rooms = document.getElementById('rooms');
 const gameStart = document.getElementById('startGameBtn');
+const searchInput = document.getElementById('searchInput');
+
+// 全ルームデータを保持する変数
+let allRoomsData = null;
 
 function joinRoom(roomId){
     socket.emit('joinRoom', roomId, (response) => {
@@ -26,52 +30,77 @@ function joinRoom(roomId){
     });
 }
 
+// ルーム表示関数
+function displayRooms(roomsData, playersData, searchTerm = '') {
+    const room_list = Object.keys(roomsData);
+    rooms.innerHTML = "";
+    
+    // 検索条件でフィルタリング
+    const filteredRooms = room_list.filter(roomId => {
+        return roomId.toLowerCase().includes(searchTerm.toLowerCase());
+    });
+    
+    for (let i = 0; i < filteredRooms.length; i++) {
+        let item = document.createElement('button');
+        
+        // シンプルなボタンスタイル
+        item.style.width = "100%";
+        item.style.padding = "12px";
+        item.style.marginBottom = "5px";
+        item.style.backgroundColor = "white";
+        item.style.color = "#333";
+        item.style.border = "1px solid #ddd";
+        item.style.borderRadius = "4px";
+        item.style.cursor = "pointer";
+        item.style.fontSize = "14px";
+        item.style.textAlign = "left";
+        
+        // ルーム情報をシンプルなテキストで表示
+        let roomInfo = `ルーム: ${filteredRooms[i]} | オーナー: ${playersData[roomsData[filteredRooms[i]].owner].name}`;
+        item.textContent = roomInfo;
+        
+        // ホバー効果
+        item.addEventListener('mouseenter', () => {
+            item.style.backgroundColor = "#f8f8f8";
+        });
+        item.addEventListener('mouseleave', () => {
+            item.style.backgroundColor = "white";
+        });
+        
+        item.addEventListener('click', () => {
+            joinRoom(filteredRooms[i])
+        });
+        
+        rooms.appendChild(item);
+    }
+    
+    window.scrollTo(0, document.body.scrollHeight);
+}
+
+// 検索入力欄のイベントリスナー
+searchInput.addEventListener('input', () => {
+    if (allRoomsData) {
+        const searchTerm = searchInput.value;
+        displayRooms(allRoomsData.rooms, allRoomsData.players, searchTerm);
+    }
+});
+
 // ルームを確認する
 showRoomsBtn.addEventListener('click', () => {
     const player_name = text_name.value;
     socket.emit('registPlayer', {name: player_name});
     socket.emit('showRooms', { maxPlayers: 4 }, (response) => {
-    if (response && response.rooms) {
-        let room_list = Object.keys(response.rooms);
-        rooms.innerHTML = "";
-        for (let i=0; i<room_list.length; i++) {
-        let item = document.createElement('button');
-        let back = document.createElement('div');
-        back.style.height = "140px";
-        back.style.width = "230px";
-        back.style.backgroundColor = "#da7326";
-        back.style.borderWidth = "6px";
-        back.style.borderStyle = "solid";
-        back.style.borderRadius = "10px";
-        back.style.margin = "auto";
-        back.style.padding = "auto";
-        item.style.height = "180px";
-        item.style.width = "270px";
-        item.style.borderWidth = "6px";
-        item.style.borderRadius = "10px";
-        item.style.backgroundColor = "#3e1e00"
-        item.style.borderStyle = "solid";
-        let contentRoomId = document.createElement('p');
-        contentRoomId.textContent = `${room_list[i]}`;
-        contentRoomId.style.margin = '3px';
-        back.appendChild(contentRoomId);
-        let contentOwner = document.createElement('p');
-        contentOwner.textContent = 'オーナー';
-        contentOwner.style.margin = '3px';
-        back.appendChild(contentOwner);
-        let contentOwnerName = document.createElement('p');
-        contentOwnerName.textContent = response.players[response.rooms[room_list[i]].owner].name;
-        contentOwnerName.style.margin = '3px';
-        back.appendChild(contentOwnerName);
-        // item.textContent = room_list[i];
-        item.addEventListener('click', () => {
-            joinRoom(room_list[i])
-        });
-        item.appendChild(back);
-        rooms.appendChild(item);
-        window.scrollTo(0, document.body.scrollHeight);
+        if (response && response.rooms) {
+            // 全ルームデータを保存
+            allRoomsData = {
+                rooms: response.rooms,
+                players: response.players
+            };
+            
+            // 現在の検索条件でルームを表示
+            const searchTerm = searchInput.value;
+            displayRooms(response.rooms, response.players, searchTerm);
         }
-    }
     })
 })
 
