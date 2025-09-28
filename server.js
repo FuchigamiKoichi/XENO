@@ -62,11 +62,53 @@ function showRooms() {
     return result;
 }
 
+// プレイヤーをルームに重複なく追加するヘルパー関数
+function addPlayerToRoomUnique(roomId, playerId) {
+    if (jsonData.rooms[roomId]) {
+        const players = jsonData.rooms[roomId].players;
+        if (!players.includes(playerId)) {
+            players.push(playerId);
+            console.log(`プレイヤー ${playerId} をルーム ${roomId} に追加しました`);
+            return true;
+        } else {
+            console.log(`プレイヤー ${playerId} は既にルーム ${roomId} に存在します`);
+            return false;
+        }
+    }
+    return false;
+}
+
+// 全ルームの重複プレイヤーを削除するクリーンアップ関数
+function cleanupDuplicatePlayers() {
+    loadData();
+    let hasChanges = false;
+    
+    for (const roomId in jsonData.rooms) {
+        const room = jsonData.rooms[roomId];
+        const originalLength = room.players.length;
+        
+        // Set型を使用して重複を除去
+        const uniquePlayers = [...new Set(room.players)];
+        
+        if (uniquePlayers.length !== originalLength) {
+            console.log(`ルーム ${roomId} で重複プレイヤーを発見: ${originalLength} → ${uniquePlayers.length}`);
+            room.players = uniquePlayers;
+            hasChanges = true;
+        }
+    }
+    
+    if (hasChanges) {
+        saveData(jsonData);
+        console.log(`重複プレイヤーのクリーンアップが完了しました`);
+    } else {
+        console.log(`重複プレイヤーは見つかりませんでした`);
+    }
+}
+
 // プレイヤーのルームの入室
 function addPlayerToRoom(addData){
     loadData();
-    if (jsonData.rooms[addData.roomId]){
-        jsonData.rooms[addData.roomId].players.push(addData.playerId);
+    if (addPlayerToRoomUnique(addData.roomId, addData.playerId)) {
         saveData(jsonData);
     }
 }
@@ -160,18 +202,25 @@ io.on('connection', (socket) => {
         if (room) {
             const currentPlayers = room.players;
             console.log(`[待機チェック] ルーム ${data.roomId} の現在人数: ${currentPlayers.length}人`);
+            console.log(`[待機チェック] playing状態: ${room.playing}`);
+            console.log(`[待機チェック] プレイヤー ${data.id} のready状態: ${jsonData.players[data.id].ready}`);
 
-            // オーナーが待機中
-            if (currentPlayers.length === 1) {
-                // 参加者本人にだけ「待機せよ」というイベントを送る
-                socket.emit('waitingForOpponent', { roomId: data.roomId });
-                console.log(`--> 'waitingForOpponent' を送信しました`);
-            }
-            //参加者が2人になったら
-            else if (currentPlayers.length === 2) {
-                // ルームにいる全員に「待機表示を消せ」というイベントを送る
-                io.to(data.roomId).emit('hideWaitingInfo');
-                console.log(`--> 'hideWaitingInfo' を送信しました`);
+            // ゲーム中でない場合のみ待機処理を行う
+            if (!room.playing) {
+                // オーナーが待機中
+                if (currentPlayers.length === 1) {
+                    // 参加者本人にだけ「待機せよ」というイベントを送る
+                    socket.emit('waitingForOpponent', { roomId: data.roomId });
+                    console.log(`--> 'waitingForOpponent' を送信しました`);
+                }
+                //参加者が2人になったら
+                else if (currentPlayers.length === 2) {
+                    // ルームにいる全員に「待機表示を消せ」というイベントを送る
+                    io.to(data.roomId).emit('hideWaitingInfo');
+                    console.log(`--> 'hideWaitingInfo' を送信しました`);
+                }
+            } else {
+                console.log(`--> ゲーム中のため待機処理をスキップしました`);
             }
         }
 
@@ -222,9 +271,14 @@ io.on('connection', (socket) => {
     }
 
     socket.join(roomId);
-    jsonData.rooms[roomId].players.push(socket.id);
-    saveData(jsonData)
-    console.log(`ルーム参加: ${roomId} (メンバー数: ${room.players.length}), 参加者: ${jsonData.players[socket.id].name}`);
+    
+    // 重複チェックしてプレイヤーを追加
+    if (addPlayerToRoomUnique(roomId, socket.id)) {
+        saveData(jsonData);
+    }
+    
+    const updatedRoom = jsonData.rooms[roomId];
+    console.log(`ルーム参加: ${roomId} (メンバー数: ${updatedRoom.players.length}), 参加者: ${jsonData.players[socket.id].name}`);
 
     // 新しいメンバーが参加したことをルーム内にブロードキャスト
     io.to(roomId).emit('updateRoomMembers', {
@@ -703,9 +757,13 @@ io.on('connection', (socket) => {
 
   // 全てのプレイヤーのreadyを判定
   socket.on("ready", async (data) => {
+    console.log(`=== Ready Event Debug ===`);
+    console.log(`playerId: ${data.playerId}, roomId: ${data.roomId}`);
+    
     let ready = 0;
     let funcs = []
     if (data.playerId == "cpu"){
+      console.log(`CPU戦が選択されました`);
       ready = 2;
       funcs = [
           { get_name: getName, choice: choice },
@@ -713,19 +771,28 @@ io.on('connection', (socket) => {
       ];
     }else{
       loadData();
+      console.log(`プレイヤー戦: ${data.playerId} のready状態を1に設定`);
       jsonData.players[data.playerId].ready = 1
       saveData(jsonData);
+      ready = 0
       for(let i=0; i<jsonData.rooms[data.roomId].players.length; i++){
-        ready += jsonData.players[jsonData.rooms[data.roomId].players[i]].ready;
+        const currentPlayerId = jsonData.rooms[data.roomId].players[i];
+        const currentReady = jsonData.players[currentPlayerId].ready;
+        console.log(`プレイヤー ${currentPlayerId} のready状態: ${currentReady}`);
+        ready += currentReady;
       }
-      console.log(`ready: ${ready}`);
+      console.log(`total ready: ${ready}`);
       funcs = [
           { get_name: getName, choice: choice },
           { get_name: getName, choice: choice }
       ];
     }
+    console.log(`ready合計: ${ready}, ゲーム開始判定: ${ready==2}`);
+    console.log(`=== Ready Event Debug End ===`);
+    
     if(ready==2){
       loadData()
+      console.log(`ゲーム開始: ルーム ${data.roomId} のplaying状態をtrueに設定`);
       jsonData.rooms[data.roomId].playing = true;
       saveData(jsonData)
       console.log('準備完了！ゲームを開始します')
@@ -785,24 +852,40 @@ io.on('connection', (socket) => {
     socket.on('requestRematch', (data) => {
       loadData()
       jsonData.rooms[data.roomId].playing = false;
-      saveData(jsonData)
       
       const { roomId, playerId } = data;
       
       // データが正常に送られてきたか確認
       if (!roomId || !playerId) {
-          console.error('無効な再戦リクエストを受け取りました。');
-          return;
+        console.error('無効な再戦リクエストを受け取りました。');
+        return;
       }
 
       console.log(`${playerId} からルーム ${roomId} への再戦リクエストを受け取りました。`);
       const room = jsonData.rooms[roomId];
 
       if (room.players.length >= 2) {
-          console.log(`ルーム ${roomId} の初回再戦リクエスト。プレイヤーリストをリセットします。`);
+          console.log(`ルーム ${roomId} の初回再戦リクエスト。プレイヤーリストとready状態をリセットします。`);
+          
+          // 既存プレイヤーのready状態をリセット
+          for (const existingPlayerId of room.players) {
+            if (jsonData.players[existingPlayerId]) {
+              jsonData.players[existingPlayerId].ready = 0;
+              console.log(`プレイヤー ${existingPlayerId} のready状態をリセット`);
+            }
+          }
+          
           room.players = []; // ここで部屋を空にする
       }
-      room.players.push(playerId);
+      
+      // 現在のプレイヤーのready状態もリセット
+      if (jsonData.players[playerId]) {
+        jsonData.players[playerId].ready = 0;
+        console.log(`再戦リクエストプレイヤー ${playerId} のready状態をリセット`);
+      }
+      
+      // 重複チェックしてプレイヤーを追加
+      addPlayerToRoomUnique(roomId, playerId);
       console.log(`ルーム ${roomId} に ${playerId} が参加。現在のメンバー:`, room.players)
 
       // このプレイヤーのsocket.idを最新のものに更新し、再度ルームに参加させる
@@ -811,8 +894,11 @@ io.on('connection', (socket) => {
       if (jsonData.players[playerId]) {
           console.log(`プレイヤー ${playerId} の socketId を更新: ${socket.id}`);
           jsonData.players[playerId].socketId = socket.id;
-          saveData(jsonData);
       }
+      
+      // 変更を保存
+      saveData(jsonData);
+      
       const playersString = room.players.join(','); 
 
       // リクエストを送ってきた本人以外に、ルーム内の全員に通知を送る
@@ -853,4 +939,8 @@ function generateRoomId() {
 
 server.listen(3000, () => {
   console.log('サーバがポート 3000 で起動しました');
+  
+  // サーバー起動時に重複プレイヤーをクリーンアップ
+  console.log('重複プレイヤーのクリーンアップを実行中...');
+  cleanupDuplicatePlayers();
 });
