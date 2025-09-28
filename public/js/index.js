@@ -36,38 +36,35 @@ showRoomsBtn.addEventListener('click', () => {
         rooms.innerHTML = "";
         for (let i=0; i<room_list.length; i++) {
         let item = document.createElement('button');
-        let back = document.createElement('div');
-        back.style.height = "140px";
-        back.style.width = "230px";
-        back.style.backgroundColor = "#da7326";
-        back.style.borderWidth = "6px";
-        back.style.borderStyle = "solid";
-        back.style.borderRadius = "10px";
-        back.style.margin = "auto";
-        back.style.padding = "auto";
-        item.style.height = "180px";
-        item.style.width = "270px";
-        item.style.borderWidth = "6px";
-        item.style.borderRadius = "10px";
-        item.style.backgroundColor = "#3e1e00"
-        item.style.borderStyle = "solid";
-        let contentRoomId = document.createElement('p');
-        contentRoomId.textContent = `${room_list[i]}`;
-        contentRoomId.style.margin = '3px';
-        back.appendChild(contentRoomId);
-        let contentOwner = document.createElement('p');
-        contentOwner.textContent = 'オーナー';
-        contentOwner.style.margin = '3px';
-        back.appendChild(contentOwner);
-        let contentOwnerName = document.createElement('p');
-        contentOwnerName.textContent = response.players[response.rooms[room_list[i]].owner].name;
-        contentOwnerName.style.margin = '3px';
-        back.appendChild(contentOwnerName);
-        // item.textContent = room_list[i];
+        
+        // シンプルなボタンスタイル
+        item.style.width = "100%";
+        item.style.padding = "12px";
+        item.style.marginBottom = "5px";
+        item.style.backgroundColor = "white";
+        item.style.color = "#333";
+        item.style.border = "1px solid #ddd";
+        item.style.borderRadius = "4px";
+        item.style.cursor = "pointer";
+        item.style.fontSize = "14px";
+        item.style.textAlign = "left";
+        
+        // ルーム情報をシンプルなテキストで表示
+        let roomInfo = `ルーム: ${room_list[i]} | オーナー: ${response.players[response.rooms[room_list[i]].owner].name}`;
+        item.textContent = roomInfo;
+        
+        // ホバー効果
+        item.addEventListener('mouseenter', () => {
+            item.style.backgroundColor = "#f8f8f8";
+        });
+        item.addEventListener('mouseleave', () => {
+            item.style.backgroundColor = "white";
+        });
+        
         item.addEventListener('click', () => {
             joinRoom(room_list[i])
         });
-        item.appendChild(back);
+        
         rooms.appendChild(item);
         window.scrollTo(0, document.body.scrollHeight);
         }

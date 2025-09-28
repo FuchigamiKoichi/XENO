@@ -1,18 +1,288 @@
-h1{
-    color: rgb(129, 114, 93);
-    text-align: center;
-    font-family: Georgia, 'Times New Roman', Times, serif;
+/* 全体のリセットとベース設定 */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
 }
 
-.Rooms{
-    width: 500px;
-    height: 600px;
-    background-color: gray;
+body {
+    font-family: 'Comic Sans MS', 'Papyrus', 'Bradley Hand', cursive, fantasy;
+    min-height: 100vh;
+    color: #333;
+    margin: 0;
+    padding: 0;
+}
+
+/* メインコンテナ：上下分割レイアウト */
+.main-container {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+/* 上部セクション：背景画像 + 入力パネル */
+.top-section {
+    flex: 1;
+    background-image: url('../images/background.png');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
     position: relative;
+    min-height: calc(100vh - 120px);
+}
+
+/* 入力パネル：左上に配置 */
+.input-panel {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    width: 350px;
+    max-height: calc(100vh - 180px);
+    overflow-y: auto;
+    z-index: 10;
+}
+
+/* 下部セクション：広告エリア */
+.bottom-section {
+    height: 120px;
+    flex-shrink: 0;
+}
+
+/* ルーム選択エリア */
+.select_rooms {
+    display: flex;
+    flex-direction: column;
+    background-color: rgba(141, 24, 12, 1);
+    width: 100%;
+}
+
+/* 背景画像表示エリア - 削除（bodyの背景として表示） */
+
+/* 広告エリア */
+.ad-area {
+    height: 100%;
+    background-color: #f8f8f8;
+    border-top: 2px solid #ddd;
+    display: flex;
+    justify-content: center;
     align-items: center;
 }
 
-.room_buttons{
-    position: absolute;
-    bottom: 0;
+.ad-placeholder {
+    text-align: center;
+    color: #666;
+    font-style: italic;
+}
+
+/* セクション共通スタイル */
+.name-section,
+.room-list-section,
+.create-section {
+    background-color: rgba(255, 255, 255, 0.9);
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.section-title {
+    font-weight: bold;
+    color: #2c3e50;
+    font-size: 1rem;
+    margin-bottom: 10px;
+    padding-bottom: 5px;
+    border-bottom: 2px solid #3498db;
+}
+
+.name-section input {
+    width: 100%;
+    height: 60px;
+    background-color: rgba(141, 24, 12, 1);
+    color: white;
+    font-size: 18px;
+    border: none;
+    padding: 15px;
+    border-radius: 8px;
+}
+
+.name-section input::placeholder {
+    color: white;
+    font-size: 18px;
+}
+
+.name-section input:focus {
+    outline: none;
+    background-color: rgba(141, 24, 12, 1);
+    color: white;
+}
+
+/* 検索窓とルーム一覧表示ボタン */
+.search-and-display {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+
+#searchInput {
+    flex: 1;
+    padding: 10px;
+    background-color: white;
+    color: black;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+#searchInput::placeholder {
+    color: #000000;
+}
+
+.show-rooms-btn {
+    padding: 10px 15px;
+    background-color: white;
+    color: black;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.show-rooms-btn:hover {
+    background-color: #f5f5f5;
+}
+
+.join-group {
+    display: flex;
+    gap: 8px;
+}
+
+.join-group input {
+    flex: 1;
+    padding: 10px;
+    background-color: white;
+    color: black;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+.join-group input::placeholder {
+    color: #999;
+}
+
+.join-btn {
+    padding: 10px 15px;
+    background-color: white;
+    color: black;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.join-btn:hover {
+    background-color: #f5f5f5;
+}
+
+/* セクション3: ルーム作成 */
+.create-section {
+    border-left: 4px solid rgba(141, 24, 12, 1);
+}
+
+.create-btn {
+    width: 100%;
+    padding: 12px;
+    background-color: rgba(141, 24, 12, 1);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.create-btn:hover {
+    background-color: rgba(121, 20, 10, 1);
+}
+
+/* 入力フィールド共通スタイル */
+input[type="text"], 
+input[type="number"], 
+select {
+    padding: 8px 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+    font-family: inherit;
+    background-color: rgba(141, 24, 12, 1);
+    transition: border-color 0.3s ease;
+}
+
+input[type="text"]:focus, 
+input[type="number"]:focus, 
+select:focus {
+    outline: none;
+    border-color: #3498db;
+}
+
+/* プレースホルダーのテキストカラー（名前入力欄以外は黒系） */
+input[type="text"]::placeholder,
+input[type="number"]::placeholder {
+    color: #000000;
+}
+
+/* 名前入力欄のプレースホルダーのフォントサイズを大きく、白文字に */
+#name::placeholder {
+    font-size: 32px;
+    color: white !important;
+}
+
+/* ルーム一覧 */
+#rooms {
+    max-height: 150px;
+    overflow-y: auto;
+    font-size: 13px;
+}
+
+#rooms button {
+    width: 100%;
+    padding: 8px 12px;
+    margin-bottom: 3px;
+    background-color: white;
+    color: #333;
+    border: 1px solid #e0e0e0;
+    border-radius: 2px;
+    cursor: pointer;
+    text-align: left;
+    font-size: 13px;
+    font-weight: normal;
+    transition: background-color 0.2s ease;
+}
+
+#rooms button:hover {
+    background-color: #f8f8f8;
+    border-color: #d0d0d0;
+}
+
+
+
+/* レスポンシブ対応 */
+@media (max-width: 768px) {
+    .input-panel {
+        position: relative;
+        top: 0;
+        left: 0;
+        width: 100%;
+        max-height: none;
+        padding: 15px;
+    }
+    
+    .top-section {
+        min-height: calc(100vh - 100px);
+    }
+    
+    .bottom-section {
+        height: 100px;
+    }
+    
+    .select_rooms {
+        margin: 0;
+    }
 }

@@ -15,30 +15,46 @@
   </style>
 </head>
 <body>
-  <h1>XENO</h1>
-
-  <div class="select_rooms", id="selectRooms">
-    <!-- プレイヤー名 -->
-    <input type="text" id="name" placeholder="プレイヤー名">
-
-    <hr>
-    <!-- ルーム選択 -->
-
-      <div id="rooms"></div>
-      <div class="room_buttons">
-        <div>
-          <input type="text" id="roomIdInput" placeholder="ルームID">
+  <div class="main-container">
+    <!-- 上部エリア：背景画像 + 左側入力欄 -->
+    <div class="top-section">
+      <div class="input-panel">
+        <div class="select_rooms" id="selectRooms">
+          <!-- セクション1: プレイヤー名 -->
+          <div class="name-section">
+            <input type="text" id="name" placeholder="おなまえは？">
+          </div>
+          
+          <!-- セクション2: ルーム一覧表示 -->
+          <div class="room-list-section">
+            <div class="search-and-display">
+              <input type="text" id="searchInput" placeholder="検索...">
+              <button id="showRoomsBtn" class="show-rooms-btn">ルーム一覧表示</button>
+            </div>
+            <div id="rooms"></div>
+            <div class="join-group">
+              <input type="text" id="roomIdInput" placeholder="ルームID">
+              <button id="joinRoomBtn" class="join-btn">入室</button>
+            </div>
+          </div>
+          
+          <!-- セクション3: ルーム作成 -->
+          <div class="create-section">
+            <button id="createRoomBtn" class="create-btn">新しいルームを作成</button>
+          </div>
         </div>
-        <div>
-          <button id="createRoomBtn">ルームの作成</button>
-          <button id="showRoomsBtn">ルームの確認</button>
+      </div>
+    </div>
+    
+    <!-- 下部エリア：広告 -->
+    <div class="bottom-section">
+      <div class="ad-area">
+        <div class="ad-placeholder">
+          <p>Advertisement Space</p>
         </div>
       </div>
     </div>
   </div>
-
-  <div id="roomInfo"></div>
-  <div id="gameArea"></div>
 
   <script src="/socket.io/socket.io.js"></script>
   <script defer src="./js/index.js"></script>
