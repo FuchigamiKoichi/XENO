@@ -420,7 +420,8 @@ io.on('connection', (socket) => {
                   roomId: data.roomId,
                   playerId: currentPlayerId 
               });
-            };
+              break;
+            }
           }
 
           io.to(player.socketId).emit('result', {result: result})
