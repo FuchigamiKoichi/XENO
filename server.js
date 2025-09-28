@@ -407,13 +407,21 @@ io.on('connection', (socket) => {
       
       if(result[0]){
         const gameLog = result[1]
-        for(let i=0; i<jsonData.rooms[data.roomId].players.length; i++){
-          const player = game.field.players[i]
-          const result = gameLog[i][gameLog[i].length - 1]
-          const currentPlayerId = jsonData.rooms[data.roomId].players[i];
-          jsonData.players[currentPlayerId].ready = 0;
-
-          console.log(`[サーバー送信前チェック] 送信するplayerId: ${currentPlayerId}`);
+        for(let i=0; i<game.field.players.length; i++){
+          const player = game.field.players[i];
+          const result = gameLog[player.turnNumber - 1][gameLog[player.turnNumber - 1].length - 1]
+          let currentPlayerId = "";
+          for(let j=0; j<jsonData.rooms[data.roomId].players.length; j++){
+            currentPlayerId = jsonData.rooms[data.roomId].players[j];
+            if (jsonData.players[currentPlayerId].socketId == player.socketId){
+              jsonData.players[currentPlayerId].ready = 0;
+              io.to(player.socketId).emit('gameEnded', { 
+                  result: result,
+                  roomId: data.roomId,
+                  playerId: currentPlayerId 
+              });
+            };
+          }
 
           io.to(player.socketId).emit('result', {result: result})
           io.to(player.socketId).emit('gameEnded', { 
