@@ -1,17 +1,21 @@
+const { EventEmitter } = require('events');
 const { Player } = require('./player.js');
 const { Field } = require('./field.js');
 const { shuffle } =  require('./card.js');
 const { createData, createLog } = require('./card.js');
 
-class Game {
+class Game extends EventEmitter{
     constructor(playerNumber, funcs, gameData, roomId) {
+        super();
         this.roomId = roomId;
+        this.isForcefullyEnded = false; // 強制終了フラグ
         // プレイヤーの生成
         const players = [];
         for (let i = 0; i < playerNumber; i++) {
             const getNameFunc = funcs[i].get_name;
             const choiceFunc = funcs[i].choice;
             const name = String(getNameFunc(gameData.roomId,i));
+            //const currentSocketId = this.jsonData.players[gameData.players[i]].socketId;
             players.push(new Player(name, choiceFunc, gameData.players[i]));
         }
 
@@ -71,9 +75,9 @@ class Game {
                 }
 
                 if (eq) {
-                    // 同点の場合は全員負け
+                    // 同点の場合は全員ドロー
                     for (let i = 0; i < players.length; i++) {
-                        this.log[i].push('lose');
+                        this.log[i].push('draw');
                     }
                 } else {
                     // 勝者と敗者を決定
@@ -161,7 +165,23 @@ class Game {
         }
     }
 
+    forceSurrender(playerId) {
+        const player = this.field.players.find(p => p.id === playerId);
+        
+        if (player) {
+            console.log(`${player.name} を強制降参させるで`);
+            player.live = false;
+        }
+        this.isForcefullyEnded = true; // ループを停止させるフラグを立てる
+        console.log(`[ゲーム] isForcefullyEndedフラグを ${this.isForcefullyEnded} に設定しました。`);
+        this.emit('cancelChoice'); // もし選択待ちならキャンセルする
+        this.isContinue();
+        console.log("isContinueを実行")
+    }
+
+
     async game() {
+        let endReason = 'NormalEnd'; // ゲームの終了理由を記録する変数
         try {
             const players = this.field.players;
             let state = [true];
@@ -172,7 +192,7 @@ class Game {
             }
 
             // ゲームループ
-            while (state[0]) {
+            while (state[0] && !this.isForcefullyEnded) {
                 for (const player of players) {
                     //脱落したプレイヤーのターンはスキップする
                     if (!player.live) {
@@ -182,7 +202,8 @@ class Game {
                     console.log(`[ループ内チェック] 現在のプレイヤー: ${player.name}, 生存状態: ${player.live}`);
                     state = this.isContinue();
                     console.log(`[isContinue判定結果] ゲームを継続しますか？ -> ${state[0]}`);
-                    if (state[0]) {
+                    console.log(`this.isForcefullyEnded: ${this.isForcefullyEnded}`);
+                    if (state[0] && !this.isForcefullyEnded) {
                         await this.turn(player);
                     } else {
                         this.winners = state[1];
@@ -195,10 +216,17 @@ class Game {
 
             return [true, this.log];
         } catch (e) {
-            const info = e.stack;
-            console.error("ゲームループ中にエラーが発生しました:", info);
-            return [false, info, this.log];
+            if (e && e.message === 'Player surrendered') {
+                console.log('ゲームが降参により正常に中断されました。');
+                endReason = 'Surrender';
+            } else {
+                const info = e.stack || e.toString();
+                console.error("ゲームループ中に予期せぬエラーが発生しました:", info);
+                return [false, info, this.log];
+            }
         }
+        console.log('ゲームが終了しました。最終的な勝敗を決定します。');
+        return { success: true, reason: endReason, log: this.log };
     }
 }
 
