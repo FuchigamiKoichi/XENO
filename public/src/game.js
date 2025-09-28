@@ -15,8 +15,9 @@ class Game extends EventEmitter{
             const getNameFunc = funcs[i].get_name;
             const choiceFunc = funcs[i].choice;
             const name = String(getNameFunc(gameData.roomId,i));
-            //const currentSocketId = this.jsonData.players[gameData.players[i]].socketId;
-            players.push(new Player(name, choiceFunc, gameData.players[i]));
+            const socketId = gameData.players[i] || null;
+            console.log(`[Game] プレイヤー${i}作成: name=${name}, socketId=${socketId}, isCPU=${name.startsWith('cpu_')}`);
+            players.push(new Player(name, choiceFunc, socketId));
         }
 
         // プレイヤーのシャッフルと順番の設定
