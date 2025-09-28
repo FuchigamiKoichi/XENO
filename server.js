@@ -332,17 +332,25 @@ io.on('connection', (socket) => {
       // emitWithAckがプレイヤーの応答を待つ。
       // タイムアウトした場合は、emitWithAckがエラーを投げ(rejectし)、catchブロックに移行。
       console.log(`choice関数が呼び出されました: kind=${kind}, socketId=${socketId}`);
+      console.log(`choices:`, choices);
       const response = await emitWithAck(now, choices, kind, socketId, roomId);
+      console.log(`emitWithAckからの応答: ${response}`);
       
       // フォールバック処理: responseが無効な値の場合
       let finalChoice;
       if (response === null || response === undefined) {
+        console.log(`応答がnull/undefined: ${response}`);
         finalChoice = getFallbackChoice(choices, `null or undefined player response`, kind);
-      } else if (!isValidChoice(response, choices)) {
+      } else if (!isValidChoice(response, choices, kind)) {
+        console.log(`応答が無効: ${response}, kind: ${kind}`);
+        console.log(`isValidChoice結果: ${isValidChoice(response, choices, kind)}`);
         finalChoice = getFallbackChoice(choices, `invalid player response: ${response}`, kind);
       } else {
+        console.log(`応答が有効: ${response}`);
         finalChoice = response;
       }
+      
+      console.log(`最終選択: ${finalChoice}`);
       
       // プレイヤーが時間内に応答した場合
       io.to(roomId).except(socketId).emit('onatherTurn', {now: now, choices: choices, kind: kind, choice: finalChoice})
@@ -453,14 +461,53 @@ io.on('connection', (socket) => {
    * 選択値の有効性をチェック
    * @param {*} choice - チェックする選択値
    * @param {Array|Object} choices - 有効な選択肢
+   * @param {string} kind - 選択の種類
    * @returns {boolean} 選択値が有効かどうか
    */
-  function isValidChoice(choice, choices) {
-    // null/undefinedチェック
-    if (choice === undefined || choice === null) {
+  function isValidChoice(choice, choices, kind = null) {
+    console.log(`=== isValidChoice Debug ===`);
+    console.log(`choice: ${choice} (type: ${typeof choice})`);
+    console.log(`choices:`, choices);
+    console.log(`kind: ${kind}`);
+    
+    // 基本的な値チェック
+    const basicValid = isBasicValueValid(choice);
+    console.log(`basicValid: ${basicValid}`);
+    if (!basicValid) {
       return false;
     }
     
+    // ゲームルール制約チェック
+    const gameRuleValid = isChoiceAllowedByGameRules(choice, kind);
+    console.log(`gameRuleValid: ${gameRuleValid}`);
+    if (!gameRuleValid) {
+      return false;
+    }
+    
+    // 選択肢範囲チェック
+    const rangeValid = isChoiceInValidRange(choice, choices);
+    console.log(`rangeValid: ${rangeValid}`);
+    console.log(`=== isValidChoice End ===`);
+    
+    return rangeValid;
+  }
+
+  /**
+   * 基本的な値の有効性をチェック
+   * @param {*} choice - チェックする選択値
+   * @returns {boolean} 基本的に有効な値かどうか
+   */
+  function isBasicValueValid(choice) {
+    return choice !== undefined && choice !== null;
+  }
+
+  /**
+   * 選択肢が有効な範囲内にあるかチェック
+   * @param {*} choice - チェックする選択値
+   * @param {Array|Object} choices - 有効な選択肢
+   * @returns {boolean} 選択肢範囲内にあるかどうか
+   */
+  function isChoiceInValidRange(choice, choices) {
     // 配列形式の選択肢の場合
     if (Array.isArray(choices)) {
       return choices.includes(choice);
@@ -472,6 +519,89 @@ io.on('connection', (socket) => {
     }
     
     // その他の場合は有効とみなす
+    return true;
+  }
+
+  // ===== ゲームルール定数 =====
+  const GAME_RULES = {
+    CARDS: {
+      HERO: 10,          // 英雄カード
+      MIN_CARD: 1,       // 最小カード番号
+      MAX_CARD: 10       // 最大カード番号
+    },
+    CHOICE_TYPES: {
+      PLAY_CARD: 'play_card',
+      OPPONENT_CHOICE: 'opponentChoice',
+      PREDICTION: 'pred',
+      TRASH: 'trush',
+      UPDATE: 'update'
+    },
+    RESTRICTIONS: {
+      HERO_UNPLAYABLE: 'カード10（英雄）は通常のプレイでは選択できません'
+    }
+  };
+
+  /**
+   * ゲームルールに基づく選択制約をチェック
+   * @param {*} choice - チェックする選択値
+   * @param {string} kind - 選択の種類
+   * @returns {boolean} ゲームルール上有効かどうか
+   */
+  function isChoiceAllowedByGameRules(choice, kind) {
+    const choiceNumber = parseInt(choice);
+    
+    // カード番号の基本チェック
+    if (!isValidCardNumber(choiceNumber)) {
+      return true; // カード以外の選択は基本的に制約なし
+    }
+    
+    // 種類別制約チェック
+    return checkChoiceRestrictionsByType(choiceNumber, kind);
+  }
+
+  /**
+   * 有効なカード番号かどうかをチェック
+   * @param {number} cardNumber - カード番号
+   * @returns {boolean} 有効なカード番号かどうか
+   */
+  function isValidCardNumber(cardNumber) {
+    return Number.isInteger(cardNumber) && 
+           cardNumber >= GAME_RULES.CARDS.MIN_CARD && 
+           cardNumber <= GAME_RULES.CARDS.MAX_CARD;
+  }
+
+  /**
+   * 選択種類別の制約をチェック
+   * @param {number} cardNumber - カード番号
+   * @param {string} kind - 選択の種類
+   * @returns {boolean} 制約に違反していないかどうか
+   */
+  function checkChoiceRestrictionsByType(cardNumber, kind) {
+    switch (kind) {
+      case GAME_RULES.CHOICE_TYPES.PLAY_CARD:
+        return checkPlayCardRestrictions(cardNumber);
+      
+      case GAME_RULES.CHOICE_TYPES.PREDICTION:
+      case GAME_RULES.CHOICE_TYPES.TRASH:
+      case GAME_RULES.CHOICE_TYPES.OPPONENT_CHOICE:
+      case GAME_RULES.CHOICE_TYPES.UPDATE:
+        return true; // これらの選択では制約なし
+      
+      default:
+        return true; // 未知の選択種類は制約なし
+    }
+  }
+
+  /**
+   * カードプレイ時の制約をチェック
+   * @param {number} cardNumber - カード番号
+   * @returns {boolean} プレイ可能かどうか
+   */
+  function checkPlayCardRestrictions(cardNumber) {
+    if (cardNumber === GAME_RULES.CARDS.HERO) {
+      console.warn(`${GAME_RULES.RESTRICTIONS.HERO_UNPLAYABLE}. Attempted card: ${cardNumber}`);
+      return false;
+    }
     return true;
   }
 
@@ -521,7 +651,7 @@ io.on('connection', (socket) => {
    * @returns {*} 検証済みの選択値
    */
   function validateAndProcessChoice(choice, choices, kind) {
-    if (isValidChoice(choice, choices)) {
+    if (isValidChoice(choice, choices, kind)) {
       console.log(`Valid choice selected: ${choice}`);
       return choice;
     }
