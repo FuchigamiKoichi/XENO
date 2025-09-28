@@ -21,10 +21,16 @@
       <button id="select-cpu-btn">CPUと対戦</button>
     </div>
 
+    <!-- ログトグルボタン -->
+    <button id="log-toggle" class="log-toggle-btn">📝</button>
+    
     <!-- 左カラム（ログ） -->
     <div id="left-column">
       <div id="log-area">
-        <h3>ログ</h3>
+        <div class="log-header">
+          <h3>ログ</h3>
+          <button id="log-close" class="log-close-btn">&times;</button>
+        </div>
         <div id="log-messages"></div>
       </div>
     </div>
