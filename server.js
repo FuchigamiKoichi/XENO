@@ -421,9 +421,6 @@ io.on('connection', (socket) => {
               roomId: data.roomId,
               playerId: currentPlayerId 
           });
-          for(let k=0; k<gameLog[i].length; k++){
-            console.log(gameLog[i][k])
-          }
           console.log(`${player.name}: ${result}`)
         }
         // 変更を保存

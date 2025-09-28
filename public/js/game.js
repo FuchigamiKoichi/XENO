@@ -20,6 +20,53 @@ const timerBar          = document.getElementById('turn-timer-bar');
 selectContainer.style.display = 'none';
 showContainer.style.display   = 'none';
 
+// ログエリアのトグル機能
+const logToggleBtn = document.getElementById('log-toggle');
+const logCloseBtn = document.getElementById('log-close');
+const logArea = document.getElementById('log-area');
+const gameScreen = document.getElementById('gameScreen');
+
+function toggleLog() {
+  const isOpen = logArea.classList.contains('open');
+  
+  if (isOpen) {
+    // ログエリアを閉じる
+    logArea.classList.remove('open');
+    gameScreen.classList.remove('log-open');
+    logToggleBtn.textContent = '📝'; // 閉じた状態のアイコン
+  } else {
+    // ログエリアを開く
+    logArea.classList.add('open');
+    gameScreen.classList.add('log-open');
+    logToggleBtn.textContent = '📋'; // 開いた状態のアイコン
+  }
+}
+
+// トグルボタンのイベントリスナー
+if (logToggleBtn) {
+  logToggleBtn.addEventListener('click', toggleLog);
+}
+
+// 閉じるボタンのイベントリスナー
+if (logCloseBtn) {
+  logCloseBtn.addEventListener('click', () => {
+    logArea.classList.remove('open');
+    gameScreen.classList.remove('log-open');
+    logToggleBtn.textContent = '📝'; // 閉じた状態のアイコン
+  });
+}
+
+// ログエリア外をクリックした時に閉じる（オプション）
+document.addEventListener('click', (e) => {
+  if (logArea.classList.contains('open') && 
+      !logArea.contains(e.target) && 
+      !logToggleBtn.contains(e.target)) {
+    logArea.classList.remove('open');
+    gameScreen.classList.remove('log-open');
+    logToggleBtn.textContent = '📝'; // 閉じた状態のアイコン
+  }
+});
+
 // Anim 初期化（アニメ側へDOMを注入）
 Anim.init({
   playerHandZone,
@@ -307,10 +354,19 @@ function closeUsedCards() {
 // ログ/結果
 function addLog(message) {
   const logMessages = document.getElementById('log-messages');
+  
+  // ユーザーが最下部近くにいるかチェック（20px以内なら自動スクロール）
+  const isNearBottom = logMessages.scrollHeight - logMessages.scrollTop - logMessages.clientHeight < 20;
+  
   const d = document.createElement('div');
   d.textContent = message;
+  d.style.wordWrap = 'break-word'; // 長いメッセージの改行
   logMessages.appendChild(d);
-  logMessages.scrollTop = logMessages.scrollHeight;
+  
+  // 最下部近くにいた場合のみ自動スクロール
+  if (isNearBottom) {
+    logMessages.scrollTop = logMessages.scrollHeight;
+  }
 }
 function showResult(message) {
   const el = document.getElementById('showResult');
@@ -576,3 +632,5 @@ startGame();
 window.goToTitle = goToTitle;
 window.surrender = surrender;
 window.closeUsedCards = closeUsedCards;
+
+
