@@ -45,7 +45,9 @@ class Game extends EventEmitter{
             if (player.live) {
                 liveCount++;
             }
+            console.log(`[isContinue] プレイヤー ${player.name}: live=${player.live}, hands=[${player.hands.map(h => h.number).join(',')}]`);
         }
+        console.log(`[isContinue] デッキ残り: ${field.deck.length}, 生存者数: ${liveCount}`);
 
         if (field.deck.length === 0 || liveCount < 2) {
             if (liveCount >= 2) {
@@ -161,7 +163,10 @@ class Game extends EventEmitter{
             );
 
             const cardIndex = player.hands.findIndex(card => card.number === cardNumber);
+            console.log(`[Game] カード効果実行: ${player.name} がカード${cardNumber}の効果を実行開始`);
+            console.log(`[Game] cardIndex: ${cardIndex}, hands: [${player.hands.map(h => h.number).join(',')}]`);
             await player.hands[cardIndex].play(player, this.roomId);
+            console.log(`[Game] カード効果実行完了: ${player.name} がカード${cardNumber}の効果を実行完了`);
         }
     }
 
@@ -214,7 +219,7 @@ class Game extends EventEmitter{
             }
             console.log('gameDone: ゲームループが正常に終了しました。')
 
-            return [true, this.log];
+            return [true, this.log, this.winners, this.losers];
         } catch (e) {
             if (e && e.message === 'Player surrendered') {
                 console.log('ゲームが降参により正常に中断されました。');
