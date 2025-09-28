@@ -20,6 +20,53 @@ const timerBar          = document.getElementById('turn-timer-bar');
 selectContainer.style.display = 'none';
 showContainer.style.display   = 'none';
 
+// ログエリアのトグル機能
+const logToggleBtn = document.getElementById('log-toggle');
+const logCloseBtn = document.getElementById('log-close');
+const logArea = document.getElementById('log-area');
+const gameScreen = document.getElementById('gameScreen');
+
+function toggleLog() {
+  const isOpen = logArea.classList.contains('open');
+  
+  if (isOpen) {
+    // ログエリアを閉じる
+    logArea.classList.remove('open');
+    gameScreen.classList.remove('log-open');
+    logToggleBtn.textContent = '📝'; // 閉じた状態のアイコン
+  } else {
+    // ログエリアを開く
+    logArea.classList.add('open');
+    gameScreen.classList.add('log-open');
+    logToggleBtn.textContent = '📋'; // 開いた状態のアイコン
+  }
+}
+
+// トグルボタンのイベントリスナー
+if (logToggleBtn) {
+  logToggleBtn.addEventListener('click', toggleLog);
+}
+
+// 閉じるボタンのイベントリスナー
+if (logCloseBtn) {
+  logCloseBtn.addEventListener('click', () => {
+    logArea.classList.remove('open');
+    gameScreen.classList.remove('log-open');
+    logToggleBtn.textContent = '📝'; // 閉じた状態のアイコン
+  });
+}
+
+// ログエリア外をクリックした時に閉じる（オプション）
+document.addEventListener('click', (e) => {
+  if (logArea.classList.contains('open') && 
+      !logArea.contains(e.target) && 
+      !logToggleBtn.contains(e.target)) {
+    logArea.classList.remove('open');
+    gameScreen.classList.remove('log-open');
+    logToggleBtn.textContent = '📝'; // 閉じた状態のアイコン
+  }
+});
+
 // Anim 初期化（アニメ側へDOMを注入）
 Anim.init({
   playerHandZone,
@@ -37,6 +84,52 @@ const playerId = params.get('playerId');
 const players  = (params.get('players') || '').split(',').filter(Boolean);
 
 socket.emit('changeSocketid', { id: playerId, roomId });
+
+// ==== Collapsible Menu toggle ====
+const menuBar    = document.getElementById('menuBar');
+const menuToggle = document.getElementById('menuToggle');
+const menuList   = document.getElementById('menuList');
+
+function openMenu() {
+  menuList.classList.add('open');
+  menuToggle.setAttribute('aria-expanded', 'true');
+}
+function closeMenu() {
+  menuList.classList.remove('open');
+  menuToggle.setAttribute('aria-expanded', 'false');
+}
+function toggleMenu() {
+  if (menuList.classList.contains('open')) closeMenu(); else openMenu();
+}
+
+menuToggle.addEventListener('click', (e) => {
+  e.stopPropagation(); // 外側クリック判定に食われないように
+  toggleMenu();
+});
+
+// メニュー外クリックで閉じる
+document.addEventListener('click', (e) => {
+  if (!menuBar.contains(e.target)) closeMenu();
+});
+
+// Escで閉じる
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') closeMenu();
+});
+
+// メニュー項目クリック時も閉じる（操作後に自動で畳む）
+['backToTitle', 'surrenderButton', 'ruleButton'].forEach(id => {
+  const el = document.getElementById(id);
+  if (el) {
+    el.addEventListener('click', () => {
+      closeMenu();
+      // 投降ボタンの場合は surrender 関数を実行
+      if (id === 'surrenderButton') {
+        surrender();
+      }
+    });
+  }
+});
 
 // CPU 対戦ボタン
 const selectCpuBtn = document.getElementById('select-cpu-btn');
@@ -108,7 +201,10 @@ function updateGameView(now) {
   const otherPlayedKeys = Object.keys(now.otherPlayed || {});
   if (otherPlayedKeys.length > 0) {
     let idx = 0;
-    (now.otherPlayed[otherPlayedKeys[0]] || []).forEach(card => {
+    const opponentPlayedCards = now.otherPlayed[otherPlayedKeys[0]] || [];
+    const previousCardCount = opponentArea.children.length;
+    
+    opponentPlayedCards.forEach((card, cardIdx) => {
       const playedImg = document.createElement('img');
       playedImg.src = `../images/${card}.jpg`;
       playedImg.classList.add('played-card');
@@ -118,6 +214,12 @@ function updateGameView(now) {
       playedImg.style.width = '100px';
       playedImg.style.height = '150px';
       opponentArea.appendChild(playedImg);
+      
+      // 新しく追加されたカードのみにポップインアニメーションを適用
+      if (cardIdx >= previousCardCount) {
+        Anim.popIn(playedImg);
+      }
+      
       idx++;
     });
   }
@@ -218,21 +320,11 @@ async function playCard_cpu(cardNumber) {
   const cname  = getCharacterName(cardNumber);
   const text   = getEffectDescription(cname);
 
+  // カードのズーム表示のみを行い、プレイエリアへの追加はupdateGameViewに任せる
   await Anim.zoomCard(imgSrc, text, 1.5);
-
-  const newCard = document.createElement('img');
-  newCard.src = imgSrc;
-  newCard.classList.add('played-card');
-
-  const index = opponentArea.children.length;
-  newCard.style.position = 'absolute';
-  newCard.style.left = `${index * 40}px`;
-  newCard.style.zIndex = index;
-  newCard.style.width = '100px';
-  newCard.style.height = '150px';
-
-  opponentArea.appendChild(newCard);
-  Anim.popIn(newCard);
+  
+  // 実際のカード追加処理はupdateGameViewで行われるため、ここでは行わない
+  // これにより重複表示を防ぐ
 }
 
 // 使用済みカードモーダル
@@ -270,10 +362,19 @@ function closeUsedCards() {
 // ログ/結果
 function addLog(message) {
   const logMessages = document.getElementById('log-messages');
+  
+  // ユーザーが最下部近くにいるかチェック（20px以内なら自動スクロール）
+  const isNearBottom = logMessages.scrollHeight - logMessages.scrollTop - logMessages.clientHeight < 20;
+  
   const d = document.createElement('div');
   d.textContent = message;
+  d.style.wordWrap = 'break-word'; // 長いメッセージの改行
   logMessages.appendChild(d);
-  logMessages.scrollTop = logMessages.scrollHeight;
+  
+  // 最下部近くにいた場合のみ自動スクロール
+  if (isNearBottom) {
+    logMessages.scrollTop = logMessages.scrollHeight;
+  }
 }
 function showResult(message) {
   const el = document.getElementById('showResult');
@@ -297,6 +398,60 @@ async function select(choices) {
     selectContainer.style.display = 'block';
   });
 }
+
+// === 手札から選択（play_card 用）：オーバーレイなしでカードを光らせて選ばせる ===
+function selectPlayableFromHand(choices) {
+  return new Promise((resolve) => {
+    // choices の値ごとにインデックスを持っておく（同値が複数あっても安全）
+    const indicesByValue = new Map();
+    choices.forEach((v, i) => {
+      const arr = indicesByValue.get(v) || [];
+      arr.push(i);
+      indicesByValue.set(v, arr);
+    });
+
+    const imgs = Array.from(playerHandZone.querySelectorAll('img'));
+    const listeners = [];
+
+    function cleanup() {
+      listeners.forEach(({ node, handler }) => node.removeEventListener('click', handler));
+      imgs.forEach(img => img.classList.remove('selectable', 'disabled'));
+      document.removeEventListener('keydown', onKeydownEsc);
+    }
+    function onKeydownEsc(e) {
+      if (e.key === 'Escape') cleanup(); // キャンセルして resolve しない（必要なら挙動変更可）
+    }
+    document.addEventListener('keydown', onKeydownEsc);
+
+    imgs.forEach(img => {
+      const val = parseInt(img.dataset.card ?? img.value, 10);
+      if (!Number.isFinite(val)) return;
+
+      // 10（英雄）は選択不可：見た目も薄く
+      if (val === 10) {
+        img.classList.add('disabled');
+        return;
+      }
+      // choices に含まれていないカードは選択不可
+      if (!choices.includes(val)) return;
+
+      // 選択可能：枠を光らせる
+      img.classList.add('selectable');
+
+      const handler = () => {
+        // 同値が複数ある場合でも未使用のインデックスを先頭から割り当て
+        const arr = indicesByValue.get(val) || [];
+        const idx = arr.shift(); // 使ったインデックスを消費
+        indicesByValue.set(val, arr);
+        cleanup();
+        resolve(idx); // 旧 select と同じく「choices のインデックス」を返す
+      };
+      img.addEventListener('click', handler);
+      listeners.push({ node: img, handler });
+    });
+  });
+}
+
 async function show(data) {
   return new Promise((resolve) => {
     showContainer.innerHTML = '';
@@ -315,11 +470,16 @@ async function show(data) {
 
 // surrender/reset/title
 function surrender() {
+  console.log('surrender関数が呼び出されました', { roomId, playerId });
   if (confirm('本当に投降しますか？')) {
     if (roomId && playerId) {
-        console.log('降参リクエストをサーバーに送信します。');
+        console.log('降参リクエストをサーバーに送信します。', { roomId, playerId });
         socket.emit('playerSurrender', { roomId: roomId, playerId: playerId });
+    } else {
+        console.error('roomIdまたはplayerIdが設定されていません', { roomId, playerId });
     }
+  } else {
+    console.log('投降がキャンセルされました');
   }
 }
 
@@ -418,9 +578,8 @@ socket.on('yourTurn', async (data, callback) => {
     callback([0]);
   } else if (data.kind === 'play_card') {
     Anim.startTurnTimer();
-    const idx = await select(data.choices);
+    const idx = await selectPlayableFromHand(data.choices);
     addLog(`あなたが${data.choices[idx]}を場に出す！`);
-    hideSelect();
     const done = await playCard(data.choices[idx]);
     if (done === 'done') {
       Anim.stopTurnTimer();
@@ -535,3 +694,5 @@ startGame();
 window.goToTitle = goToTitle;
 window.surrender = surrender;
 window.closeUsedCards = closeUsedCards;
+
+
