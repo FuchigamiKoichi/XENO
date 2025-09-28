@@ -465,29 +465,29 @@ io.on('connection', (socket) => {
    * @returns {boolean} 選択値が有効かどうか
    */
   function isValidChoice(choice, choices, kind = null) {
-    console.log(`=== isValidChoice Debug ===`);
-    console.log(`choice: ${choice} (type: ${typeof choice})`);
-    console.log(`choices:`, choices);
-    console.log(`kind: ${kind}`);
+    
+    
+    
+    
     
     // 基本的な値チェック
     const basicValid = isBasicValueValid(choice);
-    console.log(`basicValid: ${basicValid}`);
+    
     if (!basicValid) {
       return false;
     }
     
     // ゲームルール制約チェック
     const gameRuleValid = isChoiceAllowedByGameRules(choice, kind);
-    console.log(`gameRuleValid: ${gameRuleValid}`);
+    
     if (!gameRuleValid) {
       return false;
     }
     
     // 選択肢範囲チェック
     const rangeValid = isChoiceInValidRange(choice, choices);
-    console.log(`rangeValid: ${rangeValid}`);
-    console.log(`=== isValidChoice End ===`);
+    
+    
     
     return rangeValid;
   }
