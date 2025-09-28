@@ -35,7 +35,7 @@ body {
 .input-panel {
     position: absolute;
     top: 20px;
-    left: 20px;
+    left: 50px;
     width: 350px;
     max-height: calc(100vh - 180px);
     overflow-y: auto;
@@ -95,9 +95,9 @@ body {
 .name-section input {
     width: 100%;
     height: 60px;
-    background-color: rgba(141, 24, 12, 1);
-    color: white;
-    font-size: 18px;
+    background-color: rgba(141, 24, 12, 1) !important;
+    color: white !important;
+    font-size: 32px;
     border: none;
     padding: 15px;
     border-radius: 8px;
@@ -105,20 +105,23 @@ body {
 
 .name-section input::placeholder {
     color: white;
-    font-size: 18px;
+    font-size: 32px;
 }
 
 .name-section input:focus {
     outline: none;
-    background-color: rgba(141, 24, 12, 1);
-    color: white;
+    background-color: rgba(141, 24, 12, 1) !important;
+    color: white !important;
+}
+
+.name-section input:hover {
+    background-color: rgba(161, 34, 22, 1) !important;
+    transition: background-color 0.2s ease;
 }
 
 /* 検索窓とルーム一覧表示ボタン */
 .search-and-display {
     display: flex;
-    gap: 8px;
-    margin-bottom: 10px;
 }
 
 #searchInput {
@@ -135,6 +138,12 @@ body {
     color: #000000;
 }
 
+#searchInput:hover {
+    background-color: #f8f8f8;
+    border-color: #bbb;
+    transition: all 0.2s ease;
+}
+
 .show-rooms-btn {
     padding: 10px 15px;
     background-color: white;
@@ -146,12 +155,15 @@ body {
 }
 
 .show-rooms-btn:hover {
-    background-color: #f5f5f5;
+    background-color: #e8e8e8;
+    border-color: #999;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    transition: all 0.2s ease;
 }
 
 .join-group {
     display: flex;
-    gap: 8px;
 }
 
 .join-group input {
@@ -168,6 +180,22 @@ body {
     color: #999;
 }
 
+/* ルームID入力欄を明確に白背景にする */
+#roomIdInput {
+    background-color: white !important;
+    color: black !important;
+}
+
+#roomIdInput::placeholder {
+    color: #999 !important;
+}
+
+#roomIdInput:hover {
+    background-color: #f8f8f8 !important;
+    border-color: #bbb;
+    transition: all 0.2s ease;
+}
+
 .join-btn {
     padding: 10px 15px;
     background-color: white;
@@ -179,7 +207,11 @@ body {
 }
 
 .join-btn:hover {
-    background-color: #f5f5f5;
+    background-color: #e8e8e8;
+    border-color: #999;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    transition: all 0.2s ease;
 }
 
 /* セクション3: ルーム作成 */
@@ -199,11 +231,14 @@ body {
 }
 
 .create-btn:hover {
-    background-color: rgba(121, 20, 10, 1);
+    background-color: rgba(101, 15, 5, 1);
+    transform: translateY(-1px);
+    box-shadow: 0 3px 6px rgba(0,0,0,0.2);
+    transition: all 0.2s ease;
 }
 
-/* 入力フィールド共通スタイル */
-input[type="text"], 
+/* 入力フィールド共通スタイル（名前入力欄以外） */
+input[type="text"]:not(#name), 
 input[type="number"], 
 select {
     padding: 8px 10px;
@@ -211,11 +246,11 @@ select {
     border-radius: 4px;
     font-size: 14px;
     font-family: inherit;
-    background-color: rgba(141, 24, 12, 1);
+    background-color: white;
     transition: border-color 0.3s ease;
 }
 
-input[type="text"]:focus, 
+input[type="text"]:not(#name):focus, 
 input[type="number"]:focus, 
 select:focus {
     outline: none;
@@ -223,22 +258,46 @@ select:focus {
 }
 
 /* プレースホルダーのテキストカラー（名前入力欄以外は黒系） */
-input[type="text"]::placeholder,
+input[type="text"]:not(#name)::placeholder,
 input[type="number"]::placeholder {
     color: #000000;
 }
 
+/* 名前入力欄専用スタイル */
+#name {
+    background-color: rgba(141, 24, 12, 1) !important;
+    color: white !important;
+    font-size: 32px !important;
+    padding: 15px !important;
+    border: none !important;
+    border-radius: 8px !important;
+}
+
+#name:focus {
+    background-color: rgba(141, 24, 12, 1) !important;
+    color: white !important;
+    outline: none !important;
+}
+
+#name:hover {
+    background-color: rgba(161, 34, 22, 1) !important;
+}
+
 /* 名前入力欄のプレースホルダーのフォントサイズを大きく、白文字に */
 #name::placeholder {
-    font-size: 32px;
+    font-size: 32px !important;
     color: white !important;
 }
 
 /* ルーム一覧 */
 #rooms {
-    max-height: 150px;
+    height: 150px;
     overflow-y: auto;
     font-size: 13px;
+    border: 1px solid #e0e0e0;
+    border-radius: 4px;
+    padding: 5px;
+    background-color: #fafafa;
 }
 
 #rooms button {
@@ -257,8 +316,11 @@ input[type="number"]::placeholder {
 }
 
 #rooms button:hover {
-    background-color: #f8f8f8;
-    border-color: #d0d0d0;
+    background-color: #e8e8e8;
+    border-color: #999;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    transition: all 0.2s ease;
 }
 
 
