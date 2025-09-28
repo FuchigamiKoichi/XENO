@@ -422,3 +422,23 @@ body {
   outline: 2px solid #ffcc00;
   outline-offset: 2px;
 }
+
+/* --- Play可能カードのハイライト --- */
+.card.selectable {
+  outline: 3px solid #ffcc00;
+  box-shadow: 0 0 10px #ffcc00, 0 0 18px rgba(255, 204, 0, 0.6);
+  border-radius: 10px;
+  animation: cardPulse 1.1s ease-in-out infinite alternate;
+  cursor: pointer;
+}
+@keyframes cardPulse {
+  from { box-shadow: 0 0 8px #ffcc00, 0 0 12px rgba(255, 204, 0, 0.5); }
+  to   { box-shadow: 0 0 16px #ffcc00, 0 0 26px rgba(255, 204, 0, 0.7); }
+}
+
+/* --- 選択不可（10：英雄）を薄くする（任意） --- */
+.card.disabled {
+  filter: grayscale(70%) brightness(0.85);
+  opacity: 0.65;
+  cursor: not-allowed;
+}
