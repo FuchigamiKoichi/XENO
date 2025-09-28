@@ -146,7 +146,10 @@ function updateGameView(now) {
   const otherPlayedKeys = Object.keys(now.otherPlayed || {});
   if (otherPlayedKeys.length > 0) {
     let idx = 0;
-    (now.otherPlayed[otherPlayedKeys[0]] || []).forEach(card => {
+    const opponentPlayedCards = now.otherPlayed[otherPlayedKeys[0]] || [];
+    const previousCardCount = opponentArea.children.length;
+    
+    opponentPlayedCards.forEach((card, cardIdx) => {
       const playedImg = document.createElement('img');
       playedImg.src = `../images/${card}.jpg`;
       playedImg.classList.add('played-card');
@@ -156,6 +159,12 @@ function updateGameView(now) {
       playedImg.style.width = '100px';
       playedImg.style.height = '150px';
       opponentArea.appendChild(playedImg);
+      
+      // 新しく追加されたカードのみにポップインアニメーションを適用
+      if (cardIdx >= previousCardCount) {
+        Anim.popIn(playedImg);
+      }
+      
       idx++;
     });
   }
@@ -256,21 +265,11 @@ async function playCard_cpu(cardNumber) {
   const cname  = getCharacterName(cardNumber);
   const text   = getEffectDescription(cname);
 
+  // カードのズーム表示のみを行い、プレイエリアへの追加はupdateGameViewに任せる
   await Anim.zoomCard(imgSrc, text, 1.5);
-
-  const newCard = document.createElement('img');
-  newCard.src = imgSrc;
-  newCard.classList.add('played-card');
-
-  const index = opponentArea.children.length;
-  newCard.style.position = 'absolute';
-  newCard.style.left = `${index * 40}px`;
-  newCard.style.zIndex = index;
-  newCard.style.width = '100px';
-  newCard.style.height = '150px';
-
-  opponentArea.appendChild(newCard);
-  Anim.popIn(newCard);
+  
+  // 実際のカード追加処理はupdateGameViewで行われるため、ここでは行わない
+  // これにより重複表示を防ぐ
 }
 
 // 使用済みカードモーダル
