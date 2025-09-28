@@ -333,18 +333,147 @@ io.on('connection', (socket) => {
       // タイムアウトした場合は、emitWithAckがエラーを投げ(rejectし)、catchブロックに移行。
       console.log(`choice関数が呼び出されました: kind=${kind}, socketId=${socketId}`);
       const response = await emitWithAck(now, choices, kind, socketId, roomId);
+      
+      // フォールバック処理: responseが無効な値の場合
+      let finalChoice;
+      if (response === null || response === undefined) {
+        finalChoice = getFallbackChoice(choices, `null or undefined player response`, kind);
+      } else if (!isValidChoice(response, choices)) {
+        finalChoice = getFallbackChoice(choices, `invalid player response: ${response}`, kind);
+      } else {
+        finalChoice = response;
+      }
+      
       // プレイヤーが時間内に応答した場合
-      io.to(roomId).except(socketId).emit('onatherTurn', {now: now, choices: choices, kind: kind, choice: response})
-      console.log(`emitWithAckの結果: ${response}`);
+      io.to(roomId).except(socketId).emit('onatherTurn', {now: now, choices: choices, kind: kind, choice: finalChoice})
+      console.log(`emitWithAckの結果: ${finalChoice}`);
 
-      console.log(`onatherTurnイベント送信: roomId=${roomId}, kind=${kind}, choice=${response}, now=${JSON.stringify(now)}, choices=${JSON.stringify(choices)}`);
-      return response;
+      console.log(`onatherTurnイベント送信: roomId=${roomId}, kind=${kind}, choice=${finalChoice}, now=${JSON.stringify(now)}, choices=${JSON.stringify(choices)}`);
+      return finalChoice;
 
     } catch (e) {
       // emitWithAckでタイムアウトエラーが発生した場合
       console.error("choice (yourTurn) failed:", e);
+      
+      // エラー時のフォールバック処理
+      const fallbackChoice = getFallbackChoice(choices, `choice function error: ${e.message}`, kind);
+      io.to(roomId).except(socketId).emit('onatherTurn', {now: now, choices: choices, kind: kind, choice: fallbackChoice})
+      return fallbackChoice;
     }
 }
+
+  /**
+   * フォールバック選択処理 - 無効な選択の場合にランダムで有効な選択肢を返す
+   * @param {Array|Object} choices - 選択肢の配列またはオブジェクト
+   * @param {string} reason - フォールバックが必要な理由
+   * @param {string|null} kind - 選択の種類 (opponentChoice等)
+   * @returns {*} フォールバック選択値
+   */
+  function getFallbackChoice(choices, reason = "unknown", kind = null) {
+    console.warn(`Using fallback choice selection. Reason: ${reason}`);
+    console.log(`Choices type: ${typeof choices}, Kind: ${kind}`);
+    console.log(`Choices content:`, choices);
+    
+    try {
+      // 配列形式の選択肢の場合
+      if (Array.isArray(choices) && choices.length > 0) {
+        return handleArrayChoices(choices, kind);
+      }
+      
+      // オブジェクト形式の選択肢の場合
+      if (typeof choices === 'object' && choices !== null && Object.keys(choices).length > 0) {
+        return handleObjectChoices(choices, kind);
+      }
+      
+      // 有効な選択肢がない場合のデフォルト値
+      console.warn("No valid choices available, using default value 0");
+      return 0;
+      
+    } catch (error) {
+      console.error("Error in getFallbackChoice:", error);
+      return 0;
+    }
+  }
+
+  /**
+   * 配列形式の選択肢を処理
+   * @param {Array} choices - 選択肢の配列
+   * @param {string|null} kind - 選択の種類
+   * @returns {*} 選択値
+   */
+  function handleArrayChoices(choices, kind) {
+    const randomIndex = Math.floor(Math.random() * choices.length);
+    const selectedChoice = choices[randomIndex];
+    
+    // opponentChoiceの場合は特別な処理
+    if (isOpponentChoice(kind, selectedChoice)) {
+      const playerValue = selectedChoice.player;
+      console.log(`OpponentChoice fallback: selected index ${randomIndex}, player: ${playerValue}`);
+      return playerValue;
+    }
+    
+    return selectedChoice;
+  }
+
+  /**
+   * オブジェクト形式の選択肢を処理
+   * @param {Object} choices - 選択肢のオブジェクト
+   * @param {string|null} kind - 選択の種類
+   * @returns {*} 選択値
+   */
+  function handleObjectChoices(choices, kind) {
+    const keys = Object.keys(choices);
+    const randomKey = keys[Math.floor(Math.random() * keys.length)];
+    const selectedChoice = choices[randomKey];
+    
+    // opponentChoiceの場合は特別な処理
+    if (isOpponentChoice(kind, selectedChoice)) {
+      const playerValue = selectedChoice.player;
+      console.log(`OpponentChoice fallback: selected key ${randomKey}, player: ${playerValue}`);
+      return playerValue;
+    }
+    
+    return randomKey;
+  }
+
+  /**
+   * opponentChoice形式かどうかを判定
+   * @param {string|null} kind - 選択の種類
+   * @param {*} choice - 選択肢
+   * @returns {boolean} opponentChoice形式かどうか
+   */
+  function isOpponentChoice(kind, choice) {
+    return kind === 'opponentChoice' && 
+           typeof choice === 'object' && 
+           choice !== null && 
+           choice.player !== undefined;
+  }
+
+  /**
+   * 選択値の有効性をチェック
+   * @param {*} choice - チェックする選択値
+   * @param {Array|Object} choices - 有効な選択肢
+   * @returns {boolean} 選択値が有効かどうか
+   */
+  function isValidChoice(choice, choices) {
+    // null/undefinedチェック
+    if (choice === undefined || choice === null) {
+      return false;
+    }
+    
+    // 配列形式の選択肢の場合
+    if (Array.isArray(choices)) {
+      return choices.includes(choice);
+    }
+    
+    // オブジェクト形式の選択肢の場合
+    if (typeof choices === 'object' && choices !== null) {
+      return Object.keys(choices).includes(String(choice));
+    }
+    
+    // その他の場合は有効とみなす
+    return true;
+  }
 
   // プレイヤーの命名関数
   function getName(roomId, index) {
@@ -352,18 +481,88 @@ io.on('connection', (socket) => {
     return `${jsonData.players[jsonData.rooms[roomId].players[index]].name}`;
   }
 
-  // CPUの選択関数
+  /**
+   * CPUの選択処理を実行
+   * @param {Object} now - 現在のゲーム状態
+   * @param {Array|Object} choices - 選択肢
+   * @param {string} kind - 選択の種類
+   * @param {string} socketId - ソケットID
+   * @param {string} roomId - ルームID
+   * @returns {Promise<*>} 選択結果
+   */
   async function choice_cpu(now, choices, kind, socketId, roomId) {
+    console.log(`CPU choice requested - Kind: ${kind}, Room: ${roomId}`);
+    console.log(`Choices:`, choices);
+    
     try {
-      const best = await selectBestChoice(choices, now, kind); // model.js の score を自動使用
-      io.to(roomId).emit('onatherTurn', {now: now, choices: choices, kind: kind, choice: best})
-      console.log(`kind: ${kind}`)
-      console.log(`choices: ${choices}`)
-      console.log("best:", best);
-      return best
-    } catch (e) {
-      console.error("choice (yourTurn) failed:", e);
+      // ML モデルを使用して最適な選択を取得
+      const bestChoice = await selectBestChoice(choices, now, kind);
+      console.log(`ML model suggested choice: ${bestChoice}`);
+      
+      // 選択結果の検証とフォールバック処理
+      const finalChoice = validateAndProcessChoice(bestChoice, choices, kind);
+      
+      // クライアントに結果を送信
+      emitChoiceResult(roomId, socketId, now, choices, kind, finalChoice);
+      
+      return finalChoice;
+      
+    } catch (error) {
+      console.error("CPU choice failed:", error);
+      return handleChoiceError(error, choices, kind, roomId, socketId, now);
     }
+  }
+
+  /**
+   * 選択結果を検証し、必要に応じてフォールバック処理を実行
+   * @param {*} choice - 検証する選択値
+   * @param {Array|Object} choices - 有効な選択肢
+   * @param {string} kind - 選択の種類
+   * @returns {*} 検証済みの選択値
+   */
+  function validateAndProcessChoice(choice, choices, kind) {
+    if (isValidChoice(choice, choices)) {
+      console.log(`Valid choice selected: ${choice}`);
+      return choice;
+    }
+    
+    console.warn(`Invalid choice detected: ${choice}, using fallback`);
+    return getFallbackChoice(choices, `invalid CPU response: ${choice}`, kind);
+  }
+
+  /**
+   * 選択結果をクライアントに送信
+   * @param {string} roomId - ルームID
+   * @param {string} socketId - ソケットID
+   * @param {Object} now - 現在のゲーム状態
+   * @param {Array|Object} choices - 選択肢
+   * @param {string} kind - 選択の種類
+   * @param {*} choice - 選択結果
+   */
+  function emitChoiceResult(roomId, socketId, now, choices, kind, choice) {
+    io.to(roomId).emit('onatherTurn', {
+      now: now, 
+      choices: choices, 
+      kind: kind, 
+      choice: choice
+    });
+    console.log(`Choice result emitted - Final choice: ${choice}`);
+  }
+
+  /**
+   * 選択処理のエラーハンドリング
+   * @param {Error} error - 発生したエラー
+   * @param {Array|Object} choices - 選択肢
+   * @param {string} kind - 選択の種類
+   * @param {string} roomId - ルームID
+   * @param {string} socketId - ソケットID
+   * @param {Object} now - 現在のゲーム状態
+   * @returns {*} フォールバック選択結果
+   */
+  function handleChoiceError(error, choices, kind, roomId, socketId, now) {
+    const fallbackChoice = getFallbackChoice(choices, `choice_cpu function error: ${error.message}`, kind);
+    emitChoiceResult(roomId, socketId, now, choices, kind, fallbackChoice);
+    return fallbackChoice;
   }
 
   // CPUの命名関数
