@@ -132,8 +132,27 @@ body {
   text-align: center;
   flex-shrink: 0;
   position: relative;
+  min-width: 120px;  /* 最小幅を設定 */
+  min-height: 200px; /* 最小高さを設定 */
 }
-#deck { width: 100px; height: 150px; cursor: pointer; z-index: 2; }
+#deck { 
+  width: 100px; 
+  height: 150px; 
+  cursor: pointer; 
+  z-index: 2; 
+}
+
+/* 山札の状態別スタイル */
+#deck.deck-active {
+  opacity: 1;
+  filter: none;
+}
+
+#deck.deck-empty {
+  opacity: 0.5;
+  filter: grayscale(0.3);
+  cursor: not-allowed;
+}
 
 /* 横向きサイドカード */
 #side-card-container {
@@ -149,7 +168,17 @@ body {
 }
 
 /* 山札の残り枚数 */
-#deck-count { margin-top: 10px; font-size: 14px; }
+#deck-count { 
+  margin-top: 10px; 
+  font-size: 14px; 
+  min-height: 20px; /* 最小高さを設定してスペースを確保 */
+}
+
+/* 山札が0枚の時のテキストスタイル */
+#deck-count.empty-deck {
+  color: #888;
+  font-style: italic;
+}
 
 /* 自分プレイエリア */
 #playArea {

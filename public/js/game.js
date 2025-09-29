@@ -245,15 +245,27 @@ function updateGameView(now) {
     sideContainer.appendChild(sideCard);
   }
 
+  // 山札の表示（0枚でもプレースホルダーを表示）
+  const deckCard = document.createElement('img');
   if (now.cardNumber > 0) {
-    const deckCard = document.createElement('img');
     deckCard.src = `../images/0.jpg`;
-    deckCard.id = 'deck';
-    deckContainer.appendChild(deckCard);
+    deckCard.classList.add('deck-active');
+  } else {
+    deckCard.src = `../images/pack.jpg`; // 空の山札用画像
+    deckCard.classList.add('deck-empty');
   }
+  deckCard.id = 'deck';
+  deckContainer.appendChild(deckCard);
 
   const deckCount = document.getElementById('deck-count');
   deckCount.textContent = `残り枚数: ${now.cardNumber}`;
+  
+  // 山札が0枚の時のスタイル適用
+  if (now.cardNumber === 0) {
+    deckCount.classList.add('empty-deck');
+  } else {
+    deckCount.classList.remove('empty-deck');
+  }
 }
 
 // 文字列→演出テキスト
