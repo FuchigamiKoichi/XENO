@@ -528,7 +528,7 @@ body {
 }
 
 .select-card-wrapper::after {
-  content: "クリック";
+  content: attr(data-click-hint);
   position: absolute;
   bottom: -8px;
   left: 50%;
