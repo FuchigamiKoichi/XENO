@@ -383,19 +383,136 @@ function showResult(message) {
 }
 
 // セレクトUI/公開UI
-async function select(choices) {
+async function select(choices, message = 'カードを選択してください') {
   return new Promise((resolve) => {
     selectContainer.innerHTML = '';
+    
+    // メッセージタイトルを作成
+    const titleElement = document.createElement('div');
+    titleElement.classList.add('select-title');
+    titleElement.textContent = message;
+    selectContainer.appendChild(titleElement);
+    
+    // カードコンテナを作成
+    const cardsArea = document.createElement('div');
+    cardsArea.classList.add('select-cards-area');
+    
+    // 現在アクティブなカードのインデックスを追跡
+    let activeCardIndex = -1;
+    
+    // 全カードの状態をリセットする関数
+    const resetAllCardStates = () => {
+      cardsArea.querySelectorAll('.select-card-wrapper').forEach(wrapper => {
+        wrapper.classList.remove('hover-active', 'focus-active');
+      });
+      activeCardIndex = -1;
+    };
+    
+    // 特定のカードをアクティブにする関数
+    const setActiveCard = (index, type = 'hover') => {
+      resetAllCardStates();
+      const targetWrapper = cardsArea.children[index];
+      if (targetWrapper) {
+        targetWrapper.classList.add(type === 'focus' ? 'focus-active' : 'hover-active');
+        activeCardIndex = index;
+      }
+    };
+    
     for (let i = 0; i < choices.length; i++) {
       const cardNumber = choices[i];
+      
+      // カードラッパー（キーボードフォーカス対応）
+      const cardWrapper = document.createElement('div');
+      cardWrapper.classList.add('select-card-wrapper');
+      cardWrapper.setAttribute('tabindex', '0');
+      cardWrapper.setAttribute('role', 'button');
+      cardWrapper.setAttribute('aria-label', `カード ${cardNumber} を選択`);
+      cardWrapper.setAttribute('data-card-index', i);
+      
       const card = document.createElement('img');
       card.src = `../images/${cardNumber}.jpg`;
-      card.width = 140; card.height = 210; card.zIndex = 100;
-      card.addEventListener('click', () => resolve(i));
+      card.width = 140; 
+      card.height = 210; 
+      card.alt = `カード ${cardNumber}`;
       card.classList.add('select-card');
-      selectContainer.appendChild(card);
+      
+      // イベントハンドラー（クロージャーでインデックスを保持）
+      const cardIndex = i;
+      
+      const handleMouseEnter = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setActiveCard(cardIndex, 'hover');
+      };
+      
+      const handleMouseLeave = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (activeCardIndex === cardIndex) {
+          resetAllCardStates();
+        }
+      };
+      
+      const handleFocus = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setActiveCard(cardIndex, 'focus');
+      };
+      
+      const handleBlur = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (activeCardIndex === cardIndex) {
+          resetAllCardStates();
+        }
+      };
+      
+      // クリック・キーボード操作の処理
+      const selectCard = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        // 全てのイベントリスナーを削除
+        cardsArea.querySelectorAll('.select-card-wrapper').forEach((wrapper, idx) => {
+          const clonedWrapper = wrapper.cloneNode(true);
+          wrapper.parentNode.replaceChild(clonedWrapper, wrapper);
+        });
+        
+        card.style.transform = 'scale(0.95)';
+        setTimeout(() => resolve(cardIndex), 100);
+      };
+      
+      // イベントリスナーを追加
+      cardWrapper.addEventListener('mouseenter', handleMouseEnter, { passive: false });
+      cardWrapper.addEventListener('mouseleave', handleMouseLeave, { passive: false });
+      cardWrapper.addEventListener('focus', handleFocus, { passive: false });
+      cardWrapper.addEventListener('blur', handleBlur, { passive: false });
+      cardWrapper.addEventListener('click', selectCard, { passive: false });
+      cardWrapper.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          e.stopPropagation();
+          selectCard(e);
+        }
+      }, { passive: false });
+      
+      cardWrapper.appendChild(card);
+      cardsArea.appendChild(cardWrapper);
     }
-    selectContainer.style.display = 'block';
+    
+    selectContainer.appendChild(cardsArea);
+    selectContainer.style.display = 'flex';
+    
+    // 初期状態で全ての状態をクリア
+    setTimeout(() => {
+      resetAllCardStates();
+      
+      // 最初のカードにフォーカス
+      const firstCard = cardsArea.querySelector('.select-card-wrapper');
+      if (firstCard) {
+        firstCard.focus();
+      }
+    }, 50);
   });
 }
 
@@ -455,15 +572,34 @@ function selectPlayableFromHand(choices) {
 async function show(data) {
   return new Promise((resolve) => {
     showContainer.innerHTML = '';
+    
+    // タイトルメッセージを追加
+    const titleElement = document.createElement('div');
+    titleElement.classList.add('show-title');
+    const cardCount = data[0].cards.length;
+    titleElement.textContent = `相手の現在の手札（${cardCount}枚）`;
+    showContainer.appendChild(titleElement);
+    
+    // カードコンテナを作成
+    const cardsArea = document.createElement('div');
+    cardsArea.classList.add('show-cards-area');
+    
     for (let i = 0; i < data[0].cards.length; i++) {
       const cardNumber = data[0].cards[i];
       const card = document.createElement('img');
       card.src = `../images/${cardNumber}.jpg`;
-      card.width = 140; card.height = 210; card.zIndex = 100;
+      card.width = 140; 
+      card.height = 210; 
+      card.alt = `相手のカード ${cardNumber}`;
       card.classList.add('show-card');
-      showContainer.appendChild(card);
+      cardsArea.appendChild(card);
     }
-    showContainer.style.display = 'block';
+    
+    showContainer.appendChild(cardsArea);
+    
+    showContainer.style.display = 'flex';
+    
+    // 3秒後に自動で閉じる
     setTimeout(() => resolve(0), 3000);
   });
 }
@@ -556,7 +692,7 @@ socket.on('yourTurn', async (data, callback) => {
   if (data.kind === 'draw') {
     if (data.choices.length > 2) {
       Anim.startTurnTimer();
-      const idx = await select(data.choices);
+      const idx = await select(data.choices, 'ドローするカードを選んでください');
       hideSelect();
       const chosen = data.choices[idx];
       const done = await Anim.drawCardToHand(chosen);
@@ -600,7 +736,21 @@ socket.on('yourTurn', async (data, callback) => {
   } else {
     try {
       Anim.startTurnTimer();
-      const idx = await select(data.choices);
+      // data.kindに応じてメッセージを変更
+      let message = 'カードを選択してください';
+      if (data.kind === 'pred') {
+        message = '相手が持っていると思うカードを選んでください';
+      } else if (data.kind === 'guess') {
+        message = '相手のカードを予想してください';
+      } else if (data.kind === 'discard') {
+        message = '捨てるカードを選んでください';
+      } else if (data.kind === 'trash') {
+        message = '捨てるカードを選んでください';
+      } else if (data.kind === 'choice') {
+        message = '選択肢からカードを選んでください';
+      }
+      
+      const idx = await select(data.choices, message);
       hideSelect();
       Anim.stopTurnTimer();
       callback([idx]);
