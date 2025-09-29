@@ -80,28 +80,11 @@
         <div id="usedCardsList"></div>
       </div>
     </div>
-
-    <!-- ルール説明モーダル -->
+    <!-- ルール説明 モーダル -->
     <div id="ruleModal" style="display:none;">
-      <div id="modal-content">
-        <span id="closeRule" style="cursor:pointer;">&times</span>
-        <h2>ZENOのルール</h2>
-        <div class="tab-buttons">
-          <button class="tab-btn active" data-target="page1">基本ルール</button>
-          <button class="tab-btn" data-target="page2">カードの種類</button>
-          <button class="tab-btn" data-target="page3">勝利条件</button>
-        </div>
-        <div class="tab-content active" id="page1">
-          <p>カードには強さを示す1〜10までの数字が書いてあります…（略）</p>
-        </div>
-        <div class="tab-content" id="page2">
-          <h2>少年</h2>
-          <h3>カード効果【革命】</h3>
-          <p>…（略）</p>
-        </div>
-        <div class="tab-content" id="page3">
-          <p>これは勝利条件の説明です。</p>
-        </div>
+      <div class="modal-content">
+        <span id="closeRule" class="close-btn" style="cursor:pointer;position: absolute; top: 20px; right: 80px; font-size: 40px;">&times;</span>
+        <!-- ここにrule.htmlの内容が動的に挿入されます -->
       </div>
     </div>
 

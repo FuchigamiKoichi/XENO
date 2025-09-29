@@ -144,10 +144,69 @@ if (selectCpuBtn) {
 playArea.addEventListener('click', showUsedCards);
 opponentArea.addEventListener('click', showOpponentUsedCards);
 
-// ルールモーダル
-ruleButton.onclick = () => { ruleModal.style.display = 'block'; };
 closeRuleBtn.addEventListener('click', () => { ruleModal.style.display = 'none'; });
 
+// ルールボタンがクリックされた時の処理
+ruleButton.addEventListener('click', async () => {
+  // モーダル表示
+  ruleModal.style.display = 'block';
+
+  if (ruleModal.dataset.loaded === 'true') {
+    return;
+  }
+
+  // --- ルールHTMLを初回のみ読み込む ---
+  try {
+    const res = await fetch('./rule.html');
+    if (!res.ok) throw new Error('Failed to fetch rule.html');
+    
+    const html = await res.text();
+    const bodyMatch = html.match(/<body[^>]*>([\s\S]*)<\/body>/i);
+    const ruleHtml = bodyMatch ? bodyMatch[1] : '';
+
+    // モーダル内のコンテンツエリアにHTMLを挿入
+    const contentWrapper = ruleModal.querySelector('.modal-content');
+    const ruleContainer = document.createElement('div');
+    ruleContainer.innerHTML = ruleHtml;
+
+    const backBtn = ruleContainer.querySelector('button[onclick="window.history.back()"]');
+    if (backBtn) backBtn.remove();
+    
+    // 既存のコンテンツ（閉じるボタンなど）の後に追加
+    contentWrapper.appendChild(ruleContainer);
+
+    // 読み込み完了フラグ
+    ruleModal.dataset.loaded = 'true';
+
+    const tabBtns = contentWrapper.querySelectorAll('.tab-btn');
+    const tabContents = contentWrapper.querySelectorAll('.tab-content');
+    tabBtns.forEach(btn => {
+      btn.addEventListener('click', function() {
+        tabBtns.forEach(b => b.classList.remove('active'));
+        tabContents.forEach(c => c.classList.remove('active'));
+        btn.classList.add('active');
+        const targetContent = contentWrapper.querySelector('#' + btn.dataset.target);
+        if (targetContent) targetContent.classList.add('active');
+      });
+    });
+    const pillBtns = contentWrapper.querySelectorAll('.pill-btn');
+    const cardDescs = contentWrapper.querySelectorAll('.card-desc');
+    pillBtns.forEach(pill => {
+      pill.addEventListener('click', function() {
+        pillBtns.forEach(p => p.classList.remove('active'));
+        cardDescs.forEach(d => d.classList.remove('active'));
+        pill.classList.add('active');
+        const targetDesc = contentWrapper.querySelector('#' + pill.dataset.cardTarget);
+        if (targetDesc) targetDesc.classList.add('active');
+      });
+    });
+
+  } catch (e) {
+    console.error('ルールの読み込みに失敗しました:', e);
+    const contentWrapper = ruleModal.querySelector('.modal-content');
+    contentWrapper.innerHTML += '<div>ルール説明の読み込みに失敗しました。</div>';
+  }
+});
 // ルールタブ切替
 (() => {
   const tabButtons = document.querySelectorAll('.tab-btn');
