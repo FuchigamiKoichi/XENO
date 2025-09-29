@@ -119,9 +119,19 @@
     </div>
   </div>
 
-  <!-- GSAP（CDN）→ socket.io → ゲームJS の順 -->
+  <!-- カード説明ツールチップ -->
+  <div id="card-tooltip" class="card-tooltip">
+    <div class="tooltip-header">
+      <span id="tooltip-card-name"></span>
+      <span id="tooltip-card-number"></span>
+    </div>
+    <div id="tooltip-card-effect" class="tooltip-effect"></div>
+  </div>
+
+  <!-- GSAP（CDN）→ socket.io → messages → ゲームJS の順 -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
   <script src="/socket.io/socket.io.js"></script>
+  <script src="./js/messages.js"></script>
   <script src="./js/animation.js"></script>
   <script defer src="./js/game.js"></script>
 </body>
