@@ -167,3 +167,21 @@ document.addEventListener('keydown', (e) => {
     socket.emit('playerAction', roomId, { move: 'up' });
     }
 });
+
+// ルーム削除通知の受信
+socket.on('roomDeleted', (data) => {
+    alert(`ルーム ${data.roomId} が削除されました: ${data.reason}`);
+    // ルーム一覧を再読み込み
+    if (document.getElementById('rooms').children.length > 0) {
+        showRoomsBtn.click();
+    }
+});
+
+// プレイヤー退室通知の受信
+socket.on('playerLeft', (data) => {
+    console.log(`プレイヤーが退室しました。残り ${data.remainingPlayers} 人`);
+    // 必要に応じてルーム一覧を更新
+    if (allRoomsData) {
+        showRoomsBtn.click();
+    }
+});

@@ -77,8 +77,25 @@ class SocketHandlers {
         this.handleIdentifyResultPage(socket, data);
       });
 
+      // ルーム削除リクエスト（管理者用）
+      socket.on('deleteRoom', (data, callback) => {
+        this.handleDeleteRoom(socket, data, callback, io);
+      });
+
+
+
+      // ロビーに戻る選択
+      socket.on('returnToLobby', (data) => {
+        this.handleReturnToLobby(socket, data, io);
+      });
+
       socket.on('disconnect', () => {
-        Logger.info('ユーザ切断:', socket.id);
+        Logger.info(`ユーザ切断: ${socket.id}`);
+        
+        // 切断時に空ルームをクリーンアップ
+        setTimeout(() => {
+          RoomManager.cleanupEmptyRooms();
+        }, 5000); // 5秒後にクリーンアップ実行
       });
     });
   }
@@ -156,6 +173,9 @@ class SocketHandlers {
         }
         DataManager.saveData();
     }
+    
+    // ルームのアクティビティを更新
+    RoomManager.updateRoomActivity(roomId);
     
     const updatedRoom = jsonData.rooms[roomId];
     Logger.info(`ルーム参加: ${roomId} (メンバー数: ${updatedRoom.players.length}), 参加者: ${jsonData.players[socket.id].name}`);
@@ -294,6 +314,12 @@ class SocketHandlers {
     
     DataManager.loadData();
     const jsonData = DataManager.getJsonData();
+    
+    // ルームのアクティビティを更新
+    RoomManager.updateRoomActivity(data.roomId);
+    
+    // ゲーム開始時にロビー復帰意思をリセット
+    RoomManager.resetLeaveWishes(data.roomId);
     
     if (data.playerId === 'cpu') {
       Logger.info('CPU戦が選択されました');
@@ -676,6 +702,112 @@ class SocketHandlers {
     if (roomId && playerId) {
         Logger.info(`リザルトページのクライアント ${playerId} をルーム ${roomId} に参加させます。`);
         socket.join(roomId);
+    }
+  }
+
+  /**
+   * ルーム削除処理
+   */
+  static handleDeleteRoom(socket, data, callback, io) {
+    const { roomId, adminPassword } = data;
+    
+    // 簡単な管理者認証（実際のプロダクションではより堅牢な認証が必要）
+    if (adminPassword !== process.env.ADMIN_PASSWORD && adminPassword !== 'admin123') {
+      if (callback) {
+        callback({ success: false, message: '権限がありません' });
+      }
+      return;
+    }
+
+    DataManager.loadData();
+    const jsonData = DataManager.getJsonData();
+    const room = jsonData.rooms[roomId];
+
+    if (!room) {
+      if (callback) {
+        callback({ success: false, message: 'ルームが存在しません' });
+      }
+      return;
+    }
+
+    // ゲーム中の場合は削除を拒否
+    if (room.playing) {
+      if (callback) {
+        callback({ success: false, message: 'ゲーム中のため削除できません' });
+      }
+      return;
+    }
+
+    // ルーム内の全プレイヤーに通知
+    room.players.forEach(playerId => {
+      const player = jsonData.players[playerId];
+      if (player && player.socketId) {
+        io.to(player.socketId).emit('roomDeleted', { roomId, reason: '管理者によりルームが削除されました' });
+      }
+    });
+
+    // ルーム削除実行
+    const deleted = RoomManager.forceDeleteRoom(roomId);
+    
+    if (callback) {
+      callback({ 
+        success: deleted, 
+        message: deleted ? 'ルームを削除しました' : 'ルーム削除に失敗しました' 
+      });
+    }
+
+    Logger.info(`管理者によるルーム削除: ${roomId}`);
+  }
+
+
+
+  /**
+   * プレイヤーがロビーに戻ることを選択した場合の処理
+   */
+  static handleReturnToLobby(socket, data, io) {
+    const { roomId, playerId } = data;
+
+    if (!roomId || !playerId) {
+      Logger.error('無効なロビー復帰リクエストを受け取りました。');
+      return;
+    }
+
+    Logger.info(`プレイヤー ${playerId} がルーム ${roomId} からロビーに戻ることを選択`);
+
+    // プレイヤーのロビー復帰意思を記録
+    const playersWantingToLeave = RoomManager.markPlayerWantsToLeave(roomId, playerId);
+
+    // ルーム内の他のプレイヤーに通知
+    socket.to(roomId).emit('playerWantsToLeave', { 
+      playerId, 
+      playersWantingToLeave,
+      message: `プレイヤーがロビーに戻ることを選択しました (${playersWantingToLeave}人目)` 
+    });
+
+    // 全プレイヤーがロビーに戻りたいかチェック
+    if (RoomManager.checkAllPlayersWantToLeave(roomId)) {
+      Logger.info(`ルーム ${roomId} の全プレイヤーがロビー復帰を希望 - ルーム削除処理開始`);
+
+      // ルーム内の全プレイヤーに削除通知
+      DataManager.loadData();
+      const jsonData = DataManager.getJsonData();
+      const room = jsonData.rooms[roomId];
+
+      if (room) {
+        room.players.forEach(pId => {
+          const player = jsonData.players[pId];
+          if (player && player.socketId && !player.name.startsWith('cpu_')) {
+            io.to(player.socketId).emit('roomDissolved', { 
+              roomId, 
+              reason: '全プレイヤーがロビーに戻ることを選択したため、ルームが解散されました'
+            });
+          }
+        });
+
+        // ルーム削除実行
+        RoomManager.removeRoom(roomId);
+        Logger.info(`全プレイヤー合意によりルーム削除: ${roomId}`);
+      }
     }
   }
 
