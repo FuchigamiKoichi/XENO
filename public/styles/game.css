@@ -346,12 +346,218 @@ body {
 
 /* 選択/公開UI */
 #select-container, #show-container, #showResult {
-  position: fixed; top: 20%; left: 30%;
-  width: 50vw; height: 50vh;
-  background-color: rgba(0,0,0,0);
-  justify-content: center; align-items: center; z-index: 99;
+  position: fixed; 
+  top: 50%; 
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: auto;
+  max-width: 90vw;
+  height: auto;
+  background-color: rgba(0, 0, 0, 0.8);
+  border-radius: 15px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center; 
+  align-items: center; 
+  z-index: 1000;
+  border: 3px solid #ffcc00;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
 }
+
+/* 選択画面のタイトル */
+.select-title {
+  color: #ffcc00;
+  font-size: 1.5em;
+  font-weight: bold;
+  margin-bottom: 15px;
+  text-align: center;
+}
+
+/* 選択画面のカードコンテナ */
+#select-container {
+  flex-direction: column;
+}
+
+/* カード選択エリア */
+.select-cards-area {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 15px;
+  max-width: 100%;
+}
+
+/* 選択可能なカードのラッパー */
+.select-card-wrapper {
+  cursor: pointer;
+  border: 3px solid transparent;
+  border-radius: 10px;
+  transition: all 0.3s ease;
+  position: relative;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+  outline: none;
+  /* ブラウザのデフォルトホバーを無効化 */
+  pointer-events: auto;
+}
+
+/* ブラウザのデフォルトホバー状態を無効化（!importantを使わず、より具体的なセレクタで制御） */
+.select-card-wrapper:not(.hover-active):hover {
+  /* デフォルトスタイルを維持（JavaScriptで制御） */
+  border-color: transparent;
+  transform: none;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+  z-index: auto;
+}
+
+.select-card-wrapper:not(.focus-active):focus {
+  /* デフォルトスタイルを維持（JavaScriptで制御） */
+  border-color: transparent;
+  transform: none;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+  z-index: auto;
+}
+
+/* ホバー・フォーカス状態（JavaScriptで制御） */
+.select-card-wrapper.hover-active,
+.select-card-wrapper.focus-active {
+  border-color: #ffcc00;
+  transform: scale(1.05) translateY(-5px);
+  box-shadow: 0 8px 16px rgba(255, 204, 0, 0.4);
+  z-index: 10;
+}
+
+.select-card-wrapper.focus-active {
+  border-color: #00bfff;
+  box-shadow: 0 8px 16px rgba(0, 191, 255, 0.4);
+}
+
+.select-card {
+  border-radius: 10px;
+  transition: transform 0.1s ease;
+}
+
+.select-card-wrapper::after {
+  content: "クリック";
+  position: absolute;
+  bottom: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: #ffcc00;
+  color: #000;
+  padding: 2px 8px;
+  border-radius: 5px;
+  font-size: 12px;
+  font-weight: bold;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+
+/* ブラウザのデフォルト::afterを無効化 */
+.select-card-wrapper:hover::after,
+.select-card-wrapper:focus::after {
+  opacity: 0 !important;
+}
+
+/* JavaScriptで制御される状態のみ有効 */
+.select-card-wrapper.hover-active::after,
+.select-card-wrapper.focus-active::after {
+  opacity: 1 !important;
+}
+
+/* 透視結果表示 */
+.show-title {
+  color: #ffcc00;
+  font-size: 1.5em;
+  font-weight: bold;
+  margin-bottom: 15px;
+  text-align: center;
+}
+
+.show-cards-area {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 15px;
+  max-width: 100%;
+  margin-bottom: 0;
+}
+
+.show-card {
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+  border: 2px solid #ffcc00;
+}
+
+
+
 #showResult { display: none; }
+
+/* モバイル対応 */
+@media (max-width: 768px) {
+  #select-container {
+    width: 95vw;
+    padding: 15px;
+  }
+  
+  .select-title {
+    font-size: 1.2em;
+    margin-bottom: 10px;
+  }
+  
+  .select-cards-area {
+    gap: 10px;
+  }
+  
+  .select-card {
+    width: 100px;
+    height: 150px;
+  }
+  
+  .select-card-wrapper::after {
+    font-size: 10px;
+    padding: 1px 6px;
+    bottom: -6px;
+  }
+  
+  .show-title {
+    font-size: 1.2em;
+    margin-bottom: 10px;
+  }
+  
+  .show-cards-area {
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+  
+  .show-card {
+    width: 100px;
+    height: 150px;
+  }
+}
+
+@media (max-width: 480px) {
+  .select-cards-area {
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .select-card {
+    width: 120px;
+    height: 180px;
+  }
+  
+  .show-cards-area {
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .show-card {
+    width: 120px;
+    height: 180px;
+  }
+}
 
 /* 待機UI（部屋ID） */
 #waiting-info {
