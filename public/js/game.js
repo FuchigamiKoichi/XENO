@@ -238,6 +238,9 @@ function updateGameView(now) {
       cardImg.classList.add('card');
       cardImg.value = card;
       playerHandZone.appendChild(cardImg);
+      
+      // ツールチップイベントを追加
+      addCardTooltipEvents(cardImg, card);
     });
   }
 
@@ -253,6 +256,10 @@ function updateGameView(now) {
       playedImg.style.width = '100px';
       playedImg.style.height = '150px';
       playArea.appendChild(playedImg);
+      
+      // ツールチップイベントを追加
+      addCardTooltipEvents(playedImg, card);
+      
       idx++;
     });
   }
@@ -273,6 +280,9 @@ function updateGameView(now) {
       playedImg.style.width = '100px';
       playedImg.style.height = '150px';
       opponentArea.appendChild(playedImg);
+      
+      // ツールチップイベントを追加
+      addCardTooltipEvents(playedImg, card);
       
       // 新しく追加されたカードのみにポップインアニメーションを適用
       if (cardIdx >= previousCardCount) {
@@ -347,6 +357,27 @@ function getEffectDescription(characterName) {
     case '英雄': return '英雄の効果：最強の一撃！';
     default: return '効果は特にありません。';
   }
+}
+
+// カード詳細情報を取得する関数
+function getCardDetails(cardNumber) {
+  cardNumber = parseInt(cardNumber, 10);
+  const characterName = getCharacterName(cardNumber);
+  
+  const cardDetails = {
+    1: { name: '少年', effect: '(1枚目) 効果なし / (2枚目) 皇帝と同様の効果' },
+    2: { name: '兵士', effect: '相手の手札を推測して当てたら相手を脱落させる' },
+    3: { name: '占い師', effect: '相手の手札を見ることができる' },
+    4: { name: '乙女', effect: '次の自分の手番まで他人からの効果を無効化' },
+    5: { name: '死神', effect: '相手に手札を1枚捨てさせる' },
+    6: { name: '貴族', effect: '手札の数字を比較して負けた方が脱落' },
+    7: { name: '賢者', effect: '次のターンで山札のトップ3枚から選択してドロー' },
+    8: { name: '精霊', effect: '相手と手札を交換する' },
+    9: { name: '皇帝', effect: '相手を脱落させる（乙女で防御可能）' },
+    10: { name: '英雄', effect: '手札から捨てられると転生札を得て復活' }
+  };
+  
+  return cardDetails[cardNumber] || { name: '不明', effect: '効果は特にありません。' };
 }
 
 // カードを出す（自分）
@@ -569,6 +600,9 @@ async function select(choices, message = 'カードを選択してください')
       
       cardWrapper.appendChild(card);
       cardsArea.appendChild(cardWrapper);
+      
+      // ツールチップイベントを追加
+      addCardTooltipEvents(card, cardNumber);
     }
     
     selectContainer.appendChild(cardsArea);
@@ -664,6 +698,9 @@ async function show(data) {
       card.alt = `相手のカード ${cardNumber}`;
       card.classList.add('show-card');
       cardsArea.appendChild(card);
+      
+      // ツールチップイベントを追加
+      addCardTooltipEvents(card, cardNumber);
     }
     
     showContainer.appendChild(cardsArea);
@@ -921,6 +958,84 @@ socket.on('roomDeleted', (data) => {
 socket.on('playerLeft', (data) => {
     addLogMessage(`プレイヤーが退室しました。残り ${data.remainingPlayers} 人`);
 });
+
+// ツールチップ機能
+const cardTooltip = document.getElementById('card-tooltip');
+const tooltipCardName = document.getElementById('tooltip-card-name');
+const tooltipCardNumber = document.getElementById('tooltip-card-number');
+const tooltipCardEffect = document.getElementById('tooltip-card-effect');
+
+function showCardTooltip(cardNumber, event) {
+  const cardDetails = getCardDetails(cardNumber);
+  
+  tooltipCardName.textContent = cardDetails.name;
+  tooltipCardNumber.textContent = cardNumber;
+  tooltipCardEffect.textContent = cardDetails.effect;
+  
+  // マウス位置にツールチップを表示
+  const x = event.clientX;
+  const y = event.clientY;
+  const tooltipRect = cardTooltip.getBoundingClientRect();
+  
+  // 画面端での位置調整
+  let left = x + 10;
+  let top = y - 10;
+  
+  if (left + 250 > window.innerWidth) {
+    left = x - 260;
+  }
+  if (top < 0) {
+    top = y + 10;
+  }
+  if (top + tooltipRect.height > window.innerHeight) {
+    top = window.innerHeight - tooltipRect.height - 10;
+  }
+  
+  cardTooltip.style.left = `${left}px`;
+  cardTooltip.style.top = `${top}px`;
+  cardTooltip.classList.add('show');
+}
+
+function hideCardTooltip() {
+  cardTooltip.classList.remove('show');
+}
+
+function updateTooltipPosition(event) {
+  if (!cardTooltip.classList.contains('show')) return;
+  
+  const x = event.clientX;
+  const y = event.clientY;
+  
+  let left = x + 10;
+  let top = y - 10;
+  
+  if (left + 250 > window.innerWidth) {
+    left = x - 260;
+  }
+  if (top < 0) {
+    top = y + 10;
+  }
+  
+  cardTooltip.style.left = `${left}px`;
+  cardTooltip.style.top = `${top}px`;
+}
+
+// カード画像にツールチップイベントを追加する関数
+function addCardTooltipEvents(cardElement, cardNumber) {
+  if (!cardElement || !cardNumber) return;
+  
+  cardElement.addEventListener('mouseenter', (e) => {
+    showCardTooltip(cardNumber, e);
+  });
+  
+  cardElement.addEventListener('mousemove', (e) => {
+    updateTooltipPosition(e);
+  });
+  
+  cardElement.addEventListener('mouseleave', () => {
+    hideCardTooltip();
+  });
+}
 
 // HTML から呼ぶもの
 window.goToTitle = goToTitle;
