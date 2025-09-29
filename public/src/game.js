@@ -50,7 +50,8 @@ class Game extends EventEmitter{
         }
         console.log(`[isContinue] デッキ残り: ${field.deck.length}, 生存者数: ${liveCount}`);
 
-        if (field.deck.length === 0 || liveCount < 2) {
+        // 生存者が1人以下の場合は即座にゲーム終了
+        if (liveCount <= 1 || field.deck.length === 0) {
             if (liveCount >= 2) {
                 // 手札があるプレイヤーだけを対象にする
                 const playersWithHands = players.filter(p => p.live && p.hands.length > 0);
@@ -98,12 +99,21 @@ class Game extends EventEmitter{
                     }
                 }
             } else {
-                // 生存者が2人未満の場合
-                for (let i = 0; i < players.length; i++) {
-                    if (players[i].live) {
-                        this.log[i].push('win');
-                        this.winners.push(players[i]);
-                    } else {
+                // 生存者が1人以下の場合
+                if (liveCount === 1) {
+                    // 最後の生存者が勝者
+                    for (let i = 0; i < players.length; i++) {
+                        if (players[i].live) {
+                            this.log[i].push('win');
+                            this.winners.push(players[i]);
+                        } else {
+                            this.log[i].push('lose');
+                            this.losers.push(players[i]);
+                        }
+                    }
+                } else {
+                    // 生存者が0人の場合（全員脱落）
+                    for (let i = 0; i < players.length; i++) {
                         this.log[i].push('lose');
                         this.losers.push(players[i]);
                     }
@@ -199,23 +209,37 @@ class Game extends EventEmitter{
 
             // ゲームループ
             while (state[0] && !this.isForcefullyEnded) {
+                let anyPlayerPlayed = false;
+                
                 for (const player of players) {
                     //脱落したプレイヤーのターンはスキップする
                     if (!player.live) {
                         console.log(`> ${player.name} は脱落済みのため、ターンをスキップします。`);
                         continue;
                     }
+                    
                     console.log(`[ループ内チェック] 現在のプレイヤー: ${player.name}, 生存状態: ${player.live}`);
                     state = this.isContinue();
                     console.log(`[isContinue判定結果] ゲームを継続しますか？ -> ${state[0]}`);
                     console.log(`this.isForcefullyEnded: ${this.isForcefullyEnded}`);
+                    
                     if (state[0] && !this.isForcefullyEnded) {
                         await this.turn(player);
+                        anyPlayerPlayed = true;
                     } else {
                         this.winners = state[1];
                         this.losers = state[2];
                         break;
                     }
+                }
+                
+                // 生存プレイヤーがいるのに誰もプレイしなかった場合、ゲームを終了
+                if (!anyPlayerPlayed && state[0] && !this.isForcefullyEnded) {
+                    console.log(`[警告] 生存プレイヤーがいるのに誰もプレイしませんでした。ゲームを強制終了します。`);
+                    state = this.isContinue();
+                    this.winners = state[1];
+                    this.losers = state[2];
+                    break;
                 }
             }
             console.log('gameDone: ゲームループが正常に終了しました。')
