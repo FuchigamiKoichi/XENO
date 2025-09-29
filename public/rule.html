@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <title>ZENOのルール説明</title>
+  <link rel="stylesheet" href="./styles/game.css" />
+</head>
+<body>
+  <div class="modal-content">
+    <h2>ZENOのルール</h2>
+    <div class="tab-buttons">
+      <button class="tab-btn active" data-target="page1">基本ルール</button>
+      <button class="tab-btn" data-target="page2">カードの種類</button>
+      <button class="tab-btn" data-target="page3">ゲームの流れ</button>
+    </div>
+    <div class="tab-content active" id="page1">
+      <p>
+        カードには強さを示す1〜10までの数字が書いてあります。<br>
+        1〜8のカードは2枚ずつ、9と10のカードは1枚ずつあります（合計18枚）。<br>
+        各ターン、2枚の手札のうち1枚を場に出して効果を発動します。<br>
+        山札がない場合、カードを引く必要がある効果は発動できません。<br>
+        カードの効果で相手を脱落させると勝利します。<br>
+        英雄が皇帝以外の効果で捨てさせられた場合、あるいは手札に英雄があるプレイヤーが脱落させられた場合は手札をすべて捨てて転生札を手札に加え、復活します。<br>
+        ゲーム開始時に山札が無くなった場合は、より大きいカードを持っているプレイヤーが勝利します。
+      </p>
+    </div>
+    <div class="tab-content" id="page2">
+      <div class="card-pills">
+        <button class="pill-btn active" data-card-target="card1">1:俺</button>
+        <button class="pill-btn" data-card-target="card2">2:粗探し</button>
+        <button class="pill-btn" data-card-target="card3">3:エスパー</button>
+        <button class="pill-btn" data-card-target="card4">4:バリア</button>
+        <button class="pill-btn" data-card-target="card5">5:下痢</button>
+        <button class="pill-btn" data-card-target="card6">6:対決</button>
+        <button class="pill-btn" data-card-target="card7">7:正夢</button>
+        <button class="pill-btn" data-card-target="card8">8:能力交換</button>
+        <button class="pill-btn" data-card-target="card9">9:悪魔</button>
+        <button class="pill-btn" data-card-target="card10">10:彼女</button>
+      </div>
+
+      <div class="card-descriptions">
+        <div class="card-desc active" id="card1">
+            <h2>カード1【俺】</h2>
+            <img src="./images/1.jpg" alt="少年カード画像" class="rule-image" />
+            <h3>カード効果【革命】</h3>
+            <p>1枚目は何の効果も発動しないが、場に2枚目が出た場合は相手の手札を把握した上で1枚捨てさせる</p>
+        </div>
+        
+        <div class="card-desc" id="card2">
+            <h2>カード2【粗探し】</h2>
+            <img src="./images/2.jpg" alt="少女カード画像" class="rule-image" />
+            <h3>カード効果【粗探し】</h3>
+            <p>相手の手札を言い当てると相手は脱落する</p>
+        </div>
+
+        <div class="card-desc" id="card3">
+            <h2>カード3【エスパー】</h2>
+            <img src="./images/3.jpg" alt="少女カード画像" class="rule-image" />
+            <h3>カード効果【エスパー】</h3>
+            <p>相手の手札を見る</p>
+        </div>
+
+        <div class="card-desc" id="card4">
+            <h2>カード4【バリア】</h2>
+            <img src="./images/4.jpg" alt="少女カード画像" class="rule-image" />
+            <h3>カード効果【バリア】</h3>
+            <p>次の自分の手番まで自分への効果を無効化する</p>
+        </div>
+
+        <div class="card-desc" id="card5">
+            <h2>カード5【下痢】</h2>
+            <img src="./images/5.jpg" alt="少女カード画像" class="rule-image" />
+            <h3>カード効果【下痢】</h3>
+            <p>相手に山札から1枚引かせる。2枚になった相手の手札を非公開にさせたまま、ランダムで1枚を捨てさせる</p>
+        </div>
+        <div class="card-desc" id="card6">
+            <h2>カード6【対決】</h2>
+            <img src="./images/6.jpg" alt="少女カード画像" class="rule-image" />
+            <h3>カード効果【対決】</h3>
+            <p>相手と手札を見せ合い、数字の小さい方が脱落する</p>
+        </div>
+
+        <div class="card-desc" id="card7">
+            <h2>カード7【正夢】</h2>
+            <img src="./images/7.jpg" alt="少女カード画像" class="rule-image" />
+            <h3>カード効果【正夢】</h3>
+            <p>次の手番で山札から1枚引く代わりに3枚みて、その中の1枚を手札に加えることができる。残り2枚は山札に戻す</p>
+        </div>
+
+        <div class="card-desc" id="card8">
+            <h2>カード8【能力交換】</h2>
+            <img src="./images/8.jpg" alt="少女カード画像" class="rule-image" />
+            <h3>カード効果【能力交換】</h3>
+            <p>相手の手札と自分の持っている手札を交換する</p>
+        </div>
+
+        <div class="card-desc" id="card9">
+            <h2>カード9【悪魔】</h2>
+            <img src="./images/9.jpg" alt="少女カード画像" class="rule-image" />
+            <h3>カード効果【悪魔】</h3>
+            <p>相手に山札から1枚引かせて手札を2枚とも公開させる。そしてどちらか1枚を捨てさせる</p>
+        </div>
+
+        <div class="card-desc" id="card10">
+            <h2>カード10【彼女】</h2>
+            <img src="./images/10.jpg" alt="少女カード画像" class="rule-image" />
+            <h3>カード効果【彼女】</h3>
+            <p>場に出すことができず、捨てさせられたら脱落する。皇帝以外に捨てさせられた場合は一度だけ転生札で復活する</p>
+        </div>
+      </div>
+    </div>
+    <div class="tab-content" id="page3">
+      <h2>ゲームの流れ</h2>
+      <p>ゲームは以下の手順で進行します。</p>
+      <ol>
+        <li>各プレイヤーは手番が来たら山札から1枚カードを引く</li>
+        <li>次に2枚の手札のうちいずれかを選び使用する</li>
+        <li>使用したカードが持つ効果処理をしたらターン終了となり、次のプレイヤーに手番が移る</li>
+      </ol>
+        <p>
+            これを繰り返し、相手を脱落させるか、山札が無くなった時点でより大きいカードを持っているプレイヤーが勝利する。
+        </p>
+
+    </div>
+    <button onclick="window.history.back()">ゲーム画面に戻る</button>
+  </div>
+  <script>
+    // タブ切り替えスクリプト
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', function() {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById(btn.dataset.target).classList.add('active');
+      });
+    });
+  </script>
+</body>
+</html>
