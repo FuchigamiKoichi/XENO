@@ -20,6 +20,9 @@ const timerBar          = document.getElementById('turn-timer-bar');
 selectContainer.style.display = 'none';
 showContainer.style.display   = 'none';
 
+// メッセージ初期化
+initializeMessages();
+
 // ログエリアのトグル機能
 const logToggleBtn = document.getElementById('log-toggle');
 const logCloseBtn = document.getElementById('log-close');
@@ -238,6 +241,9 @@ function updateGameView(now) {
       cardImg.classList.add('card');
       cardImg.value = card;
       playerHandZone.appendChild(cardImg);
+      
+      // ツールチップイベントを追加
+      addCardTooltipEvents(cardImg, card);
     });
   }
 
@@ -253,6 +259,10 @@ function updateGameView(now) {
       playedImg.style.width = '100px';
       playedImg.style.height = '150px';
       playArea.appendChild(playedImg);
+      
+      // ツールチップイベントを追加
+      addCardTooltipEvents(playedImg, card);
+      
       idx++;
     });
   }
@@ -273,6 +283,9 @@ function updateGameView(now) {
       playedImg.style.width = '100px';
       playedImg.style.height = '150px';
       opponentArea.appendChild(playedImg);
+      
+      // ツールチップイベントを追加
+      addCardTooltipEvents(playedImg, card);
       
       // 新しく追加されたカードのみにポップインアニメーションを適用
       if (cardIdx >= previousCardCount) {
@@ -317,7 +330,7 @@ function updateGameView(now) {
   deckContainer.appendChild(deckCard);
 
   const deckCount = document.getElementById('deck-count');
-  deckCount.textContent = `残り枚数: ${now.cardNumber}`;
+  deckCount.textContent = messageManager.getGameMessage('deckCount', { count: now.cardNumber });
   
   // 山札が0枚の時のスタイル適用
   if (now.cardNumber === 0) {
@@ -334,19 +347,13 @@ function getCharacterName(cardNumber) {
   return characterNames[cardNumber - 1];
 }
 function getEffectDescription(characterName) {
-  switch (characterName) {
-    case '少年': return '少年';
-    case '兵士': return '兵士の効果：相手の手札を推測！';
-    case '占い師': return '占い師の効果：相手の手札を覗く！';
-    case '乙女': return '乙女の効果：次のターンまで守られる！';
-    case '死神': return '死神の効果：相手に手札を捨てさせる！';
-    case '貴族': return '貴族の効果：対決！';
-    case '賢者': return '賢者の効果：次のターンで山札のトップ3枚からカードを選択！';
-    case '精霊': return '精霊の効果：カードを交換！';
-    case '皇帝': return '皇帝の効果：相手を恐怖に！';
-    case '英雄': return '英雄の効果：最強の一撃！';
-    default: return '効果は特にありません。';
-  }
+  return messageManager.getEffectMessage(characterName);
+}
+
+// カード詳細情報を取得する関数
+function getCardDetails(cardNumber) {
+  cardNumber = parseInt(cardNumber, 10);
+  return messageManager.getCardInfo(cardNumber);
 }
 
 // カードを出す（自分）
@@ -454,14 +461,14 @@ function showResult(message) {
 }
 
 // セレクトUI/公開UI
-async function select(choices, message = 'カードを選択してください') {
+async function select(choices, message = undefined) {
   return new Promise((resolve) => {
     selectContainer.innerHTML = '';
     
     // メッセージタイトルを作成
     const titleElement = document.createElement('div');
     titleElement.classList.add('select-title');
-    titleElement.textContent = message;
+    titleElement.textContent = message || messageManager.getSelectMessage('default');
     selectContainer.appendChild(titleElement);
     
     // カードコンテナを作成
@@ -497,8 +504,9 @@ async function select(choices, message = 'カードを選択してください')
       cardWrapper.classList.add('select-card-wrapper');
       cardWrapper.setAttribute('tabindex', '0');
       cardWrapper.setAttribute('role', 'button');
-      cardWrapper.setAttribute('aria-label', `カード ${cardNumber} を選択`);
+      cardWrapper.setAttribute('aria-label', messageManager.getUIMessage('tooltip.selectCard', { number: cardNumber }));
       cardWrapper.setAttribute('data-card-index', i);
+      cardWrapper.setAttribute('data-click-hint', messageManager.getUIMessage('clickHint'));
       
       const card = document.createElement('img');
       card.src = `../images/${cardNumber}.jpg`;
@@ -569,6 +577,9 @@ async function select(choices, message = 'カードを選択してください')
       
       cardWrapper.appendChild(card);
       cardsArea.appendChild(cardWrapper);
+      
+      // ツールチップイベントを追加
+      addCardTooltipEvents(card, cardNumber);
     }
     
     selectContainer.appendChild(cardsArea);
@@ -648,7 +659,7 @@ async function show(data) {
     const titleElement = document.createElement('div');
     titleElement.classList.add('show-title');
     const cardCount = data[0].cards.length;
-    titleElement.textContent = `相手の現在の手札（${cardCount}枚）`;
+    titleElement.textContent = messageManager.getGameMessage('opponentHandDisplay', { count: cardCount });
     showContainer.appendChild(titleElement);
     
     // カードコンテナを作成
@@ -664,6 +675,9 @@ async function show(data) {
       card.alt = `相手のカード ${cardNumber}`;
       card.classList.add('show-card');
       cardsArea.appendChild(card);
+      
+      // ツールチップイベントを追加
+      addCardTooltipEvents(card, cardNumber);
     }
     
     showContainer.appendChild(cardsArea);
@@ -763,20 +777,20 @@ socket.on('yourTurn', async (data, callback) => {
   if (data.kind === 'draw') {
     if (data.choices.length > 2) {
       Anim.startTurnTimer();
-      const idx = await select(data.choices, 'ドローするカードを選んでください');
+      const idx = await select(data.choices, messageManager.getSelectMessage('draw'));
       hideSelect();
       const chosen = data.choices[idx];
       const done = await Anim.drawCardToHand(chosen);
       if (done === 'done') {
         Anim.stopTurnTimer();
-        addLog(`あなたが${idx}をドロー！`);
+        addLog(messageManager.getGameMessage('drawCard', { card: idx }));
         callback([idx]);
       }
     } else {
       const done = await Anim.drawCardToHand(data.choices[0]);
       if (done === 'done') {
         Anim.stopTurnTimer();
-        addLog(`あなたが${data.choices[0]}をドロー！`);
+        addLog(messageManager.getGameMessage('drawCard', { card: data.choices[0] }));
         callback([0]);
       }
     }
@@ -786,7 +800,7 @@ socket.on('yourTurn', async (data, callback) => {
   } else if (data.kind === 'play_card') {
     Anim.startTurnTimer();
     const idx = await selectPlayableFromHand(data.choices);
-    addLog(`あなたが${data.choices[idx]}を場に出す！`);
+    addLog(messageManager.getGameMessage('playCard', { card: data.choices[idx] }));
     const done = await playCard(data.choices[idx]);
     if (done === 'done') {
       Anim.stopTurnTimer();
@@ -798,7 +812,7 @@ socket.on('yourTurn', async (data, callback) => {
   } else if (data.kind === 'show') {
     try {
       await show(data.choices);
-      addLog(`相手の持っているカードは${data.choices[0]}だった！`);
+      addLog(messageManager.getGameMessage('opponentHandReveal', { card: data.choices[0] }));
       hideShow();
       callback([0]);
     } catch (e) {
@@ -808,18 +822,7 @@ socket.on('yourTurn', async (data, callback) => {
     try {
       Anim.startTurnTimer();
       // data.kindに応じてメッセージを変更
-      let message = 'カードを選択してください';
-      if (data.kind === 'pred') {
-        message = '相手が持っていると思うカードを選んでください';
-      } else if (data.kind === 'guess') {
-        message = '相手のカードを予想してください';
-      } else if (data.kind === 'discard') {
-        message = '捨てるカードを選んでください';
-      } else if (data.kind === 'trash') {
-        message = '捨てるカードを選んでください';
-      } else if (data.kind === 'choice') {
-        message = '選択肢からカードを選んでください';
-      }
+      const message = messageManager.getSelectMessage(data.kind);
       
       const idx = await select(data.choices, message);
       hideSelect();
@@ -836,7 +839,7 @@ socket.on('onatherTurn', async (data) => {
   Anim.stopTurnTimer();
   if (data.kind === 'play_card') {
     await playCard_cpu(parseInt(data.choice, 10));
-    addLog(`相手が${data.choice}を場に出す！`);
+    addLog(messageManager.getGameMessage('opponentPlayCard', { card: data.choice }));
   } else if (data.kind === 'draw') {
     await Anim.cpuDrawCardToHand();
     for (let i = 0; i < data.now.playersLength + 1; i++) {
@@ -919,8 +922,86 @@ socket.on('roomDeleted', (data) => {
 
 // プレイヤー退室通知の受信
 socket.on('playerLeft', (data) => {
-    addLogMessage(`プレイヤーが退室しました。残り ${data.remainingPlayers} 人`);
+    addLogMessage(messageManager.getGameMessage('playerLeft', { count: data.remainingPlayers }));
 });
+
+// ツールチップ機能
+const cardTooltip = document.getElementById('card-tooltip');
+const tooltipCardName = document.getElementById('tooltip-card-name');
+const tooltipCardNumber = document.getElementById('tooltip-card-number');
+const tooltipCardEffect = document.getElementById('tooltip-card-effect');
+
+function showCardTooltip(cardNumber, event) {
+  const cardDetails = getCardDetails(cardNumber);
+  
+  tooltipCardName.textContent = cardDetails.name;
+  tooltipCardNumber.textContent = cardNumber;
+  tooltipCardEffect.textContent = cardDetails.effect;
+  
+  // マウス位置にツールチップを表示
+  const x = event.clientX;
+  const y = event.clientY;
+  const tooltipRect = cardTooltip.getBoundingClientRect();
+  
+  // 画面端での位置調整
+  let left = x + 10;
+  let top = y - 10;
+  
+  if (left + 250 > window.innerWidth) {
+    left = x - 260;
+  }
+  if (top < 0) {
+    top = y + 10;
+  }
+  if (top + tooltipRect.height > window.innerHeight) {
+    top = window.innerHeight - tooltipRect.height - 10;
+  }
+  
+  cardTooltip.style.left = `${left}px`;
+  cardTooltip.style.top = `${top}px`;
+  cardTooltip.classList.add('show');
+}
+
+function hideCardTooltip() {
+  cardTooltip.classList.remove('show');
+}
+
+function updateTooltipPosition(event) {
+  if (!cardTooltip.classList.contains('show')) return;
+  
+  const x = event.clientX;
+  const y = event.clientY;
+  
+  let left = x + 10;
+  let top = y - 10;
+  
+  if (left + 250 > window.innerWidth) {
+    left = x - 260;
+  }
+  if (top < 0) {
+    top = y + 10;
+  }
+  
+  cardTooltip.style.left = `${left}px`;
+  cardTooltip.style.top = `${top}px`;
+}
+
+// カード画像にツールチップイベントを追加する関数
+function addCardTooltipEvents(cardElement, cardNumber) {
+  if (!cardElement || cardNumber == null) return;
+  
+  cardElement.addEventListener('mouseenter', (e) => {
+    showCardTooltip(cardNumber, e);
+  });
+  
+  cardElement.addEventListener('mousemove', (e) => {
+    updateTooltipPosition(e);
+  });
+  
+  cardElement.addEventListener('mouseleave', () => {
+    hideCardTooltip();
+  });
+}
 
 // HTML から呼ぶもの
 window.goToTitle = goToTitle;

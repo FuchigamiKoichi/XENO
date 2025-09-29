@@ -528,7 +528,7 @@ body {
 }
 
 .select-card-wrapper::after {
-  content: "クリック";
+  content: attr(data-click-hint);
   position: absolute;
   bottom: -8px;
   left: 50%;
@@ -646,6 +646,71 @@ body {
   .show-card {
     width: 120px;
     height: 180px;
+  }
+}
+
+/* カード説明ツールチップ */
+.card-tooltip {
+  position: fixed;
+  background-color: rgba(0, 0, 0, 0.9);
+  border: 2px solid #ffcc00;
+  border-radius: 8px;
+  padding: 10px;
+  color: white;
+  font-size: 14px;
+  z-index: 10000;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  max-width: 250px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+}
+
+.card-tooltip.show {
+  opacity: 1;
+}
+
+.tooltip-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+  font-weight: bold;
+  color: #ffcc00;
+}
+
+#tooltip-card-name {
+  font-size: 16px;
+}
+
+#tooltip-card-number {
+  background-color: #ffcc00;
+  color: black;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 12px;
+}
+
+.tooltip-effect {
+  line-height: 1.4;
+  color: #f0f0f0;
+}
+
+/* モバイル対応 */
+@media (max-width: 768px) {
+  .card-tooltip {
+    font-size: 12px;
+    padding: 8px;
+    max-width: 200px;
+  }
+  
+  #tooltip-card-name {
+    font-size: 14px;
+  }
+  
+  #tooltip-card-number {
+    font-size: 10px;
+    padding: 1px 4px;
   }
 }
 
