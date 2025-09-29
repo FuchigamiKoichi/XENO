@@ -988,7 +988,7 @@ function updateTooltipPosition(event) {
 
 // カード画像にツールチップイベントを追加する関数
 function addCardTooltipEvents(cardElement, cardNumber) {
-  if (!cardElement || !cardNumber) return;
+  if (!cardElement || cardNumber == null) return;
   
   cardElement.addEventListener('mouseenter', (e) => {
     showCardTooltip(cardNumber, e);
