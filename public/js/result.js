@@ -40,6 +40,31 @@ window.addEventListener('DOMContentLoaded', () => {
     }
 
     resultReason.textContent = reason;
+
+    let countdown = 10;
+    const timerDisplay = document.getElementById('rematch-timer');
+    const rematchButton = document.getElementById('rematch-btn');
+
+    const rematchTimeout = setTimeout(() => {
+        rematchButton.click(); 
+    }, 10000);
+
+    const countdownInterval = setInterval(() => {
+        countdown--;
+        if (countdown > 0) {
+            timerDisplay.textContent = `${countdown}秒後に自動で再戦します...`;
+        } else {
+            timerDisplay.textContent = '再戦を開始します...';
+            clearInterval(countdownInterval);
+        }
+    }, 1000);
+
+    function cancelAutoRematch() {
+        clearTimeout(rematchTimeout);
+        clearInterval(countdownInterval);
+        timerDisplay.style.display = 'none';
+    }
+    rematchButton.addEventListener('click', cancelAutoRematch);
 });
 
 // 「もう1度遊ぶ」ボタンの処理
@@ -67,12 +92,6 @@ socket.on('opponentRequestedRematch', (data) => {
     if(statusEl) {
         statusEl.textContent = `${data.name} さんが再戦を希望しています。`;
         statusEl.classList.add('show'); // CSSでフェードイン
-    }
-
-    const lobbyBtn = document.getElementById('return-to-lobby-btn');
-    if (lobbyBtn) {
-        lobbyBtn.textContent = '再戦を待っています';
-        lobbyBtn.disabled = true;
     }
 });
 
