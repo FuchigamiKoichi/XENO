@@ -145,8 +145,69 @@ body {
   justify-content: center; align-items: center;
 }
 .rule-image {
-  width: 40%; max-width: 150px; height: auto;
-  margin: 20px 0; border-radius: 10px;
+  max-width: 250px; 
+  width: 100%;
+  height: auto;
+  display: block;
+  margin: 0 auto 16px; 
+  border-radius: 8px; 
+}
+
+#ruleModal .modal-content {
+  width: 95vw;
+  max-width: 1200px;
+  height: 90vh;
+  min-height: 600px;
+  background: rgba(0,0,0,0.5);
+  border-radius: 16px;
+  padding: 40px 32px;
+  box-shadow: 0 8px 40px rgba(0,0,0,0.3);
+  overflow-y: auto;
+  text-align: left;
+  position: relative;
+}
+#ruleModal .modal-content h2 {
+  text-align: center;
+  margin-top: 0;
+}
+
+/* --- ルール画面サブメニュー用スタイル --- */
+
+.card-pills {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 16px;
+  border-bottom: 1px solid #ccc;
+  padding-bottom: 16px;
+}
+
+.pill-btn {
+  padding: 8px 12px;
+  border: 1px solid #ccc;
+  border-radius: 16px;
+  background-color: #f0f0f0;
+  cursor: pointer;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.pill-btn:hover {
+  background-color: #e0e0e0;
+}
+
+.pill-btn.active {
+  background-color: #007bff;
+  color: white;
+  border-color: #007bff;
+}
+
+.card-desc {
+  display: none; /* 通常は非表示 */
+}
+
+.card-desc.active {
+  display: block; /* activeクラスがついたものだけ表示 */
 }
 
 /* タブ */
