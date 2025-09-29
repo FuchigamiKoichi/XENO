@@ -83,7 +83,40 @@ socket.on('navigateToGame', (data) => {
         window.location.replace(data.url);
     }
 });
+
+// 他のプレイヤーがロビーに戻ることを選択した通知
+socket.on('playerWantsToLeave', (data) => {
+    console.log('他のプレイヤーがロビー復帰を選択:', data);
+    
+    const statusEl = document.getElementById('opponent-status');
+    if (statusEl) {
+        statusEl.textContent = data.message;
+        statusEl.classList.add('show');
+    }
+});
+
+// ルーム解散通知
+socket.on('roomDissolved', (data) => {
+    console.log('ルーム解散通知:', data);
+    alert(data.reason);
+    window.location.href = '/';
+});
 // (4) 「ロビーに戻る」ボタン
 document.getElementById('return-to-lobby-btn').addEventListener('click', () => {
-    window.location.href = '/'; 
+    if (roomId && playerId) {
+        // サーバーにロビー復帰の意思を通知
+        socket.emit('returnToLobby', { roomId, playerId });
+        
+        // ボタンを無効化してフィードバック
+        const button = document.getElementById('return-to-lobby-btn');
+        button.textContent = 'ロビーに戻っています...';
+        button.disabled = true;
+        
+        // 少し待ってからロビーに移動
+        setTimeout(() => {
+            window.location.href = '/';
+        }, 1000);
+    } else {
+        window.location.href = '/';
+    }
 });
