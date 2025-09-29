@@ -461,7 +461,7 @@ function showResult(message) {
 }
 
 // セレクトUI/公開UI
-async function select(choices, message = null) {
+async function select(choices, message = undefined) {
   return new Promise((resolve) => {
     selectContainer.innerHTML = '';
     
