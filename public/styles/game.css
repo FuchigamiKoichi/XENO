@@ -401,21 +401,21 @@ body {
   pointer-events: auto;
 }
 
-/* ブラウザのデフォルトホバー状態を強制的に無効化 */
-.select-card-wrapper:hover {
+/* ブラウザのデフォルトホバー状態を無効化（!importantを使わず、より具体的なセレクタで制御） */
+.select-card-wrapper:not(.hover-active):hover {
   /* デフォルトスタイルを維持（JavaScriptで制御） */
-  border-color: transparent !important;
-  transform: none !important;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3) !important;
-  z-index: auto !important;
+  border-color: transparent;
+  transform: none;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+  z-index: auto;
 }
 
-.select-card-wrapper:focus {
+.select-card-wrapper:not(.focus-active):focus {
   /* デフォルトスタイルを維持（JavaScriptで制御） */
-  border-color: transparent !important;
-  transform: none !important;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3) !important;
-  z-index: auto !important;
+  border-color: transparent;
+  transform: none;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+  z-index: auto;
 }
 
 /* ホバー・フォーカス状態（JavaScriptで制御） */
