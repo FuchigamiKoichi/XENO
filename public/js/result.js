@@ -83,7 +83,86 @@ socket.on('navigateToGame', (data) => {
         window.location.replace(data.url);
     }
 });
+
+// 他のプレイヤーがロビーに戻ることを選択した通知
+socket.on('playerWantsToLeave', (data) => {
+    console.log('他のプレイヤーがロビー復帰を選択:', data);
+    
+    const statusEl = document.getElementById('opponent-status');
+    if (statusEl) {
+        statusEl.textContent = data.message;
+        statusEl.classList.add('show');
+    }
+});
+
+// ルーム解散通知
+// Accessible modal for notifications
+function showAccessibleModal(message, callback) {
+    let modal = document.getElementById('accessible-modal');
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'accessible-modal';
+        modal.setAttribute('role', 'alertdialog');
+        modal.setAttribute('aria-modal', 'true');
+        modal.setAttribute('tabindex', '-1');
+        modal.style.position = 'fixed';
+        modal.style.top = '0';
+        modal.style.left = '0';
+        modal.style.width = '100vw';
+        modal.style.height = '100vh';
+        modal.style.background = 'rgba(0,0,0,0.5)';
+        modal.style.display = 'flex';
+        modal.style.alignItems = 'center';
+        modal.style.justifyContent = 'center';
+        modal.style.zIndex = '9999';
+        modal.innerHTML = `
+            <div style="background: white; padding: 2em; border-radius: 8px; max-width: 90vw; box-shadow: 0 2px 8px rgba(0,0,0,0.2);">
+                <div id="accessible-modal-message" style="margin-bottom: 1em;" tabindex="0"></div>
+                <button id="accessible-modal-ok" style="padding: 0.5em 1em;">OK</button>
+            </div>
+        `;
+        document.body.appendChild(modal);
+    }
+    modal.style.display = 'flex';
+    const msgEl = modal.querySelector('#accessible-modal-message');
+    msgEl.textContent = message;
+    msgEl.focus();
+    const okBtn = modal.querySelector('#accessible-modal-ok');
+    okBtn.focus();
+    okBtn.onclick = () => {
+        modal.style.display = 'none';
+        if (callback) callback();
+    };
+    // Allow Enter/Escape to close
+    modal.onkeydown = (e) => {
+        if (e.key === 'Enter' || e.key === 'Escape') {
+            okBtn.click();
+        }
+    };
+}
+
+socket.on('roomDissolved', (data) => {
+    console.log('ルーム解散通知:', data);
+    showAccessibleModal(data.reason, () => {
+        window.location.href = '/';
+    });
+});
 // (4) 「ロビーに戻る」ボタン
 document.getElementById('return-to-lobby-btn').addEventListener('click', () => {
-    window.location.href = '/'; 
+    if (roomId && playerId) {
+        // サーバーにロビー復帰の意思を通知
+        socket.emit('returnToLobby', { roomId, playerId });
+        
+        // ボタンを無効化してフィードバック
+        const button = document.getElementById('return-to-lobby-btn');
+        button.textContent = 'ロビーに戻っています...';
+        button.disabled = true;
+        
+        // 少し待ってからロビーに移動
+        setTimeout(() => {
+            window.location.href = '/';
+        }, 1000);
+    } else {
+        window.location.href = '/';
+    }
 });

@@ -690,6 +690,17 @@ function startGame() {
 }
 startGame();
 
+// ルーム削除通知の受信
+socket.on('roomDeleted', (data) => {
+    alert(`ルーム ${data.roomId} が削除されました: ${data.reason}`);
+    window.location.href = 'index.html';
+});
+
+// プレイヤー退室通知の受信
+socket.on('playerLeft', (data) => {
+    addLogMessage(`プレイヤーが退室しました。残り ${data.remainingPlayers} 人`);
+});
+
 // HTML から呼ぶもの
 window.goToTitle = goToTitle;
 window.surrender = surrender;
