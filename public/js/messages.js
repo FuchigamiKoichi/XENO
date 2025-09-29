@@ -98,15 +98,7 @@ class MessageManager {
     
     // ネストされたキーに対応（例: "tooltip.selectCard"）
     const keys = key.split('.');
-    let message = this.messages.ui;
-    
-    for (const k of keys) {
-      if (message && typeof message === 'object' && message[k] !== undefined) {
-        message = message[k];
-      } else {
-        return key; // キーが見つからない場合はキーをそのまま返す
-      }
-    }
+    let message = keys.reduce((obj, k) => obj?.[k], this.messages.ui);
     
     if (typeof message !== 'string') {
       return key;
