@@ -62,33 +62,66 @@ class AudioManager {
     }
     
     /**
-     * 音声ファイルを事前読み込み
+     * 音声ファイルを遅延読み込み（必要な時だけ読み込み）
      */
     preloadSounds() {
-        // BGMのプリロード
+        // 重要なSEのみを事前読み込み（ゲーム開始に必要）
+        const criticalSounds = ['hover', 'decision', 'gameStart'];
+        
+        criticalSounds.forEach(key => {
+            if (this.sePaths[key]) {
+                const audio = new Audio(this.sePaths[key]);
+                audio.preload = 'auto';
+                audio.volume = this.seVolume;
+                this.sounds[key] = audio;
+            }
+        });
+        
+        // BGMとその他のSEは遅延読み込み（preload='none'）
         Object.keys(this.bgmPaths).forEach(key => {
             const audio = new Audio(this.bgmPaths[key]);
-            audio.preload = 'auto';
+            audio.preload = 'none'; // 遅延読み込み
             audio.loop = true;
             audio.volume = this.bgmVolume;
             this.sounds[key] = audio;
         });
         
-        // SEのプリロード
         Object.keys(this.sePaths).forEach(key => {
-            const audio = new Audio(this.sePaths[key]);
-            audio.preload = 'auto';
-            audio.volume = this.seVolume;
-            this.sounds[key] = audio;
+            if (!criticalSounds.includes(key)) {
+                const audio = new Audio(this.sePaths[key]);
+                audio.preload = 'none'; // 遅延読み込み
+                audio.volume = this.seVolume;
+                this.sounds[key] = audio;
+            }
         });
     }
     
+    /**
+     * 音声ファイルが読み込まれているかチェックし、必要に応じて読み込む
+     * @param {HTMLAudioElement} audio - 音声要素
+     * @returns {Promise} 読み込み完了のPromise
+     */
+    ensureAudioLoaded(audio) {
+        return new Promise((resolve) => {
+            if (audio.readyState >= 2) { // HAVE_CURRENT_DATA以上
+                resolve();
+            } else {
+                const onCanPlay = () => {
+                    audio.removeEventListener('canplay', onCanPlay);
+                    resolve();
+                };
+                audio.addEventListener('canplay', onCanPlay);
+                audio.load(); // 読み込み開始
+            }
+        });
+    }
+
     /**
      * BGMを再生
      * @param {string} bgmKey - BGMのキー
      * @param {boolean} fadeIn - フェードイン効果を使用するかどうか
      */
-    playBGM(bgmKey, fadeIn = true) {
+    async playBGM(bgmKey, fadeIn = true) {
         if (this.isMuted) return;
         
         // 既存のBGMを停止
@@ -101,6 +134,9 @@ class AudioManager {
             console.warn(`BGM not found: ${bgmKey}`);
             return;
         }
+        
+        // BGMが読み込まれていない場合は読み込む
+        await this.ensureAudioLoaded(bgm);
         
         this.currentBGM = bgm;
         
@@ -143,7 +179,7 @@ class AudioManager {
      * @param {string} seKey - SEのキー
      * @param {number} duration - 再生時間（秒）。未指定の場合はデフォルト時間を使用
      */
-    playSE(seKey, duration = null) {
+    async playSE(seKey, duration = null) {
         if (this.isMuted) return;
         
         const se = this.sounds[seKey];
@@ -151,6 +187,9 @@ class AudioManager {
             console.warn(`SE not found: ${seKey}`);
             return;
         }
+        
+        // SEが読み込まれていない場合は読み込む
+        await this.ensureAudioLoaded(se);
         
         // 既存のタイマーがあればクリア
         this.stopSE(seKey);

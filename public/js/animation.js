@@ -2,6 +2,13 @@
 // すべてのアニメ共通ロジックをここに集約（グローバルに Anim を公開）
 
 (function () {
+  // WebP対応のカード画像パス取得関数
+  function getCardImagePath(cardNum) {
+    if (cardNum >= 0 && cardNum <= 10) {
+      return `../images/${cardNum}.webp`;
+    }
+    return `../images/${cardNum}.jpg`;
+  }
   // ===== 設定（必要なら init で上書き可）=====
   const FX = {
     dur: 0.5,            // 標準アニメ時間
@@ -112,7 +119,7 @@
       const anchorTo   = getSafeRect(refs.playerHandZone);
 
       const temp = document.createElement('img');
-      temp.src = `../images/${drawnCard}.jpg`;
+      temp.src = getCardImagePath(drawnCard);
       temp.classList.add('card', 'anim-temp');
       document.body.appendChild(temp);
 
@@ -152,7 +159,7 @@
       const anchorTo   = getSafeRect(refs.opponentHandZone);
 
       const temp = document.createElement('img');
-      temp.src = `../images/0.jpg`;
+      temp.src = getCardImagePath(0);
       temp.classList.add('card', 'anim-temp');
       document.body.appendChild(temp);
 
@@ -223,7 +230,7 @@
       // 仮のカードを複数作成
       for (let i = 0; i < numCards; i++) {
         const card = document.createElement('img');
-        card.src = '../images/0.jpg'; // 裏面
+        card.src = getCardImagePath(0); // 裏面
         card.classList.add('card', 'anim-temp');
         card.style.position = 'absolute';
         card.style.width = '100px';

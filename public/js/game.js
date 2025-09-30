@@ -23,6 +23,71 @@ showContainer.style.display   = 'none';
 // メッセージ初期化
 initializeMessages();
 
+// 画像の遅延読み込みキャッシュ
+const imageCache = new Map();
+
+/**
+ * 画像を遅延読み込みしてキャッシュする
+ * @param {string} src - 画像のURL
+ * @returns {Promise<HTMLImageElement>} 読み込み完了した画像要素
+ */
+function loadImageLazy(src) {
+  if (imageCache.has(src)) {
+    return Promise.resolve(imageCache.get(src));
+  }
+  
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      imageCache.set(src, img);
+      resolve(img);
+    };
+    img.onerror = reject;
+    img.src = src;
+  });
+}
+
+/**
+ * カード番号から最適な画像パスを取得（WebP対応）
+ * @param {number} cardNum - カード番号
+ * @returns {string} 画像パス
+ */
+function getCardImagePath(cardNum) {
+  // カード番号0-10はWebP、その他はJPG
+  if (cardNum >= 0 && cardNum <= 10) {
+    return `../images/${cardNum}.webp`;
+  }
+  return `../images/${cardNum}.jpg`;
+}
+
+/**
+ * 最適化されたカード画像要素を作成
+ * @param {string} src - 画像のURL
+ * @param {string} className - CSSクラス名
+ * @param {Object} attributes - 追加属性
+ * @returns {Promise<HTMLImageElement>} カード画像要素
+ */
+async function createOptimizedCardImage(src, className = '', attributes = {}) {
+  const img = document.createElement('img');
+  img.className = className;
+  
+  // 属性を設定
+  Object.entries(attributes).forEach(([key, value]) => {
+    img.setAttribute(key, value);
+  });
+  
+  // 遅延読み込みを使用して画像を設定
+  try {
+    const cachedImg = await loadImageLazy(src);
+    img.src = cachedImg.src;
+  } catch (error) {
+    console.warn(`Failed to load image: ${src}`, error);
+    img.src = src; // フォールバック
+  }
+  
+  return img;
+}
+
 // ゲーム開始時にBGMを再生
 document.addEventListener('DOMContentLoaded', () => {
   // ユーザーの操作後にBGMを開始（自動再生ポリシー対応）
@@ -36,6 +101,10 @@ document.addEventListener('DOMContentLoaded', () => {
   
   document.addEventListener('click', startBGMOnInteraction);
   document.addEventListener('keydown', startBGMOnInteraction);
+  
+  // 重要なカード画像を事前読み込み（背面、基本カードなど）
+  const criticalImages = ['../images/pack.jpg', getCardImagePath(0), getCardImagePath(1)];
+  criticalImages.forEach(src => loadImageLazy(src));
 });
 
 // ログエリアのトグル機能
@@ -359,7 +428,7 @@ function updateGameView(now) {
   if (now.myHands.length > 0) {
     now.myHands.forEach(card => {
       const cardImg = document.createElement('img');
-      cardImg.src = `../images/${card}.jpg`;
+      cardImg.src = getCardImagePath(card);
       cardImg.classList.add('card');
       cardImg.value = card;
       playerHandZone.appendChild(cardImg);
@@ -373,7 +442,7 @@ function updateGameView(now) {
     let idx = 0;
     now.myPlayed.forEach(card => {
       const playedImg = document.createElement('img');
-      playedImg.src = `../images/${card}.jpg`;
+      playedImg.src = getCardImagePath(card);
       playedImg.classList.add('played-card');
       playedImg.style.position = 'absolute';
       playedImg.style.left = `${idx * 40}px`;
@@ -397,7 +466,7 @@ function updateGameView(now) {
     
     opponentPlayedCards.forEach((card, cardIdx) => {
       const playedImg = document.createElement('img');
-      playedImg.src = `../images/${card}.jpg`;
+      playedImg.src = getCardImagePath(card);
       playedImg.classList.add('played-card');
       playedImg.style.position = 'absolute';
       playedImg.style.left = `${idx * 40}px`;
@@ -425,7 +494,7 @@ function updateGameView(now) {
       opponentHandZone.innerHTML = '';
       for (let j = 0; j < playerTurnNumber.length; j++) {
         const backCard = document.createElement('img');
-        backCard.src = `../images/0.jpg`;
+        backCard.src = getCardImagePath(0);
         backCard.classList.add('card');
         opponentHandZone.appendChild(backCard);
       }
@@ -434,7 +503,7 @@ function updateGameView(now) {
 
   if (now.reincarnation) {
     const sideCard = document.createElement('img');
-    sideCard.src = `../images/0.jpg`;
+    sideCard.src = getCardImagePath(0);
     sideCard.classList.add('side-card');
     sideContainer.appendChild(sideCard);
   }
@@ -442,7 +511,7 @@ function updateGameView(now) {
   // 山札の表示（0枚でもプレースホルダーを表示）
   const deckCard = document.createElement('img');
   if (now.cardNumber > 0) {
-    deckCard.src = `../images/0.jpg`;
+    deckCard.src = getCardImagePath(0);
     deckCard.classList.add('deck-active');
   } else {
     deckCard.src = `../images/pack.jpg`; // 空の山札用画像
@@ -480,7 +549,7 @@ function getCardDetails(cardNumber) {
 
 // カードを出す（自分）
 async function playCard(cardNumber) {
-  const imgSrc = `../images/${cardNumber}.jpg`;
+  const imgSrc = getCardImagePath(cardNumber);
   const cardNum = parseInt(cardNumber, 10);
 
   // カード効果に応じて特別なSEを再生
@@ -535,7 +604,7 @@ async function playCard(cardNumber) {
 
 // カードを出す（相手）
 async function playCard_cpu(cardNumber) {
-  const imgSrc = `../images/${cardNumber}.jpg`;
+  const imgSrc = getCardImagePath(cardNumber);
   const cardNum = parseInt(cardNumber, 10);
   
   // カード効果に応じて特別なSEを再生
@@ -670,7 +739,7 @@ async function select(choices, message = undefined) {
       cardWrapper.setAttribute('data-click-hint', messageManager.getUIMessage('clickHint'));
       
       const card = document.createElement('img');
-      card.src = `../images/${cardNumber}.jpg`;
+      card.src = getCardImagePath(cardNumber);
       card.width = 140; 
       card.height = 210; 
       card.alt = `カード ${cardNumber}`;
@@ -837,7 +906,7 @@ async function show(data) {
     for (let i = 0; i < data[0].cards.length; i++) {
       const cardNumber = data[0].cards[i];
       const card = document.createElement('img');
-      card.src = `../images/${cardNumber}.jpg`;
+      card.src = getCardImagePath(cardNumber);
       card.width = 140; 
       card.height = 210; 
       card.alt = `相手のカード ${cardNumber}`;
@@ -905,7 +974,7 @@ function setupSideCard() {
   const index = Math.floor(Math.random() * decks.length);
   decks.splice(index, 1)[0];
   const sideCard = document.createElement('img');
-  sideCard.src = '0.jpg';
+  sideCard.src = getCardImagePath(0);
   sideCard.classList.add('side-card');
   const sideContainer = document.getElementById('side-card-container');
   sideContainer.appendChild(sideCard);
@@ -1035,7 +1104,7 @@ socket.on('onatherTurn', async (data) => {
         opponentHandZone.innerHTML = '';
         for (let j = 0; j < playerTurnNumber.length + 1; j++) {
           const backCard = document.createElement('img');
-          backCard.src = `../images/0.jpg`;
+          backCard.src = getCardImagePath(0);
           backCard.classList.add('card');
           opponentHandZone.appendChild(backCard);
         }

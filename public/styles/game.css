@@ -6,8 +6,24 @@ body {
   color: white;
   margin: 0;
   padding: 0;
+  /* パフォーマンス最適化 */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeSpeed;
 }
 .container { margin-top: 20vh; }
+
+/* 画像パフォーマンス最適化 */
+img {
+  /* GPU加速を有効化 */
+  transform: translateZ(0);
+  will-change: auto;
+  /* 画像のスムージング最適化 */
+  image-rendering: optimizeQuality;
+  /* レイアウトシフトを防ぐ */
+  height: auto;
+  max-width: 100%;
+}
 
 /* ゲーム全体のレイアウト */
 .game-layout {

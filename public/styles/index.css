@@ -6,11 +6,10 @@
 }
 
 body {
-    font-family: 'Comic Sans MS', 'Papyrus', 'Bradley Hand', cursive, fantasy;
-    min-height: 100vh;
-    color: #333;
-    margin: 0;
-    padding: 0;
+    font-family: 'Arial', sans-serif;
+    background-image: url('../images/background.jpg');
+    background-size: cover;
+    background-position: center;
 }
 
 /* メインコンテナ：上下分割レイアウト */
@@ -23,7 +22,7 @@ body {
 /* 上部セクション：背景画像 + 入力パネル */
 .top-section {
     flex: 1;
-    background-image: url('../images/background.png');
+    background-image: url('../images/background.jpg');
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
