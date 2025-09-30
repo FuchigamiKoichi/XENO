@@ -13,7 +13,7 @@ class AudioManager {
         
         // 音声ファイルのパス定義
         this.bgmPaths = {
-            main: './sounds/bgm/0123_Manda-Landa_rev.mp3',
+            main: './sounds/bgm/EndingBGM.mp3',  // メインBGMとしてEndingBGMを使用
             ending: './sounds/bgm/EndingBGM.mp3'
         };
         
