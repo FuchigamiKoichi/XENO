@@ -42,6 +42,7 @@
           <button id="backToTitle" role="menuitem" type="button" class="menu-item">タイトル画面に戻る</button>
           <button id="surrenderButton" role="menuitem" type="button" class="menu-item">投降する</button>
           <button id="ruleButton" role="menuitem" type="button" class="menu-item">ルール説明</button>
+          <button id="audioSettingsButton" role="menuitem" type="button" class="menu-item">音量設定</button>
         </div>
       </nav>
 
@@ -128,10 +129,44 @@
     <div id="tooltip-card-effect" class="tooltip-effect"></div>
   </div>
 
-  <!-- GSAP（CDN）→ socket.io → messages → ゲームJS の順 -->
+  <!-- 音量設定モーダル -->
+  <div id="audioModal" class="modal">
+    <div class="modal-content">
+      <span class="close" id="closeAudio">&times;</span>
+      <h2>音量設定</h2>
+      <div class="audio-controls">
+        <div class="volume-control">
+          <label for="bgmVolume">BGM音量:</label>
+          <input type="range" id="bgmVolume" min="0" max="100" value="30">
+          <span id="bgmVolumeValue">30%</span>
+        </div>
+        <div class="volume-control">
+          <label for="seVolume">SE音量:</label>
+          <input type="range" id="seVolume" min="0" max="100" value="70">
+          <span id="seVolumeValue">70%</span>
+        </div>
+        <div class="volume-control">
+          <label for="muteToggle">
+            <input type="checkbox" id="muteToggle">
+            全体ミュート
+          </label>
+        </div>
+        
+        <!-- 音量リセット -->
+        <div class="reset-section">
+          <button id="resetToDefaults" class="reset-button">音量をデフォルトに戻す</button>
+        </div>
+        
+        <button id="testSE" class="test-button">全般SE テスト</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- GSAP（CDN）→ socket.io → messages → audio → animation → ゲームJS の順 -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
   <script src="/socket.io/socket.io.js"></script>
   <script src="./js/messages.js"></script>
+  <script src="./js/audio.js"></script>
   <script src="./js/animation.js"></script>
   <script defer src="./js/game.js"></script>
 </body>

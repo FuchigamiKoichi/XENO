@@ -2,6 +2,13 @@
 // すべてのアニメ共通ロジックをここに集約（グローバルに Anim を公開）
 
 (function () {
+  // WebP対応のカード画像パス取得関数
+  function getCardImagePath(cardNum) {
+    if (cardNum >= 0 && cardNum <= 10) {
+      return `../images/${cardNum}.webp`;
+    }
+    return `../images/${cardNum}.jpg`;
+  }
   // ===== 設定（必要なら init で上書き可）=====
   const FX = {
     dur: 0.5,            // 標準アニメ時間
@@ -112,7 +119,7 @@
       const anchorTo   = getSafeRect(refs.playerHandZone);
 
       const temp = document.createElement('img');
-      temp.src = `../images/${drawnCard}.jpg`;
+      temp.src = getCardImagePath(drawnCard);
       temp.classList.add('card', 'anim-temp');
       document.body.appendChild(temp);
 
@@ -152,7 +159,7 @@
       const anchorTo   = getSafeRect(refs.opponentHandZone);
 
       const temp = document.createElement('img');
-      temp.src = `../images/0.jpg`;
+      temp.src = getCardImagePath(0);
       temp.classList.add('card', 'anim-temp');
       document.body.appendChild(temp);
 
@@ -204,6 +211,101 @@
     gsap.set(refs.timerBar, { width: '100%' });
   }
 
+  // カードシャッフルアニメーション
+  function shuffleCards(duration = 2.0) {
+    return new Promise((resolve) => {
+      cleanupAnimTemps();
+
+      // デッキの位置を取得
+      const deckAnchor = getDeckAnchorRect();
+      const numCards = 8; // シャッフル用の仮カード枚数
+      const cards = [];
+      let shuffleAudio = null;
+
+      // シャッフル音を開始（ループ再生）
+      if (window.audioManager) {
+        shuffleAudio = window.audioManager.playSE('cardShuffle', duration * 0.8); // アニメーション時間に合わせて調整
+      }
+
+      // 仮のカードを複数作成
+      for (let i = 0; i < numCards; i++) {
+        const card = document.createElement('img');
+        card.src = getCardImagePath(0); // 裏面
+        card.classList.add('card', 'anim-temp');
+        card.style.position = 'absolute';
+        card.style.width = '100px';
+        card.style.height = '150px';
+        card.style.zIndex = 1000 + i;
+        
+        gsap.set(card, {
+          left: deckAnchor.left,
+          top: deckAnchor.top,
+          rotation: 0,
+          scale: 1,
+          autoAlpha: 1
+        });
+        
+        document.body.appendChild(card);
+        cards.push(card);
+      }
+
+      const timeline = gsap.timeline({
+        onComplete: () => {
+          // シャッフル音を停止（AudioManagerで管理されるため手動停止は不要）
+          if (window.audioManager) {
+            window.audioManager.stopSE('cardShuffle');
+          }
+          
+          // アニメーション完了後に仮カードを削除
+          cards.forEach(card => {
+            if (card.parentNode) {
+              card.parentNode.removeChild(card);
+            }
+          });
+          resolve('done');
+        }
+      });
+
+      // 各カードにシャッフルアニメーションを適用
+      cards.forEach((card, index) => {
+        const delay = index * 0.1;
+        const offsetX = (Math.random() - 0.5) * 100;
+        const offsetY = (Math.random() - 0.5) * 50;
+        const rotation = (Math.random() - 0.5) * 60;
+        
+        timeline
+          .to(card, {
+            x: offsetX,
+            y: offsetY,
+            rotation: rotation,
+            duration: 0.3,
+            ease: 'power2.out',
+            delay: delay
+          }, 0)
+          .to(card, {
+            x: 0,
+            y: 0,
+            rotation: 0,
+            duration: 0.4,
+            ease: 'back.out(1.7)',
+            delay: delay + 0.3
+          }, 0);
+      });
+
+      // デッキ全体に振動効果を追加
+      const deckEl = document.getElementById('deck');
+      if (deckEl) {
+        timeline.to(deckEl, {
+          x: '+=5',
+          duration: 0.1,
+          repeat: Math.floor(duration * 10),
+          yoyo: true,
+          ease: 'none'
+        }, 0);
+      }
+    });
+  }
+
   // 公開
   window.Anim = {
     init,
@@ -213,6 +315,7 @@
     drawCardToHand,
     cpuDrawCardToHand,
     popIn,
+    shuffleCards,
     startTurnTimer,
     stopTurnTimer
   };
