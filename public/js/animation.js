@@ -9,6 +9,73 @@
     long: 300            // ターンタイマー（秒）
   };
 
+  // ===== アニメーションスケジューラ（重なり防止）=====
+  // 目的:
+  // - 中央の大きな演出（ズーム/カード効果）は1本のレーンで直列実行
+  // - ドローなどの移動系は別レーンで直列。ただし、大演出中は開始を少し待つ
+  // - 既存APIはそのまま。非同期に積みたいとき専用のenqueue関数を公開
+  const lanes = {
+    fx: { queue: [], running: false },   // 大きな中央演出（ズーム/効果）
+    draw: { queue: [], running: false }, // ドローなどの移動系
+  };
+
+  function _runLane(laneName) {
+    const lane = lanes[laneName];
+    if (lane.running) { return; }
+    lane.running = true;
+
+    const next = async () => {
+      const task = lane.queue.shift();
+      if (!task) {
+        lane.running = false;
+        return;
+      }
+      try {
+        // drawレーンはfxが動作中なら少しだけ待ってから開始（重なり軽減）
+        if (laneName === 'draw') {
+          let waited = 0;
+          const step = 50; // ms
+          const maxWait = 600; // ms（長くは待たない）
+          while (lanes.fx.running && waited < maxWait) {
+            // eslint-disable-next-line no-await-in-loop
+            await new Promise(r => setTimeout(r, step));
+            waited += step;
+          }
+        }
+        await task();
+      } catch (e) {
+        console.error('[Anim Scheduler] task error in lane:', laneName, e);
+      } finally {
+        // 次タスクへ
+        next();
+      }
+    };
+
+    next();
+  }
+
+  function _enqueue(laneName, fn) {
+    const lane = lanes[laneName];
+    return new Promise((resolve) => {
+      lane.queue.push(async () => {
+        await fn();
+        resolve();
+      });
+      _runLane(laneName);
+    });
+  }
+
+  // 外部用: FXレーンがアイドルになるのを待つ（最大待ち時間を指定）
+  async function waitForFxIdle(maxWaitMs = 1200) {
+    const step = 50;
+    let waited = 0;
+    while (lanes.fx.running && waited < maxWaitMs) {
+      // eslint-disable-next-line no-await-in-loop
+      await new Promise(r => setTimeout(r, step));
+      waited += step;
+    }
+  }
+
   // ===== 参照（initで注入）=====
   const refs = {
     playerHandZone: null,
@@ -1118,6 +1185,31 @@
     }
   }
 
+  // ===== スケジューリング用のヘルパ =====
+  // 対戦相手のプレイ演出（ズーム→効果）を1本のFXレーンに積む
+  async function enqueueOpponentPlay(cardNumber, isBarriered = false, handInfo = null, effectText = '') {
+    const imgSrc = `../images/${cardNumber}.jpg`;
+    const text = typeof effectText === 'string' ? effectText : '';
+    return _enqueue('fx', async () => {
+      // ズーム（短め保持）
+      await zoomCard(imgSrc, text, 1.0);
+      // 効果
+      await playCardEffect(parseInt(cardNumber, 10), isBarriered, handInfo);
+    });
+  }
+
+  // ドロー演出をdrawレーンに積む（fx稼働中は最大600msだけ待ってから開始）
+  async function enqueuePlayerDraw(drawnCard) {
+    return _enqueue('draw', async () => {
+      await drawCardToHand(drawnCard);
+    });
+  }
+  async function enqueueCpuDraw() {
+    return _enqueue('draw', async () => {
+      await cpuDrawCardToHand();
+    });
+  }
+
   // 公開
   window.Anim = {
     init,
@@ -1130,6 +1222,11 @@
     startTurnTimer,
     stopTurnTimer,
     playCardEffect,
-    playBarrierEffect
+    playBarrierEffect,
+    // 非同期に積むための新API（必要に応じて利用）
+    enqueueOpponentPlay,
+    enqueuePlayerDraw,
+    enqueueCpuDraw,
+    waitForFxIdle
   };
 })();

@@ -849,6 +849,8 @@ socket.on('yourTurn', async (data, callback) => {
   await updateGameView(data.now);
   if (data.kind === 'draw') {
     if (data.choices.length > 2) {
+      // 直前ターンの相手演出（FX）が残っている可能性があるため、短時間だけ待ってからセレクトを表示
+      await Anim.waitForFxIdle(1200);
       Anim.startTurnTimer();
       const idx = await select(data.choices, messageManager.getSelectMessage('draw'));
       hideSelect();
@@ -917,14 +919,14 @@ socket.on('onatherTurn', async (data) => {
   console.log('onatherTurn received:', data); // デバッグログ追加
   if (data.kind === 'play_card') {
     console.log('相手がカードをプレイ:', data.choice, 'バリア効果:', data.isBarriered); // デバッグログ追加
-    // カード効果演出が完全に終了するまで待つ（サーバーからのバリア情報を使用）
-    await playCard_cpu_withBarrier(parseInt(data.choice, 10), data.isBarriered || false);
+    // 重なり防止のため、演出はスケジューラに積む（待たない）
+    const cname  = getCharacterName(parseInt(data.choice, 10));
+    const text   = getEffectDescription(cname);
+    Anim.enqueueOpponentPlay(parseInt(data.choice, 10), data.isBarriered || false, getCurrentHandInfo(), text);
     addLog(messageManager.getGameMessage('opponentPlayCard', { card: data.choice }));
   } else if (data.kind === 'draw') {
-    // カード効果演出との重複を防ぐため、少し待機してからドロー
-    await new Promise(resolve => setTimeout(resolve, 300));
-    // ドロー演出を実行（カード効果演出が終わった後）
-    await Anim.cpuDrawCardToHand();
+    // ドローはdrawレーンへenqueue（fxレーン稼働中は短く待ってから走る）
+    Anim.enqueueCpuDraw();
     for (let i = 0; i < data.now.playersLength + 1; i++) {
       const playerTurnNumber = data.now.playersHandsLengths[i];
       if (playerTurnNumber.turnNumber !== Object.keys(data.now.otherPlayers)[0]) {
