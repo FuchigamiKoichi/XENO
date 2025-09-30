@@ -476,7 +476,10 @@ function createData(field, player) {
 
     for (const p of players) {
         if (p !== player) {
-            state[p.turnNumber] = p.live;
+            state[p.turnNumber] = {
+                live: p.live,
+                affected: p.affected  // affected状態も含める
+            };
         }
     }
 

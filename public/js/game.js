@@ -381,9 +381,6 @@ async function playCard(cardNumber) {
   // ズーム演出（完了待ち）
   await Anim.zoomCard(imgSrc, text, 1.0);
 
-  // バリア効果の判定
-  const shouldShowBarrier = checkBarrierEffect(cardNumber);
-  
   // カード6の場合は手札情報を含めて演出を実行
   if (parseInt(cardNumber, 10) === 6) {
     const handInfo = getCurrentHandInfo();
@@ -410,9 +407,9 @@ async function playCard(cardNumber) {
   return 'done';
 }
 
-// カードを出す（相手）
-async function playCard_cpu(cardNumber) {
-  console.log('playCard_cpu called with:', cardNumber); // デバッグログ追加
+// カードを出す（相手）- サーバーからのバリア情報付き
+async function playCard_cpu_withBarrier(cardNumber, isBarriered) {
+  console.log('playCard_cpu_withBarrier called with:', cardNumber, 'バリア:', isBarriered); // デバッグログ追加
   const imgSrc = `../images/${cardNumber}.jpg`;
   const cname  = getCharacterName(cardNumber);
   const text   = getEffectDescription(cname);
@@ -421,18 +418,15 @@ async function playCard_cpu(cardNumber) {
   console.log('Showing zoom for opponent card:', cardNumber); // デバッグログ追加
   await Anim.zoomCard(imgSrc, text, 1.5);
   
-  // バリア効果の判定（相手のカード実行時）
-  const shouldShowBarrier = checkBarrierEffect(cardNumber);
-  
   // カード6の場合は手札情報を含めて演出を実行
   if (parseInt(cardNumber, 10) === 6) {
     const handInfo = getCurrentHandInfo();
     console.log('Playing card 6 effect for opponent with hand info:', handInfo); // デバッグログ追加
-    await Anim.playCardEffect(parseInt(cardNumber, 10), shouldShowBarrier, handInfo);
+    await Anim.playCardEffect(parseInt(cardNumber, 10), isBarriered, handInfo);
   } else {
-    // カード効果演出を実行（バリア効果判定付き）
-    console.log('Playing card effect for opponent card:', cardNumber, 'with barrier:', shouldShowBarrier); // デバッグログ追加
-    await Anim.playCardEffect(parseInt(cardNumber, 10), shouldShowBarrier);
+    // カード効果演出を実行（サーバーからのバリア情報を使用）
+    console.log('Playing card effect for opponent card:', cardNumber, 'with barrier:', isBarriered); // デバッグログ追加
+    await Anim.playCardEffect(parseInt(cardNumber, 10), isBarriered);
   }
   console.log('Card effect completed for opponent card:', cardNumber); // デバッグログ追加
   
@@ -440,47 +434,13 @@ async function playCard_cpu(cardNumber) {
   // これにより重複表示を防ぐ
 }
 
-// バリア効果が発動するかどうかを判定
-function checkBarrierEffect(cardNumber) {
-  if (!currentGameState) {
-    return false;
-  }
-  
-  // 他プレイヤーを対象とするカードの一覧
-  const targetingCards = [1, 2, 3, 5, 8, 9, 10];
-  
-  if (!targetingCards.includes(parseInt(cardNumber))) {
-    return false;
-  }
-  
-  // プレイヤーのaffected状態を確認
-  let playerAffected = true; // デフォルトは効果を受ける状態
-  
-  if (currentGameState.otherPlayers) {
-    const otherPlayerKeys = Object.keys(currentGameState.otherPlayers);
-    if (otherPlayerKeys.length > 0) {
-      const opponentData = currentGameState.otherPlayers[otherPlayerKeys[0]];
-      if (opponentData && typeof opponentData.affected !== 'undefined') {
-        playerAffected = opponentData.affected;
-      }
-    }
-  }
-  
-  // プレイヤーが効果を受けない状態（affected = false）で、
-  // 相手が対象効果カードを使用した場合にバリア効果を表示
-  if (!playerAffected) {
-    console.log('バリア効果発動: プレイヤーはaffected=false状態です');
-    return true;
-  }
-  
-  // 自分のaffected状態も確認（相手に対してカードを使用する場合）
-  if (currentGameState.myAffected !== undefined && !currentGameState.myAffected) {
-    console.log('バリア効果発動: 相手プレイヤーはaffected=false状態です');
-    return true;
-  }
-  
-  return false;
+// カードを出す（相手）- 後方互換性のため残す
+async function playCard_cpu(cardNumber) {
+  await playCard_cpu_withBarrier(cardNumber, false);
 }
+
+// バリア効果の判定はサーバー側で行われるため、この関数は削除済み
+// サーバーからのisBarriered情報を直接使用します
 
 // 現在の手札情報を取得する
 function getCurrentHandInfo() {
@@ -956,9 +916,9 @@ socket.on('onatherTurn', async (data) => {
   Anim.stopTurnTimer();
   console.log('onatherTurn received:', data); // デバッグログ追加
   if (data.kind === 'play_card') {
-    console.log('相手がカードをプレイ:', data.choice); // デバッグログ追加
-    // カード効果演出が完全に終了するまで待つ
-    await playCard_cpu(parseInt(data.choice, 10));
+    console.log('相手がカードをプレイ:', data.choice, 'バリア効果:', data.isBarriered); // デバッグログ追加
+    // カード効果演出が完全に終了するまで待つ（サーバーからのバリア情報を使用）
+    await playCard_cpu_withBarrier(parseInt(data.choice, 10), data.isBarriered || false);
     addLog(messageManager.getGameMessage('opponentPlayCard', { card: data.choice }));
   } else if (data.kind === 'draw') {
     // カード効果演出との重複を防ぐため、少し待機してからドロー
@@ -1046,6 +1006,19 @@ socket.on('roomDeleted', (data) => {
 // プレイヤー退室通知の受信
 socket.on('playerLeft', (data) => {
     addLogMessage(messageManager.getGameMessage('playerLeft', { count: data.remainingPlayers }));
+});
+
+// プレイヤー自身のカード効果が無効化された場合の通知
+socket.on('cardEffectBarriered', async (data) => {
+  console.log('自分のカード効果が無効化されました:', data); // デバッグログ追加
+  
+  // バリア効果のアニメーションを表示
+  if (data.isBarriered) {
+    console.log('バリア効果アニメーションを表示中...');
+    await Anim.playBarrierEffect();
+    console.log('バリア効果アニメーション完了');
+    addLog('相手はカード4で守られているため、効果が無効化されました！');
+  }
 });
 
 // ツールチップ機能

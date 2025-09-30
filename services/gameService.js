@@ -287,18 +287,72 @@ class GameService {
       Logger.debug(`他のプレイヤーに通知: roomId=${roomId}, choice=${choice}, kind=${kind}, actor=${actorSocketId}`);
       
       // アクションを行ったプレイヤー以外に通知
+      // バリア効果の判定（カード効果が無効化されるかどうか）
+      let isBarriered = false;
+      if (kind === 'play_card') {
+        isBarriered = GameService.checkBarrierEffect(choice, now, actorSocketId, roomId);
+      }
+      
       const notificationData = {
         choice: choice,
         kind: kind,
-        now: now
+        now: now,
+        isBarriered: isBarriered  // バリア効果情報を追加
       };
       
       // ルーム内の他のプレイヤーに onatherTurn イベントを送信
       io.to(roomId).except(actorSocketId).emit('onatherTurn', notificationData);
       
+      // プレイヤー自身にもバリア効果情報を送信（自分のカード効果が無効化された場合）
+      if (kind === 'play_card' && isBarriered) {
+        io.to(actorSocketId).emit('cardEffectBarriered', {
+          cardNumber: choice,
+          isBarriered: isBarriered
+        });
+        Logger.debug(`プレイヤー自身にバリア効果通知: ${actorSocketId}, カード: ${choice}`);
+      }
+      
       Logger.debug('他のプレイヤーへの通知完了');
     } catch (error) {
       Logger.error('他のプレイヤーへの通知中にエラーが発生:', error);
+    }
+  }
+
+  /**
+   * バリア効果（カード効果無効化）を判定する
+   * @param {string} cardNumber - プレイされたカード番号
+   * @param {Object} gameState - 現在のゲーム状態
+   * @param {string} actorSocketId - カードをプレイしたプレイヤーのソケットID
+   * @param {string} roomId - ルームID
+   * @returns {boolean} バリア効果が発動するかどうか
+   */
+  static checkBarrierEffect(cardNumber, gameState, actorSocketId, roomId) {
+    // 他プレイヤーを対象とするカードの一覧
+    const targetingCards = [1, 2, 3, 5, 8, 9, 10];
+    
+    if (!targetingCards.includes(parseInt(cardNumber))) {
+      return false;
+    }
+    
+    // ゲーム状態から対象プレイヤーのaffected状態を確認
+    try {
+      // 対象プレイヤー（効果を受ける側）のaffected状態をチェック
+      const otherPlayersKeys = Object.keys(gameState.otherPlayers || {});
+      
+      for (const turnNumber of otherPlayersKeys) {
+        const playerData = gameState.otherPlayers[turnNumber];
+        
+        // affected = false の場合、バリア効果発動
+        if (playerData && playerData.affected === false) {
+          Logger.debug(`バリア効果発動: ターン${turnNumber}のプレイヤーはaffected=false状態`);
+          return true;
+        }
+      }
+      
+      return false;
+    } catch (error) {
+      Logger.error('バリア効果判定中にエラー:', error);
+      return false;
     }
   }
 

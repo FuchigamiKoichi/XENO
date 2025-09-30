@@ -1129,6 +1129,7 @@
     popIn,
     startTurnTimer,
     stopTurnTimer,
-    playCardEffect
+    playCardEffect,
+    playBarrierEffect
   };
 })();
