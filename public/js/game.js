@@ -922,7 +922,13 @@ socket.on('onatherTurn', async (data) => {
     // 重なり防止のため、演出はスケジューラに積む（待たない）
     const cname  = getCharacterName(parseInt(data.choice, 10));
     const text   = getEffectDescription(cname);
-    Anim.enqueueOpponentPlay(parseInt(data.choice, 10), data.isBarriered || false, getCurrentHandInfo(), text);
+    // 後でリザルト遷移時に待つため、最後の相手演出のPromiseを保持
+    window.__lastOpponentAnimPromise = Anim.enqueueOpponentPlay(
+      parseInt(data.choice, 10),
+      data.isBarriered || false,
+      getCurrentHandInfo(),
+      text
+    );
     addLog(messageManager.getGameMessage('opponentPlayCard', { card: data.choice }));
   } else if (data.kind === 'draw') {
     // ドローはdrawレーンへenqueue（fxレーン稼働中は短く待ってから走る）
@@ -942,8 +948,20 @@ socket.on('onatherTurn', async (data) => {
   }
 });
 
-socket.on('gameEnded', (data) => {
+socket.on('gameEnded', async (data) => {
   Anim.stopTurnTimer();
+  // 相手演出が残っていれば完了を待つ
+  try {
+    if (window.__lastOpponentAnimPromise && typeof window.__lastOpponentAnimPromise.then === 'function') {
+      await window.__lastOpponentAnimPromise.catch(() => {});
+    }
+    // 念のためFXレーンのアイドルも待つ（最大30秒）
+    if (Anim && typeof Anim.waitForFxIdle === 'function') {
+      await Anim.waitForFxIdle(30000);
+    }
+  } catch (e) {
+    console.debug('result navigation wait error:', e);
+  }
   const resultString = data.result.toString();
   let reason = 'Noreason';
   const match = resultString.match(/\((.*)\)/);
@@ -954,8 +972,20 @@ socket.on('gameEnded', (data) => {
   );
 });
 
-socket.on('redirectToResult', (data) => {
-  if (data && data.url) window.location.replace(data.url);
+socket.on('redirectToResult', async (data) => {
+  if (!data || !data.url) return;
+  // 相手演出が残っていれば完了を待つ
+  try {
+    if (window.__lastOpponentAnimPromise && typeof window.__lastOpponentAnimPromise.then === 'function') {
+      await window.__lastOpponentAnimPromise.catch(() => {});
+    }
+    if (Anim && typeof Anim.waitForFxIdle === 'function') {
+      await Anim.waitForFxIdle(30000);
+    }
+  } catch (e) {
+    console.debug('redirect wait error:', e);
+  }
+  window.location.replace(data.url);
 });
 
 socket.on('waitingForOpponent', (data) => {
