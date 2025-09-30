@@ -1,0 +1,1070 @@
+/* ベース */
+body {
+  font-family: Arial, sans-serif;
+  text-align: center;
+  background-color: #222;
+  color: white;
+  margin: 0;
+  padding: 0;
+}
+.container { margin-top: 20vh; }
+
+/* ゲーム全体のレイアウト */
+.game-layout {
+  display: flex;
+  min-height: 100vh;
+  width: 100%;
+}
+
+/* 左右の広告領域 */
+.left-ad-area,
+.right-ad-area {
+  width: 120px;
+  background-color: #333;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: center;
+  padding: 10px 5px;
+  border: 1px solid #555;
+}
+
+.ad-placeholder {
+  background-color: #444;
+  border: 1px dashed #666;
+  border-radius: 4px;
+  padding: 10px;
+  text-align: center;
+  font-size: 12px;
+  color: #aaa;
+  margin-bottom: 10px;
+  width: 100%;
+  min-height: 150px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#surrenderButton { background-color: blue !important; }
+#ruleButton { background-color: green !important; }
+#backToTitle:hover { background-color: darkred; }
+
+.game-screen {
+  display: none;
+  position: relative;
+  flex-direction: row;
+  flex: 1;
+  min-width: 0; /* flexの縮小を許可 */
+  overflow: hidden; /* 子要素が広告領域にはみ出さないように */
+}
+
+/* ゲームコンテンツ領域 */
+.game-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+  margin-left: 0; /* ログエリアが隠れている時はマージンなし */
+  padding: 20px;
+  transition: margin-left 0.3s ease-in-out; /* スムーズなレイアウト変更 */
+}
+
+/* ログエリアが開いている時のメインコンテンツ調整 */
+.game-screen.log-open .game-content {
+  margin-left: 300px; /* ログエリアの幅分だけマージンを追加 */
+}
+
+/* ターン表示（表示/非表示は JS 側で制御） */
+#turnIndicator,
+#second_turn {
+  position: fixed;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: rgba(0,0,0,0.8);
+  color: white;
+  padding: 20px 40px;
+  font-size: 24px;
+  font-weight: bold;
+  text-align: center;
+  border-radius: 10px;
+  display: none;
+  z-index: 4000;
+}
+
+/* 相手中央エリア */
+#opponent-center-area {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+}
+
+/* 相手プレイエリア */
+#opponent-playArea {
+  width: 600px; height: 150px;
+  background-color: darkred;
+  display: flex; align-items: center; justify-content: center;
+  border: 2px solid white;
+  font-size: 18px; color: white;
+  margin: 10px auto;
+  position: relative;
+}
+
+/* 相手手札 */
+#opponent-hand {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+/* 自分中央エリア */
+#center-area {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+}
+
+/* 山札 */
+#deck-container {
+  margin-right: 20px;
+  display: flex;
+  flex-direction: column;
+  text-align: center;
+  flex-shrink: 0;
+  position: relative;
+  min-width: 120px;  /* 最小幅を設定 */
+  min-height: 200px; /* 最小高さを設定 */
+}
+#deck { 
+  width: 100px; 
+  height: 150px; 
+  cursor: pointer; 
+  z-index: 2; 
+}
+
+/* 山札の状態別スタイル */
+#deck.deck-active {
+  opacity: 1;
+  filter: none;
+}
+
+#deck.deck-empty {
+  opacity: 0.5;
+  filter: grayscale(0.3);
+  cursor: not-allowed;
+}
+
+/* 横向きサイドカード */
+#side-card-container {
+  position: absolute;
+  top: 130px; left: 80px;
+  z-index: 1;
+}
+.side-card {
+  width: 100px; height: 150px;
+  transform: rotate(90deg);
+  transform-origin: top right;
+  cursor: pointer; z-index: 1;
+}
+
+/* 山札の残り枚数 */
+#deck-count { 
+  margin-top: 10px; 
+  font-size: 14px; 
+  min-height: 20px; /* 最小高さを設定してスペースを確保 */
+}
+
+/* 山札が0枚の時のテキストスタイル */
+#deck-count.empty-deck {
+  color: #888;
+  font-style: italic;
+}
+
+/* 自分プレイエリア */
+#playArea {
+  width: 600px; height: 150px;
+  background-color: darkgreen;
+  display: flex; align-items: center; justify-content: center;
+  border: 2px solid white;
+  font-size: 20px; color: white;
+  margin: 20px;
+  position: relative;
+  flex-grow: 1;
+}
+
+/* 手札 */
+.hand-zone { display: flex; gap: 10px; margin: 20px; }
+.card { width: 100px; height: 150px; display:block; cursor: pointer; }
+
+/* モーダル */
+.modal {
+  display: none; position: fixed; z-index: 1000;
+  bottom: 30px; right: 40px;
+  min-width: 350px; min-height: 300px;
+  background-color: rgba(0,0,0,0.5);
+  justify-content: center; align-items: center;
+}
+.modal-content {
+  background-color: black;
+  padding: 20px;
+  border-radius: 10px;
+  width: 60%; max-width: 500px;
+  text-align: center;
+  position: relative;
+}
+
+/* ルールモーダル */
+#ruleModal {
+  position: fixed; top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: rgba(0,0,0,0.5);
+  display: flex; z-index: 3;
+  justify-content: center; align-items: center;
+}
+.rule-image {
+  max-width: 250px; 
+  width: 100%;
+  height: auto;
+  display: block;
+  margin: 0 auto 16px; 
+  border-radius: 8px; 
+}
+
+#ruleModal .modal-content {
+  width: 95vw;
+  max-width: 1200px;
+  height: 90vh;
+  min-height: 600px;
+  background: rgba(0,0,0,0.5);
+  border-radius: 16px;
+  padding: 40px 32px;
+  box-shadow: 0 8px 40px rgba(0,0,0,0.3);
+  overflow-y: auto;
+  text-align: left;
+  position: relative;
+}
+#ruleModal .modal-content h2 {
+  text-align: center;
+  margin-top: 0;
+}
+
+/* --- ルール画面サブメニュー用スタイル --- */
+
+.card-pills {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 16px;
+  border-bottom: 1px solid #ccc;
+  padding-bottom: 16px;
+}
+
+.pill-btn {
+  padding: 8px 12px;
+  border: 1px solid #ccc;
+  border-radius: 16px;
+  background-color: #f0f0f0;
+  cursor: pointer;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.pill-btn:hover {
+  background-color: #e0e0e0;
+}
+
+.pill-btn.active {
+  background-color: #007bff;
+  color: white;
+  border-color: #007bff;
+}
+
+.card-desc {
+  display: none; /* 通常は非表示 */
+}
+
+.card-desc.active {
+  display: block; /* activeクラスがついたものだけ表示 */
+}
+
+/* タブ */
+.tab-buttons { display: flex; justify-content: center; margin-bottom: 10px; }
+.tab-btn { padding: 10px 20px; margin: 5px; border: none; background: #ddd; cursor: pointer; }
+.tab-btn.active { background: #007bff; color: white; }
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+.close-btn { position: absolute; top: 10px; right: 15px; font-size: 24px; cursor: pointer; }
+
+/* 使用済みカード一覧 */
+#usedCardsList {
+  display: flex; flex-wrap: wrap; gap: 10px; justify-content: center;
+}
+.used-card { width: 80px; height: 120px; border: 2px solid #000; }
+.card-image { width: 100px; margin: 5px; border-radius: 8px; }
+
+/* カード拡大表示（アニメは GSAP） */
+#cardZoom {
+  position: fixed; top: 0; left: 0;
+  width: 100vw; height: 100vh;
+  background-color: rgba(0,0,0,0.8);
+  display: none; justify-content: center; align-items: center;
+  z-index: 1000;
+}
+#cardZoom img { width: 200px; height: 300px; }
+
+/* 効果テキスト */
+#effectDescription {
+  margin-top: 10px; padding: 10px 14px;
+  background: rgba(0,0,0,0.7); color: #fff; border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+  font-size: 60px; line-height: 1.4; display: inline-block;
+  max-width: 90%;
+  z-index: 7;
+}
+
+/* ログ */
+#log-area {
+  width: 300px; /* 幅を少し広げる */
+  height: 100%; /* game-screenの高さに合わせる */
+  padding: 15px;
+  top: 0px; 
+  left: -300px; /* 初期状態では完全に隠す */
+  background-color: rgba(0, 0, 0, 0.9); /* 背景を濃くする */
+  border-right: 2px solid #ccc;
+  position: absolute; /* absoluteに変更してgame-screen内に配置 */
+  font-size: 14px; 
+  box-shadow: 4px 0 10px rgba(0,0,0,0.3);
+  backdrop-filter: blur(8px);
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box; /* paddingを含めた高さ計算 */
+  z-index: 2000; /* より高いz-indexで最前面に */
+  transition: left 0.3s ease-in-out; /* スライドアニメーション */
+}
+
+/* ログエリアが開いた状態 */
+#log-area.open {
+  left: 0px; /* game-screen内の左端に表示 */
+}
+
+/* ログトグルボタン */
+.log-toggle-btn {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  width: 50px;
+  height: 50px;
+  border: none;
+  border-radius: 50%;
+  background-color: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(4px);
+  color: white;
+  font-size: 20px;
+  cursor: pointer;
+  z-index: 1500;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+}
+
+.log-toggle-btn:hover {
+  background-color: rgba(255, 255, 255, 0.3);
+  transform: scale(1.1);
+}
+
+/* ログヘッダー */
+.log-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+  flex-shrink: 0;
+}
+
+.log-header h3 {
+  margin: 0;
+  color: white;
+}
+
+/* ログ閉じるボタン */
+.log-close-btn {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 24px;
+  cursor: pointer;
+  padding: 0;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: background-color 0.2s ease;
+}
+
+.log-close-btn:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+/* 削除：log-headerで管理するため */
+#log-messages { 
+  color: white; 
+  display: flex; 
+  flex-direction: column; 
+  gap: 8px; 
+  overflow-y: scroll; /* 常にスクロールバーを表示 */
+  flex-grow: 1; /* 残りのスペースを使用 */
+  padding-right: 5px; /* スクロールバー用のスペース */
+  min-height: 0; /* flexアイテムが縮むことを許可 */
+  max-height: 100%; /* 親コンテナを超えないように制限 */
+}
+
+/* スクロールバーのスタイリング（Webkit系ブラウザ用） */
+#log-messages::-webkit-scrollbar {
+  width: 8px;
+}
+#log-messages::-webkit-scrollbar-track {
+  background: rgba(255,255,255,0.1);
+  border-radius: 4px;
+}
+#log-messages::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.3);
+  border-radius: 4px;
+}
+#log-messages::-webkit-scrollbar-thumb:hover {
+  background: rgba(255,255,255,0.5);
+}
+
+/* 選択/公開UI */
+#select-container, #show-container, #showResult {
+  position: fixed; 
+  top: 50%; 
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: auto;
+  max-width: 90vw;
+  height: auto;
+  background-color: rgba(0, 0, 0, 0.8);
+  border-radius: 15px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center; 
+  align-items: center; 
+  z-index: 1000;
+  border: 3px solid #ffcc00;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+}
+
+/* 選択画面のタイトル */
+.select-title {
+  color: #ffcc00;
+  font-size: 1.5em;
+  font-weight: bold;
+  margin-bottom: 15px;
+  text-align: center;
+}
+
+/* 選択画面のカードコンテナ */
+#select-container {
+  flex-direction: column;
+}
+
+/* カード選択エリア */
+.select-cards-area {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 15px;
+  max-width: 100%;
+}
+
+/* 選択可能なカードのラッパー */
+.select-card-wrapper {
+  cursor: pointer;
+  border: 3px solid transparent;
+  border-radius: 10px;
+  transition: all 0.3s ease;
+  position: relative;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+  outline: none;
+  /* ブラウザのデフォルトホバーを無効化 */
+  pointer-events: auto;
+}
+
+/* ブラウザのデフォルトホバー状態を無効化（!importantを使わず、より具体的なセレクタで制御） */
+.select-card-wrapper:not(.hover-active):hover {
+  /* デフォルトスタイルを維持（JavaScriptで制御） */
+  border-color: transparent;
+  transform: none;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+  z-index: auto;
+}
+
+.select-card-wrapper:not(.focus-active):focus {
+  /* デフォルトスタイルを維持（JavaScriptで制御） */
+  border-color: transparent;
+  transform: none;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+  z-index: auto;
+}
+
+/* ホバー・フォーカス状態（JavaScriptで制御） */
+.select-card-wrapper.hover-active,
+.select-card-wrapper.focus-active {
+  border-color: #ffcc00;
+  transform: scale(1.05) translateY(-5px);
+  box-shadow: 0 8px 16px rgba(255, 204, 0, 0.4);
+  z-index: 10;
+}
+
+.select-card-wrapper.focus-active {
+  border-color: #00bfff;
+  box-shadow: 0 8px 16px rgba(0, 191, 255, 0.4);
+}
+
+.select-card {
+  border-radius: 10px;
+  transition: transform 0.1s ease;
+}
+
+.select-card-wrapper::after {
+  content: attr(data-click-hint);
+  position: absolute;
+  bottom: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: #ffcc00;
+  color: #000;
+  padding: 2px 8px;
+  border-radius: 5px;
+  font-size: 12px;
+  font-weight: bold;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+
+/* ブラウザのデフォルト::afterを無効化 */
+.select-card-wrapper:hover::after,
+.select-card-wrapper:focus::after {
+  opacity: 0 !important;
+}
+
+/* JavaScriptで制御される状態のみ有効 */
+.select-card-wrapper.hover-active::after,
+.select-card-wrapper.focus-active::after {
+  opacity: 1 !important;
+}
+
+/* 透視結果表示 */
+.show-title {
+  color: #ffcc00;
+  font-size: 1.5em;
+  font-weight: bold;
+  margin-bottom: 15px;
+  text-align: center;
+}
+
+.show-cards-area {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 15px;
+  max-width: 100%;
+  margin-bottom: 0;
+}
+
+.show-card {
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+  border: 2px solid #ffcc00;
+}
+
+
+
+#showResult { display: none; }
+
+/* モバイル対応 */
+@media (max-width: 768px) {
+  #select-container {
+    width: 95vw;
+    padding: 15px;
+  }
+  
+  .select-title {
+    font-size: 1.2em;
+    margin-bottom: 10px;
+  }
+  
+  .select-cards-area {
+    gap: 10px;
+  }
+  
+  .select-card {
+    width: 100px;
+    height: 150px;
+  }
+  
+  .select-card-wrapper::after {
+    font-size: 10px;
+    padding: 1px 6px;
+    bottom: -6px;
+  }
+  
+  .show-title {
+    font-size: 1.2em;
+    margin-bottom: 10px;
+  }
+  
+  .show-cards-area {
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+  
+  .show-card {
+    width: 100px;
+    height: 150px;
+  }
+}
+
+@media (max-width: 480px) {
+  .select-cards-area {
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .select-card {
+    width: 120px;
+    height: 180px;
+  }
+  
+  .show-cards-area {
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .show-card {
+    width: 120px;
+    height: 180px;
+  }
+  
+  /* モバイル表示での転生札調整 */
+  #side-card-container {
+    top: 100px; 
+    left: 20px;  /* 画面端からの距離を小さく */
+    width: 80px;
+    height: 120px;
+  }
+  
+  .side-card {
+    width: 120px; 
+    height: 80px;  /* モバイルではさらに小さく */
+  }
+}
+
+/* カード説明ツールチップ */
+.card-tooltip {
+  position: fixed;
+  background-color: rgba(0, 0, 0, 0.9);
+  border: 2px solid #ffcc00;
+  border-radius: 8px;
+  padding: 10px;
+  color: white;
+  font-size: 14px;
+  z-index: 10000;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  max-width: 250px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+}
+
+.card-tooltip.show {
+  opacity: 1;
+}
+
+.tooltip-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+  font-weight: bold;
+  color: #ffcc00;
+}
+
+#tooltip-card-name {
+  font-size: 16px;
+}
+
+#tooltip-card-number {
+  background-color: #ffcc00;
+  color: black;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 12px;
+}
+
+.tooltip-effect {
+  line-height: 1.4;
+  color: #f0f0f0;
+}
+
+/* モバイル対応 */
+@media (max-width: 768px) {
+  .card-tooltip {
+    font-size: 12px;
+    padding: 8px;
+    max-width: 200px;
+  }
+  
+  #tooltip-card-name {
+    font-size: 14px;
+  }
+  
+  #tooltip-card-number {
+    font-size: 10px;
+    padding: 1px 4px;
+  }
+}
+
+/* 待機UI（部屋ID） */
+#waiting-info {
+  position: fixed; top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: rgba(0,0,0,0.85);
+  padding: 150px 100px; border-radius: 15px; border: 2px solid #ffcc00;
+  z-index: 5000; text-align: center; display: none;
+}
+#room-id-display {
+  font-size: 2.5em; font-weight: bold; color: #ffcc00; margin: 15px 0; user-select: all;
+}
+#copy-room-id-btn {
+  font-size: 16px; padding: 8px 15px; background-color: #007bff; color: white;
+  border: none; border-radius: 5px; cursor: pointer;
+}
+#copy-room-id-btn:hover { background-color: #0056b3; }
+
+/* ターンタイマー（アニメは GSAP） */
+#turn-timer-container {
+  position: fixed; top: 5px; left: 0;
+  width: 100%; height: 10px; background-color: #555; z-index: 9999;
+}
+#turn-timer-bar { width: 100%; height: 100%; background-color: #4CAF50; }
+
+/* ==== Collapsible Menu (top-right) ==== */
+#menuBar {
+  position: absolute;
+  top: 12px;
+  right: 16px;
+  z-index: 1100;
+}
+
+/* ハンバーガー */
+.menu-toggle {
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 1px solid rgba(255,255,255,0.25);
+  border-radius: 10px;
+  background: rgba(0,0,0,0.45);
+  color: #fff;
+  cursor: pointer;
+  backdrop-filter: blur(6px);
+}
+.menu-toggle:focus-visible {
+  outline: 2px solid #ffcc00;
+  outline-offset: 2px;
+}
+
+/* 3本線 */
+.menu-icon,
+.menu-icon::before,
+.menu-icon::after {
+  display: block;
+  width: 22px;
+  height: 2px;
+  background: #fff;
+  margin: 0 auto;
+  position: relative;
+  transition: transform .2s ease;
+}
+.menu-icon {
+  top: 0;
+}
+.menu-icon::before,
+.menu-icon::after {
+  content: "";
+  position: absolute;
+  left: 0;
+}
+.menu-icon::before { top: -7px; }
+.menu-icon::after  { top:  7px; }
+
+/* メニュー本体（デフォルト畳む） */
+.menu-list {
+  position: absolute;
+  top: 52px;
+  right: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px;
+  min-width: 200px;
+
+  background: rgba(0,0,0,0.85);
+  border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 12px;
+
+  opacity: 0;
+  transform: translateY(-8px);
+  pointer-events: none;
+  transition: opacity .18s ease, transform .18s ease;
+}
+
+/* 展開状態 */
+.menu-list.open {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+.menu-item {
+  width: 100%;
+  padding: 10px 14px;
+  text-align: left;
+  font-size: 14px;
+  color: #fff;
+  background: #333;
+  border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 8px;
+  cursor: pointer;
+}
+.menu-item:hover { background: #3f3f3f; }
+.menu-item:focus-visible {
+  outline: 2px solid #ffcc00;
+  outline-offset: 2px;
+}
+
+/* --- Play可能カードのハイライト --- */
+.card.selectable {
+  outline: 3px solid #ffcc00;
+  box-shadow: 0 0 10px #ffcc00, 0 0 18px rgba(255, 204, 0, 0.6);
+  border-radius: 10px;
+  animation: cardPulse 1.1s ease-in-out infinite alternate;
+  cursor: pointer;
+}
+@keyframes cardPulse {
+  from { box-shadow: 0 0 8px #ffcc00, 0 0 12px rgba(255, 204, 0, 0.5); }
+  to   { box-shadow: 0 0 16px #ffcc00, 0 0 26px rgba(255, 204, 0, 0.7); }
+}
+
+/* --- 選択不可（10：英雄）を薄くする（任意） --- */
+.card.disabled {
+  filter: grayscale(70%) brightness(0.85);
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+/* レスポンシブ対応 */
+@media (max-width: 768px) {
+  .game-layout {
+    flex-direction: column;
+  }
+  
+  .left-ad-area,
+  .right-ad-area {
+    width: 100%;
+    height: 60px;
+    flex-direction: row;
+    justify-content: center;
+    padding: 5px;
+  }
+  
+  .ad-placeholder {
+    min-height: 50px;
+    width: 200px;
+    margin: 0 5px;
+  }
+}
+
+@media (max-width: 1200px) {
+  .left-ad-area,
+  .right-ad-area {
+    width: 80px;
+  }
+  
+  .ad-placeholder {
+    min-height: 120px;
+    font-size: 10px;
+  }
+}
+
+/* 音量設定モーダル */
+#audioModal {
+  display: none;
+  position: fixed;
+  z-index: 1000;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  background-color: rgba(0, 0, 0, 0.8);
+}
+
+#audioModal .modal-content {
+  background-color: #333;
+  margin: 15% auto;
+  padding: 20px;
+  border: 1px solid #555;
+  border-radius: 10px;
+  width: 400px;
+  max-width: 90%;
+  position: relative;
+  color: white;
+}
+
+#audioModal .close {
+  color: #aaa;
+  float: right;
+  font-size: 28px;
+  font-weight: bold;
+  cursor: pointer;
+  position: absolute;
+  right: 15px;
+  top: 10px;
+}
+
+#audioModal .close:hover,
+#audioModal .close:focus {
+  color: white;
+  text-decoration: none;
+}
+
+.audio-controls {
+  margin-top: 20px;
+}
+
+.volume-control {
+  margin: 20px 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.volume-control label {
+  min-width: 80px;
+  text-align: left;
+}
+
+.volume-control input[type="range"] {
+  flex: 1;
+  height: 6px;
+  border-radius: 3px;
+  background: #555;
+  outline: none;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.volume-control input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #4CAF50;
+  cursor: pointer;
+}
+
+.volume-control input[type="range"]::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #4CAF50;
+  cursor: pointer;
+  border: none;
+}
+
+.volume-control span {
+  min-width: 40px;
+  text-align: right;
+  font-size: 14px;
+}
+
+.volume-control input[type="checkbox"] {
+  margin-right: 5px;
+}
+
+.test-button {
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  margin-top: 10px;
+}
+
+.test-button:hover {
+  background-color: #45a049;
+}
+
+/* SE再生時間調整セクション */
+.se-duration-section {
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid #555;
+}
+
+.se-duration-section h3 {
+  margin: 0 0 15px 0;
+  color: #ddd;
+  font-size: 16px;
+}
+
+.se-duration-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.se-select-control {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.se-select-control label {
+  min-width: 80px;
+  text-align: left;
+}
+
+.se-select-control select {
+  flex: 1;
+  padding: 5px;
+  background-color: #555;
+  color: white;
+  border: 1px solid #666;
+  border-radius: 4px;
+}
+
+.se-buttons {
+  display: flex;
+  gap: 10px;
+}
+
+.reset-button {
+  background-color: #f44336;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.reset-button:hover {
+  background-color: #da190b;
+}
