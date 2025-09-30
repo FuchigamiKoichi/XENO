@@ -68,12 +68,7 @@ socket.on('opponentRequestedRematch', (data) => {
         statusEl.textContent = `${data.name} さんが再戦を希望しています。`;
         statusEl.classList.add('show'); // CSSでフェードイン
     }
-
-    const lobbyBtn = document.getElementById('return-to-lobby-btn');
-    if (lobbyBtn) {
-        lobbyBtn.textContent = '再戦を待っています';
-        lobbyBtn.disabled = true;
-    }
+    
 });
 
 // (4) サーバーから「ゲーム画面に移動せよ」という指示を受け取る
