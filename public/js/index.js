@@ -122,12 +122,13 @@ createRoomBtn.addEventListener('click', () => {
 // 既存のルームに参加する
 joinRoomBtn.addEventListener('click', () => {
     const roomId = roomIdInput.value;
-    
+    const player_name = text_name.value;
+    socket.emit('registPlayer', {name: player_name});
     socket.emit('joinRoom', roomId, (response) => {
     if (!response || !response.success) {
         alert(response ? response.message : 'ルーム参加に失敗しました');
     } else {
-        window.replace()
+        window.location.replace(`game.html?roomId=${roomId}&playerId=${response.playerId}&players=${response.players}`)
     }
     });
 });
