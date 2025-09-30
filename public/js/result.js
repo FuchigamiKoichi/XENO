@@ -41,6 +41,23 @@ window.addEventListener('DOMContentLoaded', () => {
 
     resultReason.textContent = reason;
 
+
+    // --- ▼▼▼ スコア表示処理を追加 ▼▼▼ ---
+    const p1_name = urlParams.get('p1_name');
+    const p2_name = urlParams.get('p2_name');
+    const p1_score = urlParams.get('p1_score');
+    const p2_score = urlParams.get('p2_score');
+
+    // 取得した情報でHTMLの表示を更新
+    if (p1_name && p1_score !== null) {
+        document.getElementById('p1-name').textContent = decodeURIComponent(p1_name);
+        document.getElementById('p1-score').textContent = p1_score;
+    }
+    if (p2_name && p2_score !== null) {
+        document.getElementById('p2-name').textContent = decodeURIComponent(p2_name);
+        document.getElementById('p2-score').textContent = p2_score;
+    }
+    
     let countdown = 10;
     const timerDisplay = document.getElementById('rematch-timer');
     const rematchButton = document.getElementById('rematch-btn');

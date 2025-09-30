@@ -164,7 +164,7 @@ class SocketHandlers {
     }
 
     socket.join(roomId);
-    
+
     if (RoomManager.addPlayerToRoomUnique(roomId, socket.id)) {
         // プレイヤーのready状態を初期化
         if (jsonData.players[socket.id]) {
@@ -453,6 +453,10 @@ class SocketHandlers {
           const losers = result[3] || [];
           Logger.debug(`[Result] プレイヤー戦正常終了処理開始: 勝者${winners.length}人, 敗者${losers.length}人`);
           
+          // const winnerId = result.winners[0].id;
+          if (matchScores[roomId] && winnerId) {
+            matchScores[roomId][winnerId]++;
+          }
           // プレイヤーに結果を送信
           DataManager.loadData();
           const currentJsonData = DataManager.getJsonData();

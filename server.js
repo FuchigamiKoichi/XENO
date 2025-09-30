@@ -10,6 +10,7 @@ const { Server } = require('socket.io');
 
 const activeGames = {};
 const pendingChoices = {};
+let matchScores = {}; 
 
 const app = express();
 const server = http.createServer(app);
