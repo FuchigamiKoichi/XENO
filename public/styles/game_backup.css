@@ -647,6 +647,19 @@ body {
     width: 120px;
     height: 180px;
   }
+  
+  /* モバイル表示での転生札調整 */
+  #side-card-container {
+    top: 100px; 
+    left: 20px;  /* 画面端からの距離を小さく */
+    width: 80px;
+    height: 120px;
+  }
+  
+  .side-card {
+    width: 120px; 
+    height: 80px;  /* モバイルではさらに小さく */
+  }
 }
 
 /* カード説明ツールチップ */
@@ -884,4 +897,174 @@ body {
     min-height: 120px;
     font-size: 10px;
   }
+}
+
+/* 音量設定モーダル */
+#audioModal {
+  display: none;
+  position: fixed;
+  z-index: 1000;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  background-color: rgba(0, 0, 0, 0.8);
+}
+
+#audioModal .modal-content {
+  background-color: #333;
+  margin: 15% auto;
+  padding: 20px;
+  border: 1px solid #555;
+  border-radius: 10px;
+  width: 400px;
+  max-width: 90%;
+  position: relative;
+  color: white;
+}
+
+#audioModal .close {
+  color: #aaa;
+  float: right;
+  font-size: 28px;
+  font-weight: bold;
+  cursor: pointer;
+  position: absolute;
+  right: 15px;
+  top: 10px;
+}
+
+#audioModal .close:hover,
+#audioModal .close:focus {
+  color: white;
+  text-decoration: none;
+}
+
+.audio-controls {
+  margin-top: 20px;
+}
+
+.volume-control {
+  margin: 20px 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.volume-control label {
+  min-width: 80px;
+  text-align: left;
+}
+
+.volume-control input[type="range"] {
+  flex: 1;
+  height: 6px;
+  border-radius: 3px;
+  background: #555;
+  outline: none;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.volume-control input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #4CAF50;
+  cursor: pointer;
+}
+
+.volume-control input[type="range"]::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #4CAF50;
+  cursor: pointer;
+  border: none;
+}
+
+.volume-control span {
+  min-width: 40px;
+  text-align: right;
+  font-size: 14px;
+}
+
+.volume-control input[type="checkbox"] {
+  margin-right: 5px;
+}
+
+.test-button {
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  margin-top: 10px;
+}
+
+.test-button:hover {
+  background-color: #45a049;
+}
+
+/* SE再生時間調整セクション */
+.se-duration-section {
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid #555;
+}
+
+.se-duration-section h3 {
+  margin: 0 0 15px 0;
+  color: #ddd;
+  font-size: 16px;
+}
+
+.se-duration-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.se-select-control {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.se-select-control label {
+  min-width: 80px;
+  text-align: left;
+}
+
+.se-select-control select {
+  flex: 1;
+  padding: 5px;
+  background-color: #555;
+  color: white;
+  border: 1px solid #666;
+  border-radius: 4px;
+}
+
+.se-buttons {
+  display: flex;
+  gap: 10px;
+}
+
+.reset-button {
+  background-color: #f44336;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.reset-button:hover {
+  background-color: #da190b;
 }
