@@ -82,12 +82,12 @@ class MessageManager {
   }
 
   // エフェクトメッセージを取得
-  getEffectMessage(characterName) {
+  getEffectMessage(cardNumber) {
     if (!this.isLoaded || !this.messages.effects) {
       return '効果は特にありません。';
     }
     
-    return this.messages.effects[characterName] || this.messages.effects.default;
+    return this.messages.effects[cardNumber] || this.messages.effects.default;
   }
 
   // UIメッセージを取得
