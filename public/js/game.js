@@ -23,6 +23,21 @@ showContainer.style.display   = 'none';
 // メッセージ初期化
 initializeMessages();
 
+// ゲーム開始時にBGMを再生
+document.addEventListener('DOMContentLoaded', () => {
+  // ユーザーの操作後にBGMを開始（自動再生ポリシー対応）
+  const startBGMOnInteraction = () => {
+    if (window.audioManager) {
+      window.audioManager.playBGM('main');
+      document.removeEventListener('click', startBGMOnInteraction);
+      document.removeEventListener('keydown', startBGMOnInteraction);
+    }
+  };
+  
+  document.addEventListener('click', startBGMOnInteraction);
+  document.addEventListener('keydown', startBGMOnInteraction);
+});
+
 // ログエリアのトグル機能
 const logToggleBtn = document.getElementById('log-toggle');
 const logCloseBtn = document.getElementById('log-close');
@@ -80,6 +95,16 @@ Anim.init({
   longSec: 300, // 必要に応じて変更
 });
 
+// デッキクリックでシャッフルアニメーション
+const deckElement = document.getElementById('deck');
+if (deckElement) {
+  deckElement.addEventListener('click', async () => {
+    await Anim.shuffleCards(1.5);
+  });
+  deckElement.style.cursor = 'pointer';
+  deckElement.title = 'クリックでシャッフル';
+}
+
 // URL パラメータ
 const params   = new URLSearchParams(window.location.search);
 const roomId   = params.get('roomId');
@@ -125,6 +150,9 @@ document.addEventListener('keydown', (e) => {
   const el = document.getElementById(id);
   if (el) {
     el.addEventListener('click', () => {
+      if (window.audioManager) {
+        window.audioManager.playSE('decision');
+      }
       closeMenu();
       // 投降ボタンの場合は surrender 関数を実行
       if (id === 'surrenderButton') {
@@ -148,6 +176,100 @@ playArea.addEventListener('click', showUsedCards);
 opponentArea.addEventListener('click', showOpponentUsedCards);
 
 closeRuleBtn.addEventListener('click', () => { ruleModal.style.display = 'none'; });
+
+// 音量設定モーダルの処理
+const audioModal = document.getElementById('audioModal');
+const audioSettingsButton = document.getElementById('audioSettingsButton');
+const closeAudioBtn = document.getElementById('closeAudio');
+const bgmVolumeSlider = document.getElementById('bgmVolume');
+const seVolumeSlider = document.getElementById('seVolume');
+const muteToggle = document.getElementById('muteToggle');
+const testSEButton = document.getElementById('testSE');
+const bgmVolumeValue = document.getElementById('bgmVolumeValue');
+const seVolumeValue = document.getElementById('seVolumeValue');
+
+// 音量設定ボタンクリック
+audioSettingsButton.addEventListener('click', () => {
+  audioModal.style.display = 'block';
+  if (window.audioManager) {
+    bgmVolumeSlider.value = window.audioManager.bgmVolume * 100;
+    seVolumeSlider.value = window.audioManager.seVolume * 100;
+    muteToggle.checked = window.audioManager.isMuted;
+    bgmVolumeValue.textContent = Math.round(window.audioManager.bgmVolume * 100) + '%';
+    seVolumeValue.textContent = Math.round(window.audioManager.seVolume * 100) + '%';
+    
+    // SE再生時間の初期値を設定
+    const selectedSE = seSelect.value;
+    const duration = window.audioManager.getSEDuration(selectedSE);
+    seDurationSlider.value = duration;
+    seDurationValue.textContent = duration.toFixed(1) + '秒';
+  }
+});
+
+// 音量設定モーダルを閉じる
+closeAudioBtn.addEventListener('click', () => {
+  audioModal.style.display = 'none';
+});
+
+// BGM音量調整
+bgmVolumeSlider.addEventListener('input', (e) => {
+  const volume = e.target.value / 100;
+  bgmVolumeValue.textContent = e.target.value + '%';
+  if (window.audioManager) {
+    window.audioManager.setBGMVolume(volume);
+    window.audioManager.saveSettings();
+  }
+});
+
+// SE音量調整
+seVolumeSlider.addEventListener('input', (e) => {
+  const volume = e.target.value / 100;
+  seVolumeValue.textContent = e.target.value + '%';
+  if (window.audioManager) {
+    window.audioManager.setSEVolume(volume);
+    window.audioManager.saveSettings();
+  }
+});
+
+// ミュート切り替え
+muteToggle.addEventListener('change', (e) => {
+  if (window.audioManager) {
+    window.audioManager.setMute(e.target.checked);
+    window.audioManager.saveSettings();
+  }
+});
+
+// SEテスト
+testSEButton.addEventListener('click', () => {
+  if (window.audioManager) {
+    window.audioManager.playSE('decision');
+  }
+});
+
+// SE再生時間調整の要素を取得
+const resetToDefaultsButton = document.getElementById('resetToDefaults');
+
+// 音量をデフォルトにリセット
+resetToDefaultsButton.addEventListener('click', () => {
+  if (window.audioManager && confirm('BGMとSEの音量をデフォルトに戻しますか？')) {
+    // 音量をデフォルト値に設定
+    window.audioManager.setBGMVolume(0.1);
+    window.audioManager.setSEVolume(0.7);
+    window.audioManager.setMute(false);
+    
+    // UIを更新
+    bgmVolumeSlider.value = 0.1;
+    bgmVolumeValue.textContent = '10%';
+    seVolumeSlider.value = 0.7;
+    seVolumeValue.textContent = '70%';
+    muteToggle.checked = false;
+    
+    // 設定を保存
+    window.audioManager.saveSettings();
+    
+    console.log('[AudioManager] 音量をデフォルトに戻しました');
+  }
+});
 
 // ルールボタンがクリックされた時の処理
 ruleButton.addEventListener('click', async () => {
@@ -359,6 +481,25 @@ function getCardDetails(cardNumber) {
 // カードを出す（自分）
 async function playCard(cardNumber) {
   const imgSrc = `../images/${cardNumber}.jpg`;
+  const cardNum = parseInt(cardNumber, 10);
+
+  // カード効果に応じて特別なSEを再生
+  if (window.audioManager) {
+    switch(cardNum) {
+      case 5: // 死神
+        window.audioManager.playSE('trauma');
+        break;
+      case 9: // 皇帝
+        window.audioManager.playSE('snap');
+        break;
+      case 10: // 英雄
+        window.audioManager.playSE('gameStart');
+        break;
+      default:
+        window.audioManager.playSE('cardPlace');
+        break;
+    }
+  }
 
   // 手札から該当1枚を除去
   const myHands = playerHandZone.querySelectorAll('img');
@@ -395,6 +536,26 @@ async function playCard(cardNumber) {
 // カードを出す（相手）
 async function playCard_cpu(cardNumber) {
   const imgSrc = `../images/${cardNumber}.jpg`;
+  const cardNum = parseInt(cardNumber, 10);
+  
+  // カード効果に応じて特別なSEを再生
+  if (window.audioManager) {
+    switch(cardNum) {
+      case 5: // 死神
+        window.audioManager.playSE('trauma');
+        break;
+      case 9: // 皇帝
+        window.audioManager.playSE('snap');
+        break;
+      case 10: // 英雄
+        window.audioManager.playSE('gameStart');
+        break;
+      default:
+        window.audioManager.playSE('cardPlace');
+        break;
+    }
+  }
+  
   const cname  = getCharacterName(cardNumber);
   const text   = getEffectDescription(cname);
 
@@ -522,6 +683,9 @@ async function select(choices, message = undefined) {
         e.preventDefault();
         e.stopPropagation();
         setActiveCard(cardIndex, 'hover');
+        if (window.audioManager) {
+          window.audioManager.playSE('hover');
+        }
       };
       
       const handleMouseLeave = (e) => {
@@ -550,6 +714,10 @@ async function select(choices, message = undefined) {
       const selectCard = (e) => {
         e.preventDefault();
         e.stopPropagation();
+        
+        if (window.audioManager) {
+          window.audioManager.playSE('decision');
+        }
         
         // 全てのイベントリスナーを削除
         cardsArea.querySelectorAll('.select-card-wrapper').forEach((wrapper, idx) => {
@@ -742,8 +910,12 @@ function setupSideCard() {
   const sideContainer = document.getElementById('side-card-container');
   sideContainer.appendChild(sideCard);
 }
-function resetGame() {
+async function resetGame() {
   decks = [...decks]; // 実際は初期配列を再構築してください
+  
+  // シャッフルアニメーションを実行
+  await Anim.shuffleCards(2.0);
+  
   shuffle(decks);
   playerHandZone.innerHTML = '';
   opponentHandZone.innerHTML = '';
@@ -780,6 +952,9 @@ socket.on('yourTurn', async (data, callback) => {
       const idx = await select(data.choices, messageManager.getSelectMessage('draw'));
       hideSelect();
       const chosen = data.choices[idx];
+      if (window.audioManager) {
+        window.audioManager.playSE('cardDeal');
+      }
       const done = await Anim.drawCardToHand(chosen);
       if (done === 'done') {
         Anim.stopTurnTimer();
@@ -787,6 +962,9 @@ socket.on('yourTurn', async (data, callback) => {
         callback([idx]);
       }
     } else {
+      if (window.audioManager) {
+        window.audioManager.playSE('cardDeal');
+      }
       const done = await Anim.drawCardToHand(data.choices[0]);
       if (done === 'done') {
         Anim.stopTurnTimer();
@@ -801,6 +979,9 @@ socket.on('yourTurn', async (data, callback) => {
     Anim.startTurnTimer();
     const idx = await selectPlayableFromHand(data.choices);
     addLog(messageManager.getGameMessage('playCard', { card: data.choices[idx] }));
+    if (window.audioManager) {
+      window.audioManager.playSE('cardPlace');
+    }
     const done = await playCard(data.choices[idx]);
     if (done === 'done') {
       Anim.stopTurnTimer();
@@ -838,9 +1019,15 @@ socket.on('yourTurn', async (data, callback) => {
 socket.on('onatherTurn', async (data) => {
   Anim.stopTurnTimer();
   if (data.kind === 'play_card') {
+    if (window.audioManager) {
+      window.audioManager.playSE('cardPlace');
+    }
     await playCard_cpu(parseInt(data.choice, 10));
     addLog(messageManager.getGameMessage('opponentPlayCard', { card: data.choice }));
   } else if (data.kind === 'draw') {
+    if (window.audioManager) {
+      window.audioManager.playSE('cardDeal');
+    }
     await Anim.cpuDrawCardToHand();
     for (let i = 0; i < data.now.playersLength + 1; i++) {
       const playerTurnNumber = data.now.playersHandsLengths[i];
@@ -859,6 +1046,10 @@ socket.on('onatherTurn', async (data) => {
 
 socket.on('gameEnded', (data) => {
   Anim.stopTurnTimer();
+  if (window.audioManager) {
+    window.audioManager.stopBGM();
+    window.audioManager.playBGM('ending', false);
+  }
   const resultString = data.result.toString();
   let reason = 'Noreason';
   const match = resultString.match(/\((.*)\)/);
@@ -881,8 +1072,11 @@ socket.on('waitingForOpponent', (data) => {
   }
 });
 
-socket.on('hideWaitingInfo', () => {
+socket.on('hideWaitingInfo', async () => {
   if (waitingInfoDiv) waitingInfoDiv.style.display = 'none';
+  
+  // ゲーム開始時のシャッフルアニメーション
+  await Anim.shuffleCards(1.5);
 });
 
 socket.on('forceStopTurnTimer', () => Anim.stopTurnTimer());
