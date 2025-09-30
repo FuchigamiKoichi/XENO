@@ -381,12 +381,30 @@ async function playCard(cardNumber) {
   // ズーム演出（完了待ち）
   await Anim.zoomCard(imgSrc, text, 1.0);
 
-  // カード6の場合は手札情報を含めて演出を実行
+  // カード6は効果の成否（バリア）確定まで開示を遅延する
   if (parseInt(cardNumber, 10) === 6) {
-    const handInfo = getCurrentHandInfo();
-    await Anim.playCardEffect(parseInt(cardNumber, 10), false, handInfo); // プレイヤー自身はバリア効果なし
+    const result = await waitForCard6Resolution(4500); // 最大4.5秒待つ
+    if (result && result.barriered) {
+      // バリア時：6の開示演出はしないが、無効化演出は表示したい
+      // 競合を避けるため、FXレーンに積む
+      if (Anim && typeof Anim.enqueueBarrierEffect === 'function') {
+          console.log('[Card6] enqueue barrier effect for attacker');
+          Anim.enqueueBarrierEffect(6);
+      } else {
+        await Anim.playBarrierEffect(6);
+      }
+    } else if (result && !result.barriered) {
+      // 成功後に最新の手札情報で演出
+      const handInfo = getCurrentHandInfo();
+      // 成功時は両者のカード開示（必要に応じて調整可）
+      handInfo.onlyReveal = { player: true, opponent: true };
+      await Anim.playCardEffect(6, false, handInfo);
+    } else {
+      // タイムアウト時は安全側（何もしない）
+      console.debug('Card6 resolution timeout: skip reveal');
+    }
   } else {
-    // カード効果演出を実行（プレイヤー自身はバリア効果なし）
+    // カード効果演出を実行
     await Anim.playCardEffect(parseInt(cardNumber, 10), false);
   }
 
@@ -407,6 +425,62 @@ async function playCard(cardNumber) {
   return 'done';
 }
 
+// ====== Card 6（貴族）解決待ちユーティリティ ======
+let __pendingCard6Resolve = null;
+function waitForCard6Resolution(timeoutMs = 4500) {
+  // 既存の保留があれば前のを無効化
+  __pendingCard6Resolve = null;
+
+  return new Promise((resolve) => {
+    let finished = false;
+    const done = (res) => {
+      if (finished) return;
+      finished = true;
+      __pendingCard6Resolve = null;
+      resolve(res);
+    };
+    // socket側からの通知で解決させるためのresolverを保存
+    __pendingCard6Resolve = (res) => done(res);
+
+    // 成功判定のために lookHands のベースラインを記録
+    const getLookHandsCount = () => {
+      try {
+        if (!currentGameState || !currentGameState.lookHands) return 0;
+        const keys = Object.keys(currentGameState.lookHands);
+        let count = 0;
+        keys.forEach(k => {
+          const arr = currentGameState.lookHands[k];
+          if (Array.isArray(arr)) count += arr.length;
+        });
+        return count;
+      } catch (e) {
+        return 0;
+      }
+    };
+    const baselineCount = getLookHandsCount();
+
+    // 成功（相手カードが見える状態）をポーリング検知
+    const startedAt = Date.now();
+    const tick = () => {
+      if (finished) return;
+      try {
+        // ベースラインから増えていれば今回の効果で新規に見えたと判断
+        const nowCount = getLookHandsCount();
+        if (nowCount > baselineCount) {
+          done({ barriered: false });
+          return;
+        }
+      } catch (e) {}
+      if (Date.now() - startedAt >= timeoutMs) {
+        done(null); // タイムアウト
+      } else {
+        setTimeout(tick, 120);
+      }
+    };
+    setTimeout(tick, 120);
+  });
+}
+
 // カードを出す（相手）- サーバーからのバリア情報付き
 async function playCard_cpu_withBarrier(cardNumber, isBarriered) {
   console.log('playCard_cpu_withBarrier called with:', cardNumber, 'バリア:', isBarriered); // デバッグログ追加
@@ -420,7 +494,13 @@ async function playCard_cpu_withBarrier(cardNumber, isBarriered) {
   
   // カード6の場合は手札情報を含めて演出を実行
   if (parseInt(cardNumber, 10) === 6) {
-    const handInfo = getCurrentHandInfo();
+    let handInfo = getCurrentHandInfo() || {};
+    // セーフガード：無効化時は両側非開示、成功時は両側開示
+    if (isBarriered) {
+      handInfo.onlyReveal = { player: false, opponent: false };
+    } else {
+      handInfo.onlyReveal = { player: true, opponent: true };
+    }
     console.log('Playing card 6 effect for opponent with hand info:', handInfo); // デバッグログ追加
     await Anim.playCardEffect(parseInt(cardNumber, 10), isBarriered, handInfo);
   } else {
@@ -446,28 +526,39 @@ async function playCard_cpu(cardNumber) {
 function getCurrentHandInfo() {
   if (!currentGameState) {
     console.warn('ゲーム状態が取得できません');
-    return null;
   }
-  
-  const playerCards = currentGameState.myHands || [];
+
+  // まずはDOMから現在のプレイヤー手札を取得（最新かつ確実）
+  let playerCards = [];
+  try {
+    const imgs = playerHandZone ? Array.from(playerHandZone.querySelectorAll('img')) : [];
+    playerCards = imgs
+      .map(img => parseInt(img.dataset.card ?? img.value, 10))
+      .filter(n => Number.isFinite(n));
+  } catch (e) {}
+  // DOMから取得できない場合は、サーバー状態をフォールバック
+  if (!playerCards || playerCards.length === 0) {
+    playerCards = (currentGameState && currentGameState.myHands) ? currentGameState.myHands.slice() : [];
+  }
+
   const opponentCards = [];
-  
-  // lookHandsの情報から相手のカードを取得（カード6の効果で見たカード）
-  if (currentGameState.lookHands) {
-    const lookHandsKeys = Object.keys(currentGameState.lookHands);
-    lookHandsKeys.forEach(turnNumber => {
-      const cards = currentGameState.lookHands[turnNumber];
-      if (cards && cards.length > 0) {
-        opponentCards.push(...cards);
-      }
-    });
-  }
-  
-  console.log('手札情報取得 - プレイヤー:', playerCards, '相手:', opponentCards); // デバッグログ
-  
+  try {
+    if (currentGameState && currentGameState.lookHands) {
+      const lookHandsKeys = Object.keys(currentGameState.lookHands);
+      lookHandsKeys.forEach(turnNumber => {
+        const cards = currentGameState.lookHands[turnNumber];
+        if (cards && cards.length > 0) {
+          opponentCards.push(...cards);
+        }
+      });
+    }
+  } catch (e) {}
+
+  console.log('手札情報取得 - プレイヤー(DOM優先):', playerCards, '相手:', opponentCards);
+
   return {
-    playerCards: playerCards,
-    opponentCards: opponentCards,
+    playerCards,
+    opponentCards,
     gameState: currentGameState
   };
 }
@@ -923,10 +1014,27 @@ socket.on('onatherTurn', async (data) => {
     const cname  = getCharacterName(parseInt(data.choice, 10));
     const text   = getEffectDescription(cname);
     // 後でリザルト遷移時に待つため、最後の相手演出のPromiseを保持
+    const cardNum = parseInt(data.choice, 10);
+    let handInfo = getCurrentHandInfo();
+    // 6かつ無効化なら何も開示しないフラグを付与
+    if (cardNum === 6) {
+      handInfo = handInfo || {};
+      if (data.isBarriered) {
+        handInfo.onlyReveal = { player: false, opponent: false };
+        // 防御側にも無効化演出を見せる
+        if (Anim && typeof Anim.enqueueBarrierEffect === 'function') {
+          console.log('[onatherTurn] defender enqueue barrier effect');
+          Anim.enqueueBarrierEffect(6);
+        }
+      } else {
+        // 成功時は両者開示（必要があれば片側のみに調整）
+        handInfo.onlyReveal = { player: true, opponent: true };
+      }
+    }
     window.__lastOpponentAnimPromise = Anim.enqueueOpponentPlay(
-      parseInt(data.choice, 10),
+      cardNum,
       data.isBarriered || false,
-      getCurrentHandInfo(),
+      handInfo,
       text
     );
     addLog(messageManager.getGameMessage('opponentPlayCard', { card: data.choice }));
@@ -1047,10 +1155,21 @@ socket.on('cardEffectBarriered', async (data) => {
   // バリア効果のアニメーションを表示
   if (data.isBarriered) {
     console.log('バリア効果アニメーションを表示中...');
-    await Anim.playBarrierEffect();
+    if (Anim && typeof Anim.enqueueBarrierEffect === 'function') {
+      console.log('[BarrierNotice] enqueue barrier effect for defender');
+      Anim.enqueueBarrierEffect(data.cardNumber || null);
+    } else {
+      await Anim.playBarrierEffect(data.cardNumber || null);
+    }
     console.log('バリア効果アニメーション完了');
     addLog('相手はカード4で守られているため、効果が無効化されました！');
   }
+  // カード6の解決待ちがあれば「無効」を通知
+  try {
+    if (typeof __pendingCard6Resolve === 'function') {
+      __pendingCard6Resolve({ barriered: !!data.isBarriered });
+    }
+  } catch (e) {}
 });
 
 // ツールチップ機能

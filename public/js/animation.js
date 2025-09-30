@@ -927,6 +927,14 @@
       pointer-events: none;
     `;
     
+  // どちらのサイドを開示してよいか（デフォルトは両方true）
+    const allowPlayerReveal = (handInfo && handInfo.onlyReveal && handInfo.onlyReveal.player !== undefined)
+      ? !!handInfo.onlyReveal.player
+      : false; // デフォルトは開示しない
+    const allowOpponentReveal = (handInfo && handInfo.onlyReveal && handInfo.onlyReveal.opponent !== undefined)
+      ? !!handInfo.onlyReveal.opponent
+      : false; // デフォルトは開示しない
+
     // プレイヤーカード
     const playerCard = document.createElement('div');
     playerCard.style.cssText = `
@@ -948,7 +956,7 @@
     `;
     
     // 実際のカード画像を表示
-    if (handInfo && handInfo.playerCards && handInfo.playerCards.length > 0) {
+    if (allowPlayerReveal && handInfo && handInfo.playerCards && handInfo.playerCards.length > 0) {
       const playerCardNumber = handInfo.playerCards[0];
       
       // カード画像を作成
@@ -999,7 +1007,7 @@
     `;
     
     // 相手のカード画像を表示（カード6の効果では相手のカードも見える）
-    if (handInfo && handInfo.opponentCards && handInfo.opponentCards.length > 0) {
+    if (allowOpponentReveal && handInfo && handInfo.opponentCards && handInfo.opponentCards.length > 0) {
       const opponentCardNumber = handInfo.opponentCards[0];
       
       // カード画像を作成
@@ -1194,7 +1202,13 @@
       // ズーム（短め保持）
       await zoomCard(imgSrc, text, 1.0);
       // 効果
-      await playCardEffect(parseInt(cardNumber, 10), isBarriered, handInfo);
+      let infoToUse = handInfo;
+      if (parseInt(cardNumber, 10) === 6) {
+        // 実行時セーフガード：handInfoが無ければ非開示、バリア時は強制非開示
+        if (!infoToUse) infoToUse = { onlyReveal: { player: false, opponent: false } };
+        if (isBarriered) infoToUse.onlyReveal = { player: false, opponent: false };
+      }
+      await playCardEffect(parseInt(cardNumber, 10), isBarriered, infoToUse);
     });
   }
 
@@ -1207,6 +1221,13 @@
   async function enqueueCpuDraw() {
     return _enqueue('draw', async () => {
       await cpuDrawCardToHand();
+    });
+  }
+
+  // バリア演出のみをFXレーンに積む
+  async function enqueueBarrierEffect(cardNumber = null) {
+    return _enqueue('fx', async () => {
+      await playBarrierEffect(cardNumber);
     });
   }
 
@@ -1227,6 +1248,7 @@
     enqueueOpponentPlay,
     enqueuePlayerDraw,
     enqueueCpuDraw,
+    enqueueBarrierEffect,
     waitForFxIdle
   };
 })();

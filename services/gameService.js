@@ -327,8 +327,9 @@ class GameService {
    * @returns {boolean} バリア効果が発動するかどうか
    */
   static checkBarrierEffect(cardNumber, gameState, actorSocketId, roomId) {
-    // 他プレイヤーを対象とするカードの一覧
-    const targetingCards = [1, 2, 3, 5, 8, 9, 10];
+  // 他プレイヤーを対象とするカードの一覧
+  // 6(貴族)は相手の手札を公開するためバリア対象に含める
+  const targetingCards = [1, 2, 3, 5, 6, 8, 9, 10];
     
     if (!targetingCards.includes(parseInt(cardNumber))) {
       return false;
