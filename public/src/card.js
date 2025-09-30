@@ -169,7 +169,8 @@ class Card2 extends Card {
             const predCard = cards[predNumber - 1];
             player.pred.push({ opponent, predCard });
             
-            if (inType(predCard, opponent.hands)) {
+            const isHit = inType(predCard, opponent.hands);
+            if (isHit) {
                 if (!(predCard instanceof Card10)) {
                     this.kill(opponent);
                 } else {
@@ -179,7 +180,14 @@ class Card2 extends Card {
 
             await choice(
                 createData(this.field, player),
-                ["", ""],
+                [{
+                  type: 'card2',
+                  predResult: {
+                    guessed: predNumber,
+                    isHit: !!isHit,
+                    targetTurn: opponent.turnNumber
+                  }
+                }],
                 'update',
                 player.socketId,
                 roomId
@@ -476,7 +484,10 @@ function createData(field, player) {
 
     for (const p of players) {
         if (p !== player) {
-            state[p.turnNumber] = p.live;
+            state[p.turnNumber] = {
+                live: p.live,
+                affected: p.affected  // affected状態も含める
+            };
         }
     }
 
@@ -522,7 +533,8 @@ function createData(field, player) {
         lookedHands,
         pred,
         playersHandsLengths,
-        reincarnation: field.reincarnation.length > 0
+        reincarnation: field.reincarnation.length > 0,
+        roomId: field.game?.roomId || null  // ゲームのroomIdを追加
     };
 }
 

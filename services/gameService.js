@@ -30,20 +30,28 @@ class GameService {
     return `cpu_${index}`;
   }
 
-  static async choice_cpu(now, choices, kind, socketId) {
+  static async choice_cpu(now, choices, kind, socketId, io) {
     try {
       Logger.debug(`CPU選択: ${kind}`);
 
       const mlChoice = selectBestChoice(choices, now, kind);
       Logger.debug(`ML提案: ${mlChoice}`);
 
+      let finalChoice;
       if (GameService.isValidChoice(mlChoice, choices, kind)) {
         Logger.debug(`有効選択: ${mlChoice}`);
-        return mlChoice;
+        finalChoice = mlChoice;
       } else {
         Logger.warn(`無効選択: ${mlChoice}, フォールバック使用`);
-        return GameService.getFallbackChoice(choices, kind, `invalid CPU response: ${mlChoice}`);
+        finalChoice = GameService.getFallbackChoice(choices, kind, `invalid CPU response: ${mlChoice}`);
       }
+      
+      // カードプレイや可視更新は他のプレイヤーに通知
+      if ((kind === 'play_card' || kind === 'update') && io) {
+        GameService.notifyOtherPlayers(now, finalChoice, kind, socketId, io);
+      }
+      
+      return finalChoice;
     } catch (error) {
       Logger.error("CPU選択失敗:", error);
       return GameService.getFallbackChoice(choices, kind, `CPU error: ${error.message}`);
@@ -57,6 +65,12 @@ class GameService {
     Logger.debug(`kind: ${kind}`);
     Logger.debug(`kind === OPPONENT_CHOICE: ${kind === CONFIG.GAME_RULES.CHOICE_TYPES.OPPONENT_CHOICE}`);
     Logger.debug(`OPPONENT_CHOICE value: ${CONFIG.GAME_RULES.CHOICE_TYPES.OPPONENT_CHOICE}`);
+    
+    // update はUI反映用の通知であり検証不要（オブジェクトpayloadをそのまま返す）
+    if (kind === CONFIG.GAME_RULES.CHOICE_TYPES.UPDATE) {
+      Logger.debug('kind=update: always valid');
+      return true;
+    }
     
     if (choice === null || choice === undefined) {
       Logger.debug('choice is null or undefined');
@@ -170,7 +184,7 @@ class GameService {
       // CPU戦（1プレイヤー + 1CPU）
       Logger.info('CPU戦モードでゲーム開始');
       funcs.push({ get_name: GameService.getName, choice: GameService.createChoiceFunction(io) });
-      funcs.push({ get_name: GameService.getName_cpu, choice: GameService.choice_cpu });
+      funcs.push({ get_name: GameService.getName_cpu, choice: GameService.createCpuChoiceFunction(io) });
     } else {
       // マルチプレイヤー戦（全てプレイヤー）
       Logger.info(`${playerCount}プレイヤー戦モードでゲーム開始`);
@@ -200,6 +214,17 @@ class GameService {
   }
 
   /**
+   * CPU用choice関数を作成
+   * @param {Object} io - Socket.IOインスタンス
+   * @returns {Function} CPU choice関数
+   */
+  static createCpuChoiceFunction(io) {
+    return async (now, choices, kind, socketId) => {
+      return GameService.choice_cpu(now, choices, kind, socketId, io);
+    };
+  }
+
+  /**
    * プレイヤーの選択処理
    * @param {Object} now - 現在のゲーム状態
    * @param {Array|Object} choices - 選択肢
@@ -218,26 +243,130 @@ class GameService {
 
       if (GameService.isValidChoice(result, choices, kind)) {
         Logger.debug(`応答が有効: ${result}`);
+        
+        let finalResult;
         // opponentChoiceの場合、player値をselectNumberに変換
         if (kind === CONFIG.GAME_RULES.CHOICE_TYPES.OPPONENT_CHOICE) {
           const selectedItem = choices.find(item => item.player === Number(result));
-          const finalResult = selectedItem ? selectedItem.selectNumber : result;
+          finalResult = selectedItem ? selectedItem.selectNumber : result;
           Logger.debug(`最終選択: ${finalResult}`);
-          Logger.debug(`emitWithAckの結果: ${finalResult}`);
-          return finalResult;
         } else {
+          finalResult = result;
           Logger.debug(`最終選択: ${result}`);
-          Logger.debug(`emitWithAckの結果: ${result}`);
-          return result;
         }
+        
+        // カードプレイや可視更新（例: 兵士の予想結果）を他のプレイヤーに通知
+        if (kind === 'play_card' || kind === 'update') {
+          GameService.notifyOtherPlayers(now, finalResult, kind, socketId, io);
+        }
+        
+        Logger.debug(`emitWithAckの結果: ${finalResult}`);
+        return finalResult;
       } else {
         Logger.warn(`応答が無効: ${result}, kind: ${kind}`);
         Logger.debug(`isValidChoice結果: false`);
+        // update は無効扱いにせず、そのままブロードキャスト（UI更新用）
+        if (kind === CONFIG.GAME_RULES.CHOICE_TYPES.UPDATE) {
+          try {
+            GameService.notifyOtherPlayers(now, result ?? choices, kind, socketId, io);
+          } catch (e) {}
+          return result ?? choices;
+        }
         return GameService.getFallbackChoice(choices, kind, `invalid player response: ${result}`);
       }
     } catch (e) {
       Logger.error("choice (yourTurn) failed:", e);
       return GameService.getFallbackChoice(choices, kind, `player choice error: ${e.message}`);
+    }
+  }
+
+  /**
+   * 他のプレイヤーにアクションを通知
+   * @param {Object} now - 現在のゲーム状態
+   * @param {*} choice - プレイヤーの選択
+   * @param {string} kind - アクションの種類
+   * @param {string} actorSocketId - アクションを行ったプレイヤーのソケットID
+   * @param {Object} io - Socket.IOインスタンス
+   */
+  static notifyOtherPlayers(now, choice, kind, actorSocketId, io) {
+    try {
+      // ルームIDを取得（nowオブジェクトから）
+      const roomId = now.roomId;
+      if (!roomId) {
+        Logger.warn('ルームIDが見つかりません。他のプレイヤーへの通知をスキップします。');
+        return;
+      }
+      
+      Logger.debug(`他のプレイヤーに通知: roomId=${roomId}, choice=${choice}, kind=${kind}, actor=${actorSocketId}`);
+      
+      // アクションを行ったプレイヤー以外に通知
+      // バリア効果の判定（カード効果が無効化されるかどうか）
+      let isBarriered = false;
+      if (kind === 'play_card') {
+        isBarriered = GameService.checkBarrierEffect(choice, now, actorSocketId, roomId);
+      }
+
+      const notificationData = {
+        choice: choice,
+        kind: kind,
+        now: now,
+        isBarriered: isBarriered
+      };
+      
+      // ルーム内の他のプレイヤーに onatherTurn イベントを送信
+      io.to(roomId).except(actorSocketId).emit('onatherTurn', notificationData);
+      
+      // プレイヤー自身にもバリア効果情報を送信（自分のカード効果が無効化された場合）
+      if (kind === 'play_card' && isBarriered) {
+        io.to(actorSocketId).emit('cardEffectBarriered', {
+          cardNumber: choice,
+          isBarriered: isBarriered
+        });
+        Logger.debug(`プレイヤー自身にバリア効果通知: ${actorSocketId}, カード: ${choice}`);
+      }
+      
+      Logger.debug('他のプレイヤーへの通知完了');
+    } catch (error) {
+      Logger.error('他のプレイヤーへの通知中にエラーが発生:', error);
+    }
+  }
+
+  /**
+   * バリア効果（カード効果無効化）を判定する
+   * @param {string} cardNumber - プレイされたカード番号
+   * @param {Object} gameState - 現在のゲーム状態
+   * @param {string} actorSocketId - カードをプレイしたプレイヤーのソケットID
+   * @param {string} roomId - ルームID
+   * @returns {boolean} バリア効果が発動するかどうか
+   */
+  static checkBarrierEffect(cardNumber, gameState, actorSocketId, roomId) {
+  // 他プレイヤーを対象とするカードの一覧
+  // 6(貴族)は相手の手札を公開するためバリア対象に含める
+  const targetingCards = [1, 2, 3, 5, 6, 8, 9, 10];
+    
+    if (!targetingCards.includes(parseInt(cardNumber))) {
+      return false;
+    }
+    
+    // ゲーム状態から対象プレイヤーのaffected状態を確認
+    try {
+      // 対象プレイヤー（効果を受ける側）のaffected状態をチェック
+      const otherPlayersKeys = Object.keys(gameState.otherPlayers || {});
+      
+      for (const turnNumber of otherPlayersKeys) {
+        const playerData = gameState.otherPlayers[turnNumber];
+        
+        // affected = false の場合、バリア効果発動
+        if (playerData && playerData.affected === false) {
+          Logger.debug(`バリア効果発動: ターン${turnNumber}のプレイヤーはaffected=false状態`);
+          return true;
+        }
+      }
+      
+      return false;
+    } catch (error) {
+      Logger.error('バリア効果判定中にエラー:', error);
+      return false;
     }
   }
 
