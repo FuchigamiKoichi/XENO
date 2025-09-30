@@ -522,7 +522,8 @@ function createData(field, player) {
         lookedHands,
         pred,
         playersHandsLengths,
-        reincarnation: field.reincarnation.length > 0
+        reincarnation: field.reincarnation.length > 0,
+        roomId: field.game?.roomId || null  // ゲームのroomIdを追加
     };
 }
 

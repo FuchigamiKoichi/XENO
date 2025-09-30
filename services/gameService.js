@@ -30,20 +30,28 @@ class GameService {
     return `cpu_${index}`;
   }
 
-  static async choice_cpu(now, choices, kind, socketId) {
+  static async choice_cpu(now, choices, kind, socketId, io) {
     try {
       Logger.debug(`CPU選択: ${kind}`);
 
       const mlChoice = selectBestChoice(choices, now, kind);
       Logger.debug(`ML提案: ${mlChoice}`);
 
+      let finalChoice;
       if (GameService.isValidChoice(mlChoice, choices, kind)) {
         Logger.debug(`有効選択: ${mlChoice}`);
-        return mlChoice;
+        finalChoice = mlChoice;
       } else {
         Logger.warn(`無効選択: ${mlChoice}, フォールバック使用`);
-        return GameService.getFallbackChoice(choices, kind, `invalid CPU response: ${mlChoice}`);
+        finalChoice = GameService.getFallbackChoice(choices, kind, `invalid CPU response: ${mlChoice}`);
       }
+      
+      // カードプレイの場合、他のプレイヤーに通知
+      if (kind === 'play_card' && io) {
+        GameService.notifyOtherPlayers(now, finalChoice, kind, socketId, io);
+      }
+      
+      return finalChoice;
     } catch (error) {
       Logger.error("CPU選択失敗:", error);
       return GameService.getFallbackChoice(choices, kind, `CPU error: ${error.message}`);
@@ -170,7 +178,7 @@ class GameService {
       // CPU戦（1プレイヤー + 1CPU）
       Logger.info('CPU戦モードでゲーム開始');
       funcs.push({ get_name: GameService.getName, choice: GameService.createChoiceFunction(io) });
-      funcs.push({ get_name: GameService.getName_cpu, choice: GameService.choice_cpu });
+      funcs.push({ get_name: GameService.getName_cpu, choice: GameService.createCpuChoiceFunction(io) });
     } else {
       // マルチプレイヤー戦（全てプレイヤー）
       Logger.info(`${playerCount}プレイヤー戦モードでゲーム開始`);
@@ -200,6 +208,17 @@ class GameService {
   }
 
   /**
+   * CPU用choice関数を作成
+   * @param {Object} io - Socket.IOインスタンス
+   * @returns {Function} CPU choice関数
+   */
+  static createCpuChoiceFunction(io) {
+    return async (now, choices, kind, socketId) => {
+      return GameService.choice_cpu(now, choices, kind, socketId, io);
+    };
+  }
+
+  /**
    * プレイヤーの選択処理
    * @param {Object} now - 現在のゲーム状態
    * @param {Array|Object} choices - 選択肢
@@ -218,18 +237,25 @@ class GameService {
 
       if (GameService.isValidChoice(result, choices, kind)) {
         Logger.debug(`応答が有効: ${result}`);
+        
+        let finalResult;
         // opponentChoiceの場合、player値をselectNumberに変換
         if (kind === CONFIG.GAME_RULES.CHOICE_TYPES.OPPONENT_CHOICE) {
           const selectedItem = choices.find(item => item.player === Number(result));
-          const finalResult = selectedItem ? selectedItem.selectNumber : result;
+          finalResult = selectedItem ? selectedItem.selectNumber : result;
           Logger.debug(`最終選択: ${finalResult}`);
-          Logger.debug(`emitWithAckの結果: ${finalResult}`);
-          return finalResult;
         } else {
+          finalResult = result;
           Logger.debug(`最終選択: ${result}`);
-          Logger.debug(`emitWithAckの結果: ${result}`);
-          return result;
         }
+        
+        // カードプレイの場合、他のプレイヤーに通知
+        if (kind === 'play_card') {
+          GameService.notifyOtherPlayers(now, finalResult, kind, socketId, io);
+        }
+        
+        Logger.debug(`emitWithAckの結果: ${finalResult}`);
+        return finalResult;
       } else {
         Logger.warn(`応答が無効: ${result}, kind: ${kind}`);
         Logger.debug(`isValidChoice結果: false`);
@@ -238,6 +264,41 @@ class GameService {
     } catch (e) {
       Logger.error("choice (yourTurn) failed:", e);
       return GameService.getFallbackChoice(choices, kind, `player choice error: ${e.message}`);
+    }
+  }
+
+  /**
+   * 他のプレイヤーにアクションを通知
+   * @param {Object} now - 現在のゲーム状態
+   * @param {*} choice - プレイヤーの選択
+   * @param {string} kind - アクションの種類
+   * @param {string} actorSocketId - アクションを行ったプレイヤーのソケットID
+   * @param {Object} io - Socket.IOインスタンス
+   */
+  static notifyOtherPlayers(now, choice, kind, actorSocketId, io) {
+    try {
+      // ルームIDを取得（nowオブジェクトから）
+      const roomId = now.roomId;
+      if (!roomId) {
+        Logger.warn('ルームIDが見つかりません。他のプレイヤーへの通知をスキップします。');
+        return;
+      }
+      
+      Logger.debug(`他のプレイヤーに通知: roomId=${roomId}, choice=${choice}, kind=${kind}, actor=${actorSocketId}`);
+      
+      // アクションを行ったプレイヤー以外に通知
+      const notificationData = {
+        choice: choice,
+        kind: kind,
+        now: now
+      };
+      
+      // ルーム内の他のプレイヤーに onatherTurn イベントを送信
+      io.to(roomId).except(actorSocketId).emit('onatherTurn', notificationData);
+      
+      Logger.debug('他のプレイヤーへの通知完了');
+    } catch (error) {
+      Logger.error('他のプレイヤーへの通知中にエラーが発生:', error);
     }
   }
 

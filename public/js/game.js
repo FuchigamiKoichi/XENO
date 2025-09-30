@@ -375,6 +375,9 @@ async function playCard(cardNumber) {
   // ズーム演出（完了待ち）
   await Anim.zoomCard(imgSrc, text, 1.0);
 
+  // カード効果演出を実行（新規追加）
+  await Anim.playCardEffect(parseInt(cardNumber, 10));
+
   // 場に配置
   const newCard = document.createElement('img');
   newCard.src = imgSrc;
@@ -394,12 +397,19 @@ async function playCard(cardNumber) {
 
 // カードを出す（相手）
 async function playCard_cpu(cardNumber) {
+  console.log('playCard_cpu called with:', cardNumber); // デバッグログ追加
   const imgSrc = `../images/${cardNumber}.jpg`;
   const cname  = getCharacterName(cardNumber);
   const text   = getEffectDescription(cname);
 
   // カードのズーム表示のみを行い、プレイエリアへの追加はupdateGameViewに任せる
+  console.log('Showing zoom for opponent card:', cardNumber); // デバッグログ追加
   await Anim.zoomCard(imgSrc, text, 1.5);
+  
+  // カード効果演出を実行（新規追加）
+  console.log('Playing card effect for opponent card:', cardNumber); // デバッグログ追加
+  await Anim.playCardEffect(parseInt(cardNumber, 10));
+  console.log('Card effect completed for opponent card:', cardNumber); // デバッグログ追加
   
   // 実際のカード追加処理はupdateGameViewで行われるため、ここでは行わない
   // これにより重複表示を防ぐ
@@ -837,7 +847,9 @@ socket.on('yourTurn', async (data, callback) => {
 
 socket.on('onatherTurn', async (data) => {
   Anim.stopTurnTimer();
+  console.log('onatherTurn received:', data); // デバッグログ追加
   if (data.kind === 'play_card') {
+    console.log('相手がカードをプレイ:', data.choice); // デバッグログ追加
     await playCard_cpu(parseInt(data.choice, 10));
     addLog(messageManager.getGameMessage('opponentPlayCard', { card: data.choice }));
   } else if (data.kind === 'draw') {
