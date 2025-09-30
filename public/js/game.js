@@ -225,8 +225,14 @@ ruleButton.addEventListener('click', async () => {
   });
 })();
 
+// 現在のゲーム状態を保存（グローバル変数）
+let currentGameState = null;
+
 // 画面更新
 function updateGameView(now) {
+  // ゲーム状態を保存
+  currentGameState = now;
+  
   playerHandZone.innerHTML = '';
   playArea.innerHTML = '';
   opponentArea.innerHTML = '';
@@ -375,8 +381,17 @@ async function playCard(cardNumber) {
   // ズーム演出（完了待ち）
   await Anim.zoomCard(imgSrc, text, 1.0);
 
-  // カード効果演出を実行（新規追加）
-  await Anim.playCardEffect(parseInt(cardNumber, 10));
+  // バリア効果の判定
+  const shouldShowBarrier = checkBarrierEffect(cardNumber);
+  
+  // カード6の場合は手札情報を含めて演出を実行
+  if (parseInt(cardNumber, 10) === 6) {
+    const handInfo = getCurrentHandInfo();
+    await Anim.playCardEffect(parseInt(cardNumber, 10), false, handInfo); // プレイヤー自身はバリア効果なし
+  } else {
+    // カード効果演出を実行（プレイヤー自身はバリア効果なし）
+    await Anim.playCardEffect(parseInt(cardNumber, 10), false);
+  }
 
   // 場に配置
   const newCard = document.createElement('img');
@@ -406,13 +421,101 @@ async function playCard_cpu(cardNumber) {
   console.log('Showing zoom for opponent card:', cardNumber); // デバッグログ追加
   await Anim.zoomCard(imgSrc, text, 1.5);
   
-  // カード効果演出を実行（新規追加）
-  console.log('Playing card effect for opponent card:', cardNumber); // デバッグログ追加
-  await Anim.playCardEffect(parseInt(cardNumber, 10));
+  // バリア効果の判定（相手のカード実行時）
+  const shouldShowBarrier = checkBarrierEffect(cardNumber);
+  
+  // カード6の場合は手札情報を含めて演出を実行
+  if (parseInt(cardNumber, 10) === 6) {
+    const handInfo = getCurrentHandInfo();
+    console.log('Playing card 6 effect for opponent with hand info:', handInfo); // デバッグログ追加
+    await Anim.playCardEffect(parseInt(cardNumber, 10), shouldShowBarrier, handInfo);
+  } else {
+    // カード効果演出を実行（バリア効果判定付き）
+    console.log('Playing card effect for opponent card:', cardNumber, 'with barrier:', shouldShowBarrier); // デバッグログ追加
+    await Anim.playCardEffect(parseInt(cardNumber, 10), shouldShowBarrier);
+  }
   console.log('Card effect completed for opponent card:', cardNumber); // デバッグログ追加
   
   // 実際のカード追加処理はupdateGameViewで行われるため、ここでは行わない
   // これにより重複表示を防ぐ
+}
+
+// バリア効果が発動するかどうかを判定
+function checkBarrierEffect(cardNumber) {
+  if (!currentGameState) {
+    return false;
+  }
+  
+  // 他プレイヤーを対象とするカードの一覧
+  const targetingCards = [1, 2, 3, 5, 8, 9, 10];
+  
+  if (!targetingCards.includes(parseInt(cardNumber))) {
+    return false;
+  }
+  
+  // プレイヤーのaffected状態を確認
+  let playerAffected = true; // デフォルトは効果を受ける状態
+  
+  if (currentGameState.otherPlayers) {
+    const otherPlayerKeys = Object.keys(currentGameState.otherPlayers);
+    if (otherPlayerKeys.length > 0) {
+      const opponentData = currentGameState.otherPlayers[otherPlayerKeys[0]];
+      if (opponentData && typeof opponentData.affected !== 'undefined') {
+        playerAffected = opponentData.affected;
+      }
+    }
+  }
+  
+  // プレイヤーが効果を受けない状態（affected = false）で、
+  // 相手が対象効果カードを使用した場合にバリア効果を表示
+  if (!playerAffected) {
+    console.log('バリア効果発動: プレイヤーはaffected=false状態です');
+    return true;
+  }
+  
+  // 自分のaffected状態も確認（相手に対してカードを使用する場合）
+  if (currentGameState.myAffected !== undefined && !currentGameState.myAffected) {
+    console.log('バリア効果発動: 相手プレイヤーはaffected=false状態です');
+    return true;
+  }
+  
+  return false;
+}
+
+// 現在の手札情報を取得する
+function getCurrentHandInfo() {
+  if (!currentGameState) {
+    console.warn('ゲーム状態が取得できません');
+    return null;
+  }
+  
+  const playerCards = currentGameState.myHands || [];
+  const opponentCards = [];
+  
+  // lookHandsの情報から相手のカードを取得（カード6の効果で見たカード）
+  if (currentGameState.lookHands) {
+    const lookHandsKeys = Object.keys(currentGameState.lookHands);
+    lookHandsKeys.forEach(turnNumber => {
+      const cards = currentGameState.lookHands[turnNumber];
+      if (cards && cards.length > 0) {
+        opponentCards.push(...cards);
+      }
+    });
+  }
+  
+  console.log('手札情報取得 - プレイヤー:', playerCards, '相手:', opponentCards); // デバッグログ
+  
+  return {
+    playerCards: playerCards,
+    opponentCards: opponentCards,
+    gameState: currentGameState
+  };
+}
+
+// カード画像のsrcからカード番号を抽出
+function extractCardNumberFromSrc(src) {
+  const match = src.match(/(\d+)\.jpg$/);
+  return match ? parseInt(match[1], 10) : null;
 }
 
 // 使用済みカードモーダル
@@ -790,6 +893,8 @@ socket.on('yourTurn', async (data, callback) => {
       const idx = await select(data.choices, messageManager.getSelectMessage('draw'));
       hideSelect();
       const chosen = data.choices[idx];
+      // カード効果演出との重複を防ぐため、少し待機してからドロー
+      await new Promise(resolve => setTimeout(resolve, 300));
       const done = await Anim.drawCardToHand(chosen);
       if (done === 'done') {
         Anim.stopTurnTimer();
@@ -797,6 +902,8 @@ socket.on('yourTurn', async (data, callback) => {
         callback([idx]);
       }
     } else {
+      // カード効果演出との重複を防ぐため、少し待機してからドロー
+      await new Promise(resolve => setTimeout(resolve, 300));
       const done = await Anim.drawCardToHand(data.choices[0]);
       if (done === 'done') {
         Anim.stopTurnTimer();
@@ -850,9 +957,13 @@ socket.on('onatherTurn', async (data) => {
   console.log('onatherTurn received:', data); // デバッグログ追加
   if (data.kind === 'play_card') {
     console.log('相手がカードをプレイ:', data.choice); // デバッグログ追加
+    // カード効果演出が完全に終了するまで待つ
     await playCard_cpu(parseInt(data.choice, 10));
     addLog(messageManager.getGameMessage('opponentPlayCard', { card: data.choice }));
   } else if (data.kind === 'draw') {
+    // カード効果演出との重複を防ぐため、少し待機してからドロー
+    await new Promise(resolve => setTimeout(resolve, 300));
+    // ドロー演出を実行（カード効果演出が終わった後）
     await Anim.cpuDrawCardToHand();
     for (let i = 0; i < data.now.playersLength + 1; i++) {
       const playerTurnNumber = data.now.playersHandsLengths[i];

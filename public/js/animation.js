@@ -285,14 +285,14 @@
     });
   }
 
-  // カード4: 乙女 - バリア・守護エフェクト
+  // カード4: 乙女 - 守護・プロテクションエフェクト
   function cardEffect4() {
     console.log('cardEffect4 starting...');
     return new Promise((resolve) => {
-      const barrier = createBarrierEffect();
-      console.log('Created barrier element:', barrier);
-      document.body.appendChild(barrier);
-      console.log('Appended barrier to body');
+      const protectionEffect = createProtectionEffect();
+      console.log('Created protection element:', protectionEffect);
+      document.body.appendChild(protectionEffect);
+      console.log('Appended protection effect to body');
       
       const timeline = gsap.timeline({
         onStart: () => {
@@ -300,18 +300,18 @@
         },
         onComplete: () => {
           console.log('cardEffect4 animation complete');
-          barrier.remove();
+          protectionEffect.remove();
           resolve();
         }
       });
       
       console.log('Starting GSAP timeline for cardEffect4');
       timeline
-        .fromTo(barrier,
+        .fromTo(protectionEffect,
           { scale: 0, opacity: 0 },
           { scale: 1.2, opacity: 0.8, duration: 0.4, ease: 'back.out(1.7)' }
         )
-        .to(barrier, { scale: 1.5, opacity: 0, duration: 0.6 });
+        .to(protectionEffect, { scale: 1.5, opacity: 0, duration: 0.6 });
     });
   }
 
@@ -343,43 +343,55 @@
     });
   }
 
-  // カード6: 貴族 - 対決・衝突エフェクト（重要！）
-  function cardEffect6() {
-    console.log('cardEffect6 starting...');
+  // カード6: 貴族 - 相互カード確認演出（重要！）
+  function cardEffect6(handInfo = null) {
+    console.log('cardEffect6 starting with handInfo:', handInfo);
     return new Promise((resolve) => {
-      const duelBg = createDuelBackground();
-      const lightning = createLightningEffect();
-      const impact = createImpactEffect();
+      const cardRevealContainer = createCardRevealContainer(handInfo);
+      const { container, playerCard, opponentCard, vsText, compareEffect } = cardRevealContainer;
       
-      console.log('Created duel effects:', duelBg, lightning, impact);
-      document.body.appendChild(duelBg);
-      document.body.appendChild(lightning);
-      document.body.appendChild(impact);
-      console.log('Appended duel effects to body');
+      console.log('Created card reveal effects:', container);
+      document.body.appendChild(container);
+      console.log('Appended card reveal effects to body');
       
-      gsap.timeline({
+      const timeline = gsap.timeline({
+        onStart: () => {
+          console.log('cardEffect6 GSAP timeline started');
+        },
         onComplete: () => {
           console.log('cardEffect6 animation complete');
-          duelBg.remove();
-          lightning.remove();
-          impact.remove();
+          container.remove();
           resolve();
         }
-      })
-      // 緊迫した背景の表示
-      .to(duelBg, { opacity: 0.8, duration: 0.4 })
-      // 稲妻エフェクト
-      .fromTo(lightning,
-        { scaleY: 0, transformOrigin: 'top center' },
-        { scaleY: 1, duration: 0.2, ease: 'power2.out' }, 0.5
-      )
-      // 衝撃波エフェクト
-      .fromTo(impact,
-        { scale: 0, opacity: 1 },
-        { scale: 3, opacity: 0, duration: 0.6, ease: 'power2.out' }, 0.6
-      )
-      // 全体をフェードアウト
-      .to([duelBg, lightning], { opacity: 0, duration: 0.5, delay: 1.2 });
+      });
+      
+      console.log('Starting GSAP timeline for cardEffect6');
+      timeline
+        // カード登場
+        .fromTo([playerCard, opponentCard], 
+          { y: 100, opacity: 0, rotationY: 180 },
+          { y: 0, opacity: 1, rotationY: 0, duration: 0.8, ease: 'back.out(1.7)', stagger: 0.2 }
+        )
+        // VS テキスト出現
+        .fromTo(vsText,
+          { scale: 0, opacity: 0 },
+          { scale: 1, opacity: 1, duration: 0.4, ease: 'back.out(1.7)' }, "-=0.4"
+        )
+        // 比較エフェクト
+        .fromTo(compareEffect,
+          { scale: 0, opacity: 0 },
+          { scale: 1.5, opacity: 1, duration: 0.3 }, "+=0.5"
+        )
+        .to(compareEffect,
+          { scale: 2, opacity: 0, duration: 0.4 }
+        )
+        // カード回転・消失
+        .to([playerCard, opponentCard], 
+          { rotationY: 180, opacity: 0, duration: 0.5, ease: 'power2.in' }, "+=0.3"
+        )
+        .to(vsText, 
+          { scale: 0, opacity: 0, duration: 0.3 }, "-=0.3"
+        );
     });
   }
 
@@ -702,6 +714,335 @@
     return wings;
   }
 
+  // バリア演出（4の効果で無効化された場合）
+  function createBarrierEffect(cardNumber) {
+    console.log('Creating barrier effect for card:', cardNumber);
+    
+    const container = document.createElement('div');
+    container.style.cssText = `
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 300px;
+      height: 300px;
+      pointer-events: none;
+      z-index: 10000;
+    `;
+    
+    // バリアシールド
+    const shield = document.createElement('div');
+    shield.style.cssText = `
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 200px;
+      height: 200px;
+      background: radial-gradient(circle, rgba(255, 215, 0, 0.8) 0%, rgba(255, 215, 0, 0.4) 50%, transparent 100%);
+      border: 3px solid #FFD700;
+      border-radius: 50%;
+      opacity: 0;
+      box-shadow: 0 0 50px #FFD700;
+    `;
+    
+    // 十字の光
+    const cross1 = document.createElement('div');
+    cross1.style.cssText = `
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 4px;
+      height: 180px;
+      background: linear-gradient(to bottom, transparent, #FFD700, transparent);
+      opacity: 0;
+    `;
+    
+    const cross2 = document.createElement('div');
+    cross2.style.cssText = `
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 180px;
+      height: 4px;
+      background: linear-gradient(to right, transparent, #FFD700, transparent);
+      opacity: 0;
+    `;
+    
+    // 「無効」テキスト
+    const invalidText = document.createElement('div');
+    invalidText.textContent = '無効';
+    invalidText.style.cssText = `
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 32px;
+      font-weight: bold;
+      color: #FF4444;
+      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+      opacity: 0;
+    `;
+    
+    container.appendChild(shield);
+    container.appendChild(cross1);
+    container.appendChild(cross2);
+    container.appendChild(invalidText);
+    document.body.appendChild(container);
+    
+    console.log('Barrier effect elements created and added to DOM');
+    
+    return { container, shield, cross1, cross2, invalidText };
+  }
+
+  // バリア演出アニメーション
+  async function playBarrierEffect(cardNumber) {
+    console.log('playBarrierEffect starting for card:', cardNumber);
+    
+    return new Promise((resolve) => {
+      const elements = createBarrierEffect(cardNumber);
+      const { container, shield, cross1, cross2, invalidText } = elements;
+      
+      const tl = gsap.timeline({
+        onComplete: () => {
+          console.log('Barrier effect animation complete');
+          container.remove();
+          resolve();
+        }
+      });
+      
+      // バリアシールド出現
+      tl.to(shield, {
+        duration: 0.3,
+        opacity: 1,
+        scale: 1.2,
+        ease: "back.out(1.7)"
+      })
+      // 十字の光出現
+      .to([cross1, cross2], {
+        duration: 0.4,
+        opacity: 1,
+        ease: "power2.out"
+      }, "-=0.2")
+      // 「無効」テキスト出現
+      .to(invalidText, {
+        duration: 0.3,
+        opacity: 1,
+        scale: 1.1,
+        ease: "back.out(1.7)"
+      }, "-=0.2")
+      // 全体の消失
+      .to([shield, cross1, cross2, invalidText], {
+        duration: 0.5,
+        opacity: 0,
+        scale: 0.8,
+        ease: "power2.in"
+      }, "+=0.8");
+    });
+  }
+
+  // カード6用 - 相互カード確認コンテナ作成
+  function createCardRevealContainer(handInfo = null) {
+    const container = document.createElement('div');
+    container.style.cssText = `
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: radial-gradient(circle, rgba(0, 0, 0, 0.8) 0%, rgba(0, 0, 0, 0.9) 100%);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 10000;
+      pointer-events: none;
+    `;
+    
+    // プレイヤーカード
+    const playerCard = document.createElement('div');
+    playerCard.style.cssText = `
+      width: 120px;
+      height: 180px;
+      background: linear-gradient(135deg, #4F46E5, #7C3AED);
+      border: 3px solid #FFF;
+      border-radius: 10px;
+      margin: 0 40px;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 18px;
+      font-weight: bold;
+      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+      box-shadow: 0 0 20px rgba(79, 70, 229, 0.7);
+    `;
+    
+    // 実際のカード画像を表示
+    if (handInfo && handInfo.playerCards && handInfo.playerCards.length > 0) {
+      const playerCardNumber = handInfo.playerCards[0];
+      
+      // カード画像を作成
+      const cardImg = document.createElement('img');
+      cardImg.src = `../images/${playerCardNumber}.jpg`;
+      cardImg.style.cssText = `
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        border-radius: 7px;
+      `;
+      
+      playerCard.innerHTML = '';
+      playerCard.appendChild(cardImg);
+    } else {
+      playerCard.textContent = 'YOUR CARD';
+    }
+    
+    // VS テキスト
+    const vsText = document.createElement('div');
+    vsText.style.cssText = `
+      font-size: 48px;
+      font-weight: bold;
+      color: #FFD700;
+      text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.8);
+      margin: 0 20px;
+    `;
+    vsText.textContent = 'VS';
+    
+    // 相手カード
+    const opponentCard = document.createElement('div');
+    opponentCard.style.cssText = `
+      width: 120px;
+      height: 180px;
+      background: linear-gradient(135deg, #DC2626, #EF4444);
+      border: 3px solid #FFF;
+      border-radius: 10px;
+      margin: 0 40px;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 18px;
+      font-weight: bold;
+      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+      box-shadow: 0 0 20px rgba(220, 38, 38, 0.7);
+    `;
+    
+    // 相手のカード画像を表示（カード6の効果では相手のカードも見える）
+    if (handInfo && handInfo.opponentCards && handInfo.opponentCards.length > 0) {
+      const opponentCardNumber = handInfo.opponentCards[0];
+      
+      // カード画像を作成
+      const cardImg = document.createElement('img');
+      cardImg.src = `../images/${opponentCardNumber}.jpg`;
+      cardImg.style.cssText = `
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        border-radius: 7px;
+      `;
+      
+      opponentCard.innerHTML = '';
+      opponentCard.appendChild(cardImg);
+    } else {
+      opponentCard.textContent = 'OPPONENT';
+    }
+    
+    // 比較エフェクト
+    const compareEffect = document.createElement('div');
+    compareEffect.style.cssText = `
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 200px;
+      height: 200px;
+      background: radial-gradient(circle, rgba(255, 255, 255, 0.8) 0%, transparent 70%);
+      border-radius: 50%;
+      opacity: 0;
+    `;
+    
+    container.appendChild(playerCard);
+    container.appendChild(vsText);
+    container.appendChild(opponentCard);
+    container.appendChild(compareEffect);
+    
+    return { container, playerCard, opponentCard, vsText, compareEffect };
+  }
+
+  // カード4専用 - プロテクション（守護）エフェクト
+  function createProtectionEffect() {
+    const container = document.createElement('div');
+    container.style.cssText = `
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 300px;
+      height: 300px;
+      pointer-events: none;
+      z-index: 9999;
+    `;
+    
+    // 守護の光輪
+    const halo = document.createElement('div');
+    halo.style.cssText = `
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 200px;
+      height: 200px;
+      background: radial-gradient(circle, rgba(255, 255, 255, 0.8) 0%, rgba(173, 216, 230, 0.6) 40%, transparent 70%);
+      border: 2px solid rgba(255, 255, 255, 0.9);
+      border-radius: 50%;
+      box-shadow: 0 0 40px rgba(173, 216, 230, 0.8);
+    `;
+    
+    // 保護シンボル（十字）
+    const cross = document.createElement('div');
+    cross.style.cssText = `
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 80px;
+      height: 80px;
+    `;
+    
+    const vertical = document.createElement('div');
+    vertical.style.cssText = `
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 4px;
+      height: 60px;
+      background: linear-gradient(to bottom, transparent, rgba(255, 255, 255, 0.9), transparent);
+    `;
+    
+    const horizontal = document.createElement('div');
+    horizontal.style.cssText = `
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 60px;
+      height: 4px;
+      background: linear-gradient(to right, transparent, rgba(255, 255, 255, 0.9), transparent);
+    `;
+    
+    cross.appendChild(vertical);
+    cross.appendChild(horizontal);
+    container.appendChild(halo);
+    container.appendChild(cross);
+    
+    return container;
+  }
+
   // GSAPテスト関数
   function testGSAP() {
     console.log('Testing GSAP...');
@@ -724,15 +1065,23 @@
     .to(testDiv, { opacity: 0, duration: 0.5, delay: 0.5 });
   }
 
-  // カード演出実行関数
-  function playCardEffect(cardNumber) {
-    console.log('playCardEffect called with cardNumber:', cardNumber); // デバッグログ追加
+  // カード演出実行関数（バリア効果オプション付き）
+  async function playCardEffect(cardNumber, isBarriered = false, handInfo = null) {
+    console.log('playCardEffect called with cardNumber:', cardNumber, 'isBarriered:', isBarriered, 'handInfo:', handInfo); // デバッグログ追加
     console.log('GSAP available:', typeof gsap !== 'undefined'); // GSAP存在確認
     
     // GSAPテストを一度だけ実行
     if (!window.gsapTested) {
       window.gsapTested = true;
       testGSAP();
+    }
+    
+    // バリア効果が有効な場合は専用演出を実行
+    if (isBarriered) {
+      console.log('Playing barrier effect for card:', cardNumber);
+      await playBarrierEffect(cardNumber);
+      console.log('Barrier effect completed for card:', cardNumber);
+      return;
     }
     
     const effects = {
@@ -752,11 +1101,20 @@
     console.log('Effect function found:', !!effectFunction, 'for card:', cardNumber); // デバッグログ追加
     if (effectFunction) {
       console.log('Executing effect for card:', cardNumber); // デバッグログ追加
-      return effectFunction();
+      
+      // カード6の場合は手札情報を渡す
+      if (cardNumber === 6 && handInfo) {
+        await effectFunction(handInfo);
+      } else {
+        await effectFunction();
+      }
+      
+      console.log('Effect completed for card:', cardNumber); // 完了ログ追加
+      
+      // 演出完了後に少し待機してドローアニメーションとの重複を防ぐ
+      await new Promise(resolve => setTimeout(resolve, 200));
     } else {
       console.log('No effect function found for card:', cardNumber, 'using default'); // デバッグログ追加
-      // デフォルトエフェクト（何もない場合）
-      return Promise.resolve();
     }
   }
 
