@@ -32,10 +32,14 @@ const gameScreen = document.getElementById('gameScreen');
 function toggleLog() {
   const isOpen = logArea.classList.contains('open');
   
-  if (isOpen) {
-    // ログエリアを閉じる
-    logArea.classList.remove('open');
-    gameScreen.classList.remove('log-open');
+      if (chosen) {
+        const { guessed, isHit, targetTurn } = chosen;
+        // onatherTurnのdata.nowは攻撃側の視点である可能性が高い。
+        // 自分のターン番号はローカルに保持しているcurrentGameStateから取得する。
+        const myTurnNumber = (typeof currentGameState?.myTurnNumber !== 'undefined')
+          ? currentGameState.myTurnNumber
+          : data.now?.myTurnNumber;
+        const perspective = (myTurnNumber && targetTurn) ? (myTurnNumber === targetTurn ? 'defender' : 'attacker') : 'attacker';
     logToggleBtn.textContent = '📝'; // 閉じた状態のアイコン
   } else {
     // ログエリアを開く
@@ -356,6 +360,26 @@ function getEffectDescription(characterName) {
   return messageManager.getEffectMessage(characterName);
 }
 
+// 兵士(2)の遅延判定演出が残っている可能性がある場合に待機
+async function waitForPendingCard2Judgement(timeoutMs = 1500) {
+  const start = Date.now();
+  // まずは、遅れて到着する可能性のある判定演出Promiseの出現を短くポーリング
+  if (!window.__lastOpponentAnimPromise) {
+    const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+    while (!window.__lastOpponentAnimPromise && (Date.now() - start) < timeoutMs) {
+      await sleep(50);
+    }
+  }
+  // 見つかったらそれを待つ
+  if (window.__lastOpponentAnimPromise && typeof window.__lastOpponentAnimPromise.then === 'function') {
+    try { await window.__lastOpponentAnimPromise; } catch (_) {}
+  }
+  if (Anim && typeof Anim.waitForFxIdle === 'function') {
+    const remain = Math.max(0, timeoutMs - (Date.now() - start));
+    try { await Anim.waitForFxIdle(remain); } catch (_) {}
+  }
+}
+
 // カード詳細情報を取得する関数
 function getCardDetails(cardNumber) {
   cardNumber = parseInt(cardNumber, 10);
@@ -364,6 +388,8 @@ function getCardDetails(cardNumber) {
 
 // カードを出す（自分）
 async function playCard(cardNumber) {
+  // 直近のプレイカードを記録（リザルト遷移時のグレース待機に利用）
+  window.__lastPlayedCard = parseInt(cardNumber, 10);
   const imgSrc = `../images/${cardNumber}.jpg`;
 
   // 手札から該当1枚を除去
@@ -403,6 +429,21 @@ async function playCard(cardNumber) {
       // タイムアウト時は安全側（何もしない）
       console.debug('Card6 resolution timeout: skip reveal');
     }
+  } else if (parseInt(cardNumber, 10) === 2) {
+    // 兵士: 予想演出（攻撃側視点）
+    // サーバからの 'update' でも相手/自分両方に結果演出が来るが、
+    // ローカルは先に予想演出を軽く挟む（重複は短いので許容）
+    try {
+      // now.predに直近の自分の予想が入る可能性があるが確定ではないため控えめに運用
+      const lastPred = (window.currentGameState && Array.isArray(window.currentGameState.pred))
+        ? window.currentGameState.pred.find(p => p.subject === window.currentGameState.myTurnNumber)
+        : null;
+      const guessed = lastPred ? lastPred.predCard : undefined;
+      if (guessed && Anim && typeof Anim.enqueueGuessAnnounce === 'function') {
+        Anim.enqueueGuessAnnounce(guessed, 'attacker');
+      }
+    } catch (e) { console.debug('local guess announce skipped:', e); }
+    await Anim.playCardEffect(2, false);
   } else {
     // カード効果演出を実行
     await Anim.playCardEffect(parseInt(cardNumber, 10), false);
@@ -977,8 +1018,32 @@ socket.on('yourTurn', async (data, callback) => {
       callback([idx]);
     }
   } else if (data.kind === 'update') {
-    Anim.stopTurnTimer();
-    callback([0]);
+    // yourTurn 側の update（例: 兵士の予想結果）
+    try {
+      const payload = Array.isArray(data.choices) ? data.choices[0] : null;
+      if (payload && payload.type === 'card2' && payload.predResult) {
+        const { guessed, isHit, targetTurn } = payload.predResult || {};
+        // 自分のターン番号はローカル状態から取得（onatherTurnと同様に視点ブレを回避）
+        const myTurnNumber = (typeof currentGameState?.myTurnNumber !== 'undefined')
+          ? currentGameState.myTurnNumber
+          : data.now?.myTurnNumber;
+        const perspective = (myTurnNumber && targetTurn) ? (myTurnNumber === targetTurn ? 'defender' : 'attacker') : 'attacker';
+        const p = (async () => {
+          if (Anim && typeof Anim.enqueueGuessAnnounce === 'function') {
+            await Anim.enqueueGuessAnnounce(guessed, perspective);
+          }
+          if (Anim && typeof Anim.enqueueGuessResult === 'function') {
+            await Anim.enqueueGuessResult(guessed, !!isHit, perspective);
+          }
+        })();
+        window.__lastOpponentAnimPromise = p;
+      }
+    } catch (e) {
+      console.warn('update handling error:', e);
+    } finally {
+      Anim.stopTurnTimer();
+      callback([0]);
+    }
   } else if (data.kind === 'show') {
     try {
       await show(data.choices);
@@ -1010,6 +1075,8 @@ socket.on('onatherTurn', async (data) => {
   console.log('onatherTurn received:', data); // デバッグログ追加
   if (data.kind === 'play_card') {
     console.log('相手がカードをプレイ:', data.choice, 'バリア効果:', data.isBarriered); // デバッグログ追加
+    // 直近のプレイカード番号を保持（リザルト遷移のグレース待機に利用）
+    try { window.__lastPlayedCard = parseInt(data.choice, 10); } catch (_) {}
     // 重なり防止のため、演出はスケジューラに積む（待たない）
     const cname  = getCharacterName(parseInt(data.choice, 10));
     const text   = getEffectDescription(cname);
@@ -1054,6 +1121,42 @@ socket.on('onatherTurn', async (data) => {
       }
     }
   }
+  else if (data.kind === 'update') {
+    // 相手側からの update 通知（例: 兵士判定）。敗者側でも判定演出を見せるためにFXレーンに積み、
+    // リザルト遷移待機用に最後の相手演出Promiseも記録する。
+    try {
+      let payload = null;
+      if (data && data.choice && typeof data.choice === 'object') {
+        payload = data.choice;
+      } else if (Array.isArray(data.choice)) {
+        payload = data.choice[0];
+      } else if (Array.isArray(data.choices)) {
+        payload = data.choices[0];
+      }
+      const chosen = (payload && payload.type === 'card2' && payload.predResult) ? payload.predResult : null;
+      if (chosen) {
+        const { guessed, isHit, targetTurn } = chosen;
+        // onatherTurnのdata.nowは攻撃側視点の可能性があるため、ローカルのcurrentGameStateを優先
+        const myTurnNumber = (typeof currentGameState?.myTurnNumber !== 'undefined')
+          ? currentGameState.myTurnNumber
+          : data.now?.myTurnNumber;
+        const perspective = (myTurnNumber && targetTurn) ? (myTurnNumber === targetTurn ? 'defender' : 'attacker') : 'attacker';
+        const p = (async () => {
+          if (Anim && typeof Anim.enqueueGuessAnnounce === 'function') {
+            await Anim.enqueueGuessAnnounce(guessed, perspective);
+          }
+          if (Anim && typeof Anim.enqueueGuessResult === 'function') {
+            await Anim.enqueueGuessResult(guessed, !!isHit, perspective);
+          }
+        })();
+        window.__lastOpponentAnimPromise = p;
+        // 直近の相手側更新を記録（2の判定演出が直後に来る場合のグレース待機に利用）
+        window.__lastOpponentUpdate = { type: 'card2', at: Date.now() };
+      }
+    } catch (e) {
+      console.warn('onatherTurn update handling error:', e);
+    }
+  }
 });
 
 socket.on('gameEnded', async (data) => {
@@ -1066,6 +1169,10 @@ socket.on('gameEnded', async (data) => {
     // 念のためFXレーンのアイドルも待つ（最大30秒）
     if (Anim && typeof Anim.waitForFxIdle === 'function') {
       await Anim.waitForFxIdle(30000);
+    }
+    // 兵士(2)の判定演出が残っている可能性に備える
+    if (window.__lastPlayedCard === 2 || (window.__lastOpponentUpdate && window.__lastOpponentUpdate.type === 'card2')) {
+      await waitForPendingCard2Judgement(1500);
     }
   } catch (e) {
     console.debug('result navigation wait error:', e);
@@ -1089,6 +1196,9 @@ socket.on('redirectToResult', async (data) => {
     }
     if (Anim && typeof Anim.waitForFxIdle === 'function') {
       await Anim.waitForFxIdle(30000);
+    }
+    if (window.__lastPlayedCard === 2 || (window.__lastOpponentUpdate && window.__lastOpponentUpdate.type === 'card2')) {
+      await waitForPendingCard2Judgement(1500);
     }
   } catch (e) {
     console.debug('redirect wait error:', e);

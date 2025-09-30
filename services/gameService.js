@@ -46,8 +46,8 @@ class GameService {
         finalChoice = GameService.getFallbackChoice(choices, kind, `invalid CPU response: ${mlChoice}`);
       }
       
-      // カードプレイの場合、他のプレイヤーに通知
-      if (kind === 'play_card' && io) {
+      // カードプレイや可視更新は他のプレイヤーに通知
+      if ((kind === 'play_card' || kind === 'update') && io) {
         GameService.notifyOtherPlayers(now, finalChoice, kind, socketId, io);
       }
       
@@ -65,6 +65,12 @@ class GameService {
     Logger.debug(`kind: ${kind}`);
     Logger.debug(`kind === OPPONENT_CHOICE: ${kind === CONFIG.GAME_RULES.CHOICE_TYPES.OPPONENT_CHOICE}`);
     Logger.debug(`OPPONENT_CHOICE value: ${CONFIG.GAME_RULES.CHOICE_TYPES.OPPONENT_CHOICE}`);
+    
+    // update はUI反映用の通知であり検証不要（オブジェクトpayloadをそのまま返す）
+    if (kind === CONFIG.GAME_RULES.CHOICE_TYPES.UPDATE) {
+      Logger.debug('kind=update: always valid');
+      return true;
+    }
     
     if (choice === null || choice === undefined) {
       Logger.debug('choice is null or undefined');
@@ -249,8 +255,8 @@ class GameService {
           Logger.debug(`最終選択: ${result}`);
         }
         
-        // カードプレイの場合、他のプレイヤーに通知
-        if (kind === 'play_card') {
+        // カードプレイや可視更新（例: 兵士の予想結果）を他のプレイヤーに通知
+        if (kind === 'play_card' || kind === 'update') {
           GameService.notifyOtherPlayers(now, finalResult, kind, socketId, io);
         }
         
@@ -259,6 +265,13 @@ class GameService {
       } else {
         Logger.warn(`応答が無効: ${result}, kind: ${kind}`);
         Logger.debug(`isValidChoice結果: false`);
+        // update は無効扱いにせず、そのままブロードキャスト（UI更新用）
+        if (kind === CONFIG.GAME_RULES.CHOICE_TYPES.UPDATE) {
+          try {
+            GameService.notifyOtherPlayers(now, result ?? choices, kind, socketId, io);
+          } catch (e) {}
+          return result ?? choices;
+        }
         return GameService.getFallbackChoice(choices, kind, `invalid player response: ${result}`);
       }
     } catch (e) {
@@ -292,12 +305,12 @@ class GameService {
       if (kind === 'play_card') {
         isBarriered = GameService.checkBarrierEffect(choice, now, actorSocketId, roomId);
       }
-      
+
       const notificationData = {
         choice: choice,
         kind: kind,
         now: now,
-        isBarriered: isBarriered  // バリア効果情報を追加
+        isBarriered: isBarriered
       };
       
       // ルーム内の他のプレイヤーに onatherTurn イベントを送信

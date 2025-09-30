@@ -781,6 +781,66 @@
     return wings;
   }
 
+  // ===== 兵士(2) 用 - 推測アナウンス/判定演出 =====
+  function createGuessBanner(number, title, color) {
+    const wrap = document.createElement('div');
+    wrap.style.cssText = `
+      position: fixed; inset: 0; display: flex; align-items: center; justify-content: center;
+      z-index: 10000; pointer-events: none;
+    `;
+    const box = document.createElement('div');
+    box.style.cssText = `
+      min-width: 320px; padding: 16px 20px; border-radius: 12px; text-align: center;
+      background: rgba(0,0,0,0.75); color: #fff; box-shadow: 0 8px 24px rgba(0,0,0,0.35);
+      transform: scale(0.8); opacity: 0;
+    `;
+    const titleEl = document.createElement('div');
+    titleEl.textContent = title;
+    titleEl.style.cssText = `font-size: 18px; font-weight: 700; letter-spacing: .05em; margin-bottom: 8px; color: ${color}`;
+    const numEl = document.createElement('div');
+    numEl.textContent = `予想カード: ${number}`;
+    numEl.style.cssText = `font-size: 22px; font-weight: 800;`;
+    const img = document.createElement('img');
+    img.src = `../images/${number}.jpg`;
+    img.alt = `card-${number}`;
+    img.style.cssText = `width: 80px; height: auto; border-radius: 6px; margin: 10px auto 0; display: block; box-shadow: 0 4px 14px rgba(0,0,0,0.4);`;
+    box.appendChild(titleEl);
+    box.appendChild(numEl);
+    box.appendChild(img);
+    wrap.appendChild(box);
+    document.body.appendChild(wrap);
+    return { wrap, box };
+  }
+
+  function createGuessResultBanner(number, isHit, perspective) {
+    const color = isHit ? '#22c55e' : '#94a3b8';
+    const text = isHit
+      ? (perspective === 'attacker' ? '的中！' : '当てられた！')
+      : (perspective === 'attacker' ? 'はずれ…' : 'はずした！');
+    return createGuessBanner(number, text, color);
+  }
+
+  async function enqueueGuessAnnounce(number, perspective = 'attacker') {
+    return _enqueue('fx', async () => {
+      const title = perspective === 'attacker' ? 'あなたの予想' : '相手の予想';
+      const { wrap, box } = createGuessBanner(number, title, '#fbbf24');
+      await gsap.timeline()
+        .to(box, { opacity: 1, scale: 1, duration: 0.25, ease: 'back.out(1.7)' })
+        .to(wrap, { opacity: 0, duration: 0.3, delay: 0.9 })
+        .call(() => wrap.remove());
+    });
+  }
+
+  async function enqueueGuessResult(number, isHit, perspective = 'attacker') {
+    return _enqueue('fx', async () => {
+      const { wrap, box } = createGuessResultBanner(number, isHit, perspective);
+      await gsap.timeline()
+        .to(box, { opacity: 1, scale: 1, duration: 0.25, ease: 'back.out(1.7)' })
+        .to(wrap, { opacity: 0, duration: 0.35, delay: 0.9 })
+        .call(() => wrap.remove());
+    });
+  }
+
   // バリア演出（4の効果で無効化された場合）
   function createBarrierEffect(cardNumber) {
     console.log('Creating barrier effect for card:', cardNumber);
@@ -1249,6 +1309,8 @@
     enqueuePlayerDraw,
     enqueueCpuDraw,
     enqueueBarrierEffect,
-    waitForFxIdle
+    waitForFxIdle,
+    enqueueGuessAnnounce,
+    enqueueGuessResult
   };
 })();
