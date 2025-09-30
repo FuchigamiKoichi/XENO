@@ -534,11 +534,11 @@ function updateGameView(now) {
 // 文字列→演出テキスト
 function getCharacterName(cardNumber) {
   cardNumber = parseInt(cardNumber, 10);
-  const characterNames = ['少年','兵士','占い師','乙女','死神','貴族','賢者','精霊','皇帝','英雄'];
+  const characterNames = ['俺','探偵','エスパー','バリア','下痢','対決','正夢','能力交換','悪魔','彼女'];
   return characterNames[cardNumber - 1];
 }
-function getEffectDescription(characterName) {
-  return messageManager.getEffectMessage(characterName);
+function getEffectDescription(cardNumber) {
+  return messageManager.getEffectMessage(cardNumber);
 }
 
 // カード詳細情報を取得する関数
@@ -580,7 +580,7 @@ async function playCard(cardNumber) {
   }
 
   const cname = getCharacterName(cardNumber);
-  const text  = getEffectDescription(cname);
+  const text  = getEffectDescription(cardNumber);
 
   // ズーム演出（完了待ち）
   await Anim.zoomCard(imgSrc, text, 1.0);
