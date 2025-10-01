@@ -2,15 +2,78 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
+  <!-- Performance Optimization -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
+  <link rel="dns-prefetch" href="//fonts.googleapis.com">
+  <link rel="preload" href="./styles/index.css" as="style">
+  <link rel="preload" href="./js/index.js" as="script">
+  
   <link rel="stylesheet" href="./styles/index.css">
+  <!-- Favicon and Icons -->
+  <link rel="icon" href="/favicon.ico" sizes="32x32">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+  <link rel="manifest" href="/site.webmanifest">
   <meta charset="UTF-8">
-  <title>XENO</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HΛLPΛL - オンラインカードゲーム</title>
+  
+  <!-- SEO Meta Tags -->
+  <meta name="description" content="オンラインマルチプレイヤーカードゲーム HΛLPΛL。戦略的なカードバトルで相手を出し抜こう！リアルタイム対戦、ルーム作成、CPU対戦に対応。">
+  <meta name="keywords" content="HΛLPΛL, HALPAL, カードゲーム, オンラインゲーム, マルチプレイヤー, 戦略ゲーム, リアルタイム対戦">
+  <meta name="author" content="HΛLPΛL Game">
+  <meta name="robots" content="index, follow">
+  <meta name="language" content="ja">
+  
+  <!-- Open Graph Meta Tags -->
+  <meta property="og:title" content="HΛLPΛL - オンラインカードゲーム">
+  <meta property="og:description" content="戦略的なカードバトルで相手を出し抜こう！オンラインマルチプレイヤーカードゲーム HΛLPΛL">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://halpal-game.com">
+  <meta property="og:image" content="/images/background.png">
+  <meta property="og:site_name" content="HΛLPΛL">
+  <meta property="og:locale" content="ja_JP">
+  
+  <!-- Twitter Card Meta Tags -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="HΛLPΛL - オンラインカードゲーム">
+  <meta name="twitter:description" content="戦略的なカードバトルで相手を出し抜こう！">
+  <meta name="twitter:image" content="/images/background.png">
+  
+  <!-- PWA Support -->
+  <meta name="theme-color" content="#2c3e50">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="HΛLPΛL">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="application-name" content="HΛLPΛL">
+  
   <style>
     #rooms {
         display: flex;
         flex-direction: column;
         align-items: flex-start;
         gap: 10px;
+    }
+    
+    .info-section {
+        margin-top: 20px;
+        text-align: center;
+    }
+    
+    .info-link {
+        display: inline-block;
+        padding: 10px 20px;
+        background-color: #3498db;
+        color: white;
+        text-decoration: none;
+        border-radius: 5px;
+        font-size: 14px;
+        transition: background-color 0.3s ease;
+    }
+    
+    .info-link:hover {
+        background-color: #2980b9;
     }
   </style>
 </head>
@@ -41,6 +104,13 @@
           <!-- セクション3: ルーム作成 -->
           <div class="create-section">
             <button id="createRoomBtn" class="create-btn">新しいルームを作成</button>
+          </div>
+          
+          <!-- セクション4: ゲーム説明 -->
+          <div class="info-section">
+            <a href="https://shigenoki.com/apps/halpal/index.html" target="_blank" rel="noopener noreferrer" class="info-link">
+              ゲームの詳しい説明はこちら
+            </a>
           </div>
         </div>
       </div>
