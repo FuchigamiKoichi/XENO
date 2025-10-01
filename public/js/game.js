@@ -753,7 +753,7 @@ async function playCard_cpu_withBarrier(cardNumber, isBarriered) {
     }
   }
   const cname  = getCharacterName(cardNumber);
-  const text   = getEffectDescription(cname);
+  const text   = getEffectDescription(cardNumber);
 
   // カードのズーム表示のみを行い、プレイエリアへの追加はupdateGameViewに任せる
   console.log('Showing zoom for opponent card:', cardNumber); // デバッグログ追加
@@ -1325,7 +1325,7 @@ socket.on('onatherTurn', async (data) => {
     try { window.__lastPlayedCard = parseInt(data.choice, 10); } catch (_) {}
     // 重なり防止のため、演出はスケジューラに積む（待たない）
     const cname  = getCharacterName(parseInt(data.choice, 10));
-    const text   = getEffectDescription(cname);
+    const text   = getEffectDescription(parseInt(data.choice, 10));
     // 後でリザルト遷移時に待つため、最後の相手演出のPromiseを保持
     const cardNum = parseInt(data.choice, 10);
     let handInfo = getCurrentHandInfo();
