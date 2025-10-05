@@ -832,6 +832,12 @@ body {
   outline-offset: 2px;
 }
 
+.menu-link {
+  display: block;
+  text-decoration: none;
+  color: #fff;
+}
+
 /* --- Play可能カードのハイライト --- */
 .card.selectable {
   outline: 3px solid #ffcc00;

@@ -178,20 +178,8 @@ class Card2 extends Card {
                 }
             }
 
-            await choice(
-                createData(this.field, player),
-                [{
-                  type: 'card2',
-                  predResult: {
-                    guessed: predNumber,
-                    isHit: !!isHit,
-                    targetTurn: opponent.turnNumber
-                  }
-                }],
-                'update',
-                player.socketId,
-                roomId
-            )
+            // カード2の判定結果は現在クライアントサイドで処理されるため、サーバーからの通知は不要
+            // クライアントは自分で攻撃者の手札情報から判定を行う
         }
     }
 }
@@ -469,6 +457,15 @@ function createData(field, player) {
     }
 
     const myHands = player.hands.map(card => card.number);
+    
+    // fieldから相手の手札情報を取得
+    const otherHands = {};
+    for (const p of players) {
+        if (p !== player && p.live) {
+            // 相手プレイヤーの手札をfieldから取得
+            otherHands[p.turnNumber] = p.hands.map(card => card.number);
+        }
+    }
 
     for (const lookData of player.look) {
         const opponent = lookData.opponent;
@@ -527,6 +524,7 @@ function createData(field, player) {
         otherPlayers: state,
         cardNumber: field.deck.length,
         myHands,
+        otherHands,  // fieldから取得した相手の手札情報
         myPlayed,
         otherPlayed,
         lookHands,

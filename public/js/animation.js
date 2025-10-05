@@ -637,19 +637,6 @@
     return eye;
   }
 
-  function createBarrierEffect() {
-    const barrier = document.createElement('div');
-    barrier.style.cssText = `
-      position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-      width: 250px; height: 250px; pointer-events: none; z-index: 9999;
-      background: radial-gradient(circle, rgba(59,130,246,0.3) 0%, rgba(147,197,253,0.6) 50%, transparent 100%);
-      border: 3px solid #3b82f6; border-radius: 50%;
-      box-shadow: 0 0 40px #3b82f6; opacity: 1; visibility: visible;
-    `;
-    console.log('Created barrier with styles:', barrier.style.cssText);
-    return barrier;
-  }
-
   function createDarknessEffect() {
     const darkness = document.createElement('div');
     darkness.style.cssText = `
@@ -849,8 +836,8 @@
   }
 
   // バリア演出（4の効果で無効化された場合）
-  function createBarrierEffect(cardNumber) {
-    console.log('Creating barrier effect for card:', cardNumber);
+  function createBarrierEffect() {
+    // console.log('Creating barrier effect for card:', cardNumber);
     
     const container = document.createElement('div');
     container.style.cssText = `
@@ -932,11 +919,9 @@
   }
 
   // バリア演出アニメーション
-  async function playBarrierEffect(cardNumber) {
-    console.log('playBarrierEffect starting for card:', cardNumber);
-    
+  async function playBarrierEffect() {
     return new Promise((resolve) => {
-      const elements = createBarrierEffect(cardNumber);
+      const elements = createBarrierEffect();
       const { container, shield, cross1, cross2, invalidText } = elements;
       
       const tl = gsap.timeline({
@@ -1221,7 +1206,7 @@
     // バリア効果が有効な場合は専用演出を実行
     if (isBarriered) {
       console.log('Playing barrier effect for card:', cardNumber);
-      await playBarrierEffect(cardNumber);
+      await playBarrierEffect();
       console.log('Barrier effect completed for card:', cardNumber);
       return;
     }
@@ -1292,9 +1277,9 @@
   }
 
   // バリア演出のみをFXレーンに積む
-  async function enqueueBarrierEffect(cardNumber = null) {
+  async function enqueueBarrierEffect() {
     return _enqueue('fx', async () => {
-      await playBarrierEffect(cardNumber);
+      await playBarrierEffect();
     });
   }
 
