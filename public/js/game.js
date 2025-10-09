@@ -1113,7 +1113,7 @@ socket.on('onatherTurn', async (data) => {
   }
 });
 
-socket.on('gameEnded', (data) => {
+socket.on('ed', (data) => {
   Anim.stopTurnTimer();
   if (window.audioManager) {
     window.audioManager.stopBGM();
