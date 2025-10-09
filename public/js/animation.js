@@ -1203,14 +1203,6 @@
       testGSAP();
     }
     
-    // バリア効果が有効な場合は専用演出を実行
-    if (isBarriered  && cardNumber in [1, 2, 3, 5, 6, 8, 9]) {
-      console.log('Playing barrier effect for card:', cardNumber);
-      await playBarrierEffect();
-      console.log('Barrier effect completed for card:', cardNumber);
-      return;
-    }
-    
     const effects = {
       1: cardEffect1,
       2: cardEffect2,
@@ -1247,7 +1239,7 @@
 
   // ===== スケジューリング用のヘルパ =====
   // 対戦相手のプレイ演出（ズーム→効果）を1本のFXレーンに積む
-  async function enqueueOpponentPlay(cardNumber, isBarriered = false, handInfo = null, effectText = '') {
+  async function enqueuePlay(cardNumber, isBarriered = false, handInfo = null, effectText = '') {
     const imgSrc = `../images/${cardNumber}.jpg`;
     const text = typeof effectText === 'string' ? effectText : '';
     return _enqueue('fx', async () => {
@@ -1255,11 +1247,6 @@
       await zoomCard(imgSrc, text, 1.0);
       // 効果
       let infoToUse = handInfo;
-      if (parseInt(cardNumber, 10) === 6) {
-        // 実行時セーフガード：handInfoが無ければ非開示、バリア時は強制非開示
-        if (!infoToUse) infoToUse = { onlyReveal: { player: false, opponent: false } };
-        if (isBarriered) infoToUse.onlyReveal = { player: false, opponent: false };
-      }
       await playCardEffect(parseInt(cardNumber, 10), isBarriered, infoToUse);
     });
   }
@@ -1393,7 +1380,7 @@
     playCardEffect,
     playBarrierEffect,
     // 非同期に積むための新API（必要に応じて利用）
-    enqueueOpponentPlay,
+    enqueuePlay,
     enqueuePlayerDraw,
     enqueueCpuDraw,
     enqueueBarrierEffect,

@@ -190,12 +190,13 @@
     </div>
   </div>
 
-  <!-- GSAP（CDN）→ socket.io → messages → audio → animation → ゲームJS の順 -->
+  <!-- GSAP（CDN）→ socket.io → messages → audio → animation → socketHandlers → ゲームJS の順 -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
   <script src="/socket.io/socket.io.js"></script>
   <script src="./js/messages.js"></script>
   <script src="./js/audio.js"></script>
   <script src="./js/animation.js"></script>
+  <script src="./js/socketHandlers.js"></script>
   <script defer src="./js/game.js"></script>
 </body>
 </html>

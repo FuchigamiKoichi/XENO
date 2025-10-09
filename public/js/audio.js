@@ -1,7 +1,3 @@
-/**
- * XENOゲーム用音声管理システム
- * BGMとSEを管理するクラス
- */
 class AudioManager {
     constructor() {
         this.bgmVolume = 0.1;
