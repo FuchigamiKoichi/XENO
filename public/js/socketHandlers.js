@@ -125,7 +125,7 @@ const SocketHandlers = {
   async handleShow(data, callback) {
     try {
       await show(data.choices);
-      addLog(messageManager.getGameMessage('opponentHandReveal', { card: data.choices[0] }));
+      addLog(messageManager.getGameMessage('opponentHandReveal', { card: data.choices[0].cards[0] }));
       hideShow();
       callback([0]);
     } catch (e) {
