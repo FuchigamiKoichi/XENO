@@ -1204,7 +1204,7 @@
     }
     
     // バリア効果が有効な場合は専用演出を実行
-    if (isBarriered) {
+    if (isBarriered  && cardNumber in [1, 2, 3, 5, 6, 8, 9]) {
       console.log('Playing barrier effect for card:', cardNumber);
       await playBarrierEffect();
       console.log('Barrier effect completed for card:', cardNumber);

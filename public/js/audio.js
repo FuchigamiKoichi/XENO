@@ -362,6 +362,133 @@ class AudioManager {
 // グローバルインスタンス
 window.audioManager = new AudioManager();
 
+// ========================================
+// ゲーム用オーディオ関数
+// ========================================
+
+/**
+ * カード効果に応じた効果音を再生
+ * @param {number} cardNum - カード番号
+ */
+function playCardSE(cardNum) {
+  if (!window.audioManager) {
+    return;
+  }
+  
+  switch (cardNum) {
+    case 5: // 死神
+      window.audioManager.playSE('trauma');
+      break;
+    case 9: // 皇帝
+      window.audioManager.playSE('snap');
+      break;
+    case 10: // 英雄
+      window.audioManager.playSE('gameStart');
+      break;
+    default:
+      window.audioManager.playSE('cardPlace');
+      break;
+  }
+}
+
+/**
+ * カード配布音を再生
+ */
+function playCardDealSE() {
+  if (window.audioManager) {
+    window.audioManager.playSE('cardDeal');
+  }
+}
+
+/**
+ * カードを置く音を再生
+ */
+function playCardPlaceSE() {
+  if (window.audioManager) {
+    window.audioManager.playSE('cardPlace');
+  }
+}
+
+/**
+ * 決定音を再生
+ */
+function playDecisionSE() {
+  if (window.audioManager) {
+    window.audioManager.playSE('decision');
+  }
+}
+
+/**
+ * BGMを開始（ユーザー操作後）
+ */
+function startMainBGM() {
+  if (window.audioManager) {
+    window.audioManager.playBGM('main');
+  }
+}
+
+/**
+ * オーディオ設定をUIに反映
+ * @param {Object} elements - UI要素のオブジェクト
+ */
+function updateAudioUI(elements) {
+  if (!window.audioManager) {
+    return;
+  }
+  
+  const { bgmVolumeSlider, seVolumeSlider, muteToggle, bgmVolumeValue, seVolumeValue } = elements;
+  
+  if (bgmVolumeSlider) bgmVolumeSlider.value = window.audioManager.bgmVolume * 100;
+  if (seVolumeSlider) seVolumeSlider.value = window.audioManager.seVolume * 100;
+  if (muteToggle) muteToggle.checked = window.audioManager.isMuted;
+  if (bgmVolumeValue) bgmVolumeValue.textContent = Math.round(window.audioManager.bgmVolume * 100) + '%';
+  if (seVolumeValue) seVolumeValue.textContent = Math.round(window.audioManager.seVolume * 100) + '%';
+}
+
+/**
+ * BGM音量を設定
+ * @param {number} volume - 音量 (0-1)
+ */
+function setBGMVolume(volume) {
+  if (window.audioManager) {
+    window.audioManager.setBGMVolume(volume);
+    window.audioManager.saveSettings();
+  }
+}
+
+/**
+ * SE音量を設定
+ * @param {number} volume - 音量 (0-1)
+ */
+function setSEVolume(volume) {
+  if (window.audioManager) {
+    window.audioManager.setSEVolume(volume);
+    window.audioManager.saveSettings();
+  }
+}
+
+/**
+ * ミュート設定を変更
+ * @param {boolean} muted - ミュート状態
+ */
+function setMute(muted) {
+  if (window.audioManager) {
+    window.audioManager.setMute(muted);
+  }
+}
+
+/**
+ * SE時間を取得
+ * @param {string} seName - SE名
+ * @returns {number} SE時間（秒）
+ */
+function getSEDuration(seName) {
+  if (window.audioManager) {
+    return window.audioManager.getSEDuration(seName);
+  }
+  return 0;
+}
+
 // ページ読み込み時に設定を復元
 document.addEventListener('DOMContentLoaded', () => {
     window.audioManager.loadSettings();

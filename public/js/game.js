@@ -1,6 +1,3 @@
-// game.js
-// 画面制御・ソケット・ゲームロジック。アニメは animation.js の Anim を利用。
-
 const socket = io();
 
 // DOM 参照
@@ -23,88 +20,221 @@ showContainer.style.display   = 'none';
 // メッセージ初期化
 initializeMessages();
 
+// ===============================
+// Error Handling & Logging
+// ===============================
+
+const ErrorHandler = {
+  /**
+   * エラーログを記録
+   * @param {string} context - エラーが発生したコンテキスト
+   * @param {Error|string} error - エラーオブジェクト
+   * @param {Object} additionalData - 追加データ
+   */
+  logError(context, error, additionalData = {}) {
+    const errorInfo = {
+      timestamp: new Date().toISOString(),
+      context,
+      error: error instanceof Error ? {
+        message: error.message,
+        stack: error.stack,
+        name: error.name
+      } : error,
+      additionalData,
+      userAgent: navigator.userAgent,
+      url: window.location.href
+    };
+
+    console.error(`[${context}] Error occurred:`, errorInfo);
+    
+    // 必要に応じてサーバーにエラーレポートを送信
+    // this.sendErrorReport(errorInfo);
+  },
+
+  /**
+   * 警告ログを記録
+   * @param {string} context - 警告が発生したコンテキスト
+   * @param {string} message - 警告メッセージ
+   * @param {Object} additionalData - 追加データ
+   */
+  logWarning(context, message, additionalData = {}) {
+    console.warn(`[${context}] Warning:`, message, additionalData);
+  },
+
+  /**
+   * 非同期処理を安全に実行
+   * @param {Function} asyncFn - 非同期関数
+   * @param {string} context - 実行コンテキスト
+   * @param {*} fallbackValue - エラー時のフォールバック値
+   */
+  async safeExecute(asyncFn, context, fallbackValue = null) {
+    try {
+      return await asyncFn();
+    } catch (error) {
+      this.logError(context, error);
+      return fallbackValue;
+    }
+  },
+
+  /**
+   * 安全なDOM操作
+   * @param {Function} domFn - DOM操作関数
+   * @param {string} context - 実行コンテキスト
+   */
+  safeDOMOperation(domFn, context) {
+    try {
+      return domFn();
+    } catch (error) {
+      this.logError(`DOM_${context}`, error);
+      return null;
+    }
+  },
+
+  /**
+   * アニメーションPromiseを安全に追跡
+   * @param {Promise} promise - アニメーションPromise
+   * @param {string} promiseType - Promiseタイプ
+   * @returns {Promise} 追跡されたPromise
+   */
+  trackAnimationPromise(promise, promiseType = 'animation') {
+    const trackedPromise = promise.catch(error => {
+      this.logError(`ANIMATION_${promiseType.toUpperCase()}`, error);
+      return null; // エラーでも処理を継続
+    });
+
+    // グローバル追跡用の設定
+    if (promiseType === 'self') {
+      window.__lastSelfAnimPromise = trackedPromise;
+      trackedPromise.finally(() => {
+        if (window.__lastSelfAnimPromise === trackedPromise) {
+          window.__lastSelfAnimPromise = null;
+        }
+      });
+    } else if (promiseType === 'opponent') {
+      window.__lastOpponentAnimPromise = trackedPromise;
+      trackedPromise.finally(() => {
+        if (window.__lastOpponentAnimPromise === trackedPromise) {
+          window.__lastOpponentAnimPromise = null;
+        }
+      });
+    }
+
+    return trackedPromise;
+  }
+};
+
 // 未捕捉のPromiseエラーをキャッチ
 window.addEventListener('unhandledrejection', function(event) {
-  console.error('Unhandled promise rejection:', event.reason);
-  console.error('Promise that was rejected:', event.promise);
+  ErrorHandler.logError('UNHANDLED_PROMISE_REJECTION', event.reason, {
+    promise: event.promise
+  });
   // エラーを防ぐ（オプション）
   event.preventDefault();
 });
 
-// 画像の遅延読み込みキャッシュ
+// 一般的なエラーをキャッチ
+window.addEventListener('error', function(event) {
+  ErrorHandler.logError('GLOBAL_ERROR', event.error, {
+    filename: event.filename,
+    lineno: event.lineno,
+    colno: event.colno
+  });
+});
+
+// ===============================
+// DOM & Image Utilities
+// ===============================
+
 const imageCache = new Map();
 
-/**
- * 画像を遅延読み込みしてキャッシュする
- * @param {string} src - 画像のURL
- * @returns {Promise<HTMLImageElement>} 読み込み完了した画像要素
- */
-function loadImageLazy(src) {
-  if (imageCache.has(src)) {
-    return Promise.resolve(imageCache.get(src));
-  }
-  
-  return new Promise((resolve, reject) => {
-    const img = new Image();
-    img.onload = () => {
-      imageCache.set(src, img);
-      resolve(img);
-    };
-    img.onerror = reject;
-    img.src = src;
-  });
-}
+const DOMUtils = {
+  /**
+   * 画像を遅延読み込みしてキャッシュする
+   * @param {string} src - 画像のURL
+   * @returns {Promise<HTMLImageElement>} 読み込み完了した画像要素
+   */
+  loadImageLazy(src) {
+    if (imageCache.has(src)) {
+      return Promise.resolve(imageCache.get(src));
+    }
+    
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => {
+        imageCache.set(src, img);
+        resolve(img);
+      };
+      img.onerror = reject;
+      img.src = src;
+    });
+  },
 
-/**
- * カード番号から最適な画像パスを取得（WebP対応）
- * @param {number} cardNum - カード番号
- * @returns {string} 画像パス
- */
+  /**
+   * DOM要素を作成
+   * @param {string} tagName - タグ名
+   * @param {Object} options - オプション
+   * @returns {HTMLElement} 作成された要素
+   */
+  createElement(tagName, options = {}) {
+    const element = document.createElement(tagName);
+    
+    if (options.className) {
+      element.className = options.className;
+    }
+    
+    if (options.textContent) {
+      element.textContent = options.textContent;
+    }
+    
+    if (options.attributes) {
+      Object.entries(options.attributes).forEach(([key, value]) => {
+        element.setAttribute(key, value);
+      });
+    }
+    
+    if (options.styles) {
+      Object.entries(options.styles).forEach(([key, value]) => {
+        element.style[key] = value;
+      });
+    }
+    
+    return element;
+  },
+
+  /**
+   * 安全にイベントリスナーを追加
+   * @param {Element} element - 対象要素
+   * @param {string} event - イベントタイプ
+   * @param {Function} handler - イベントハンドラー
+   */
+  addEventListenerSafe(element, event, handler) {
+    if (element && typeof element.addEventListener === 'function') {
+      element.addEventListener(event, handler);
+    }
+  }
+};
+
+
+
+// カード番号から画像パスを取得
 function getCardImagePath(cardNum) {
-  // カード番号0-10はWebP、その他はJPG
-  if (cardNum >= 0 && cardNum <= 10) {
-    return `../images/${cardNum}.webp`;
-  }
-  return `../images/${cardNum}.jpg`;
+  return `../images/${cardNum}.webp`;
 }
 
-/**
- * 最適化されたカード画像要素を作成
- * @param {string} src - 画像のURL
- * @param {string} className - CSSクラス名
- * @param {Object} attributes - 追加属性
- * @returns {Promise<HTMLImageElement>} カード画像要素
- */
-async function createOptimizedCardImage(src, className = '', attributes = {}) {
-  const img = document.createElement('img');
-  img.className = className;
-  
-  // 属性を設定
-  Object.entries(attributes).forEach(([key, value]) => {
-    img.setAttribute(key, value);
-  });
-  
-  // 遅延読み込みを使用して画像を設定
-  try {
-    const cachedImg = await loadImageLazy(src);
-    img.src = cachedImg.src;
-  } catch (error) {
-    console.warn(`Failed to load image: ${src}`, error);
-    img.src = src; // フォールバック
-  }
-  
-  return img;
-}
+// ===============================
+// Initialization
+// ===============================
 
-// ゲーム開始時にBGMを再生
+// ゲーム開始時にBGMを再生とUI初期化
 document.addEventListener('DOMContentLoaded', () => {
+  // UI初期化
+  initializeUI();
+  
   // ユーザーの操作後にBGMを開始（自動再生ポリシー対応）
   const startBGMOnInteraction = () => {
-    if (window.audioManager) {
-      window.audioManager.playBGM('main');
-      document.removeEventListener('click', startBGMOnInteraction);
-      document.removeEventListener('keydown', startBGMOnInteraction);
-    }
+    startMainBGM();
+    document.removeEventListener('click', startBGMOnInteraction);
+    document.removeEventListener('keydown', startBGMOnInteraction);
   };
   
   document.addEventListener('click', startBGMOnInteraction);
@@ -112,7 +242,7 @@ document.addEventListener('DOMContentLoaded', () => {
   
   // 重要なカード画像を事前読み込み（背面、基本カードなど）
   const criticalImages = [getCardImagePath(0), getCardImagePath(1)];
-  criticalImages.forEach(src => loadImageLazy(src));
+  criticalImages.forEach(src => DOMUtils.loadImageLazy(src));
 });
 
 // ログエリアのトグル機能
@@ -121,45 +251,174 @@ const logCloseBtn = document.getElementById('log-close');
 const logArea = document.getElementById('log-area');
 const gameScreen = document.getElementById('gameScreen');
 
-function toggleLog() {
-  const isOpen = logArea.classList.contains('open');
-  if (isOpen) {
-    // ログエリアを閉じる
-    logArea.classList.remove('open');
-    gameScreen.classList.remove('log-open');
-    logToggleBtn.textContent = '📝'; // 閉じた状態のアイコン
-  } else {
-    // ログエリアを開く
+// ===============================
+// UI Management
+// ===============================
+
+const UIManager = {
+  /**
+   * ログエリアの表示を切り替え
+   */
+  toggleLog() {
+    const isOpen = logArea.classList.contains('open');
+    if (isOpen) {
+      this.closeLog();
+    } else {
+      this.openLog();
+    }
+  },
+
+  /**
+   * ログエリアを開く
+   */
+  openLog() {
     logArea.classList.add('open');
     gameScreen.classList.add('log-open');
-    logToggleBtn.textContent = '📋'; // 開いた状態のアイコン
-  }
-}
+    logToggleBtn.textContent = '�'; // 開いた状態のアイコン
+  },
 
-// トグルボタンのイベントリスナー
-if (logToggleBtn) {
-  logToggleBtn.addEventListener('click', toggleLog);
-}
-
-// 閉じるボタンのイベントリスナー
-if (logCloseBtn) {
-  logCloseBtn.addEventListener('click', () => {
+  /**
+   * ログエリアを閉じる
+   */
+  closeLog() {
     logArea.classList.remove('open');
     gameScreen.classList.remove('log-open');
-    logToggleBtn.textContent = '📝'; // 閉じた状態のアイコン
+    logToggleBtn.textContent = '�'; // 閉じた状態のアイコン
+  },
+
+  /**
+   * メニューを開く
+   */
+  openMenu() {
+    menuList.classList.add('open');
+    menuToggle.setAttribute('aria-expanded', 'true');
+  },
+
+  /**
+   * メニューを閉じる
+   */
+  closeMenu() {
+    menuList.classList.remove('open');
+    menuToggle.setAttribute('aria-expanded', 'false');
+  },
+
+  /**
+   * メニューの表示を切り替え
+   */
+  toggleMenu() {
+    if (menuList.classList.contains('open')) {
+      this.closeMenu();
+    } else {
+      this.openMenu();
+    }
+  },
+
+  /**
+   * モーダルを表示
+   * @param {HTMLElement} modal - モーダル要素
+   */
+  showModal(modal) {
+    if (modal) {
+      modal.style.display = 'block';
+    }
+  },
+
+  /**
+   * モーダルを非表示
+   * @param {HTMLElement} modal - モーダル要素
+   */
+  hideModal(modal) {
+    if (modal) {
+      modal.style.display = 'none';
+    }
+  },
+
+  /**
+   * ログメッセージを追加
+   * @param {string} message - ログメッセージ
+   */
+  addLog(message) {
+    return ErrorHandler.safeDOMOperation(() => {
+      const logMessages = document.getElementById('log-messages');
+      if (!logMessages) return;
+
+      // ユーザーが最下部近くにいるかチェック（20px以内なら自動スクロール）
+      const isNearBottom = logMessages.scrollHeight - logMessages.scrollTop - logMessages.clientHeight < 20;
+      
+      const d = DOMUtils.createElement('div', {
+        textContent: message,
+        styles: { wordWrap: 'break-word' }
+      });
+      
+      logMessages.appendChild(d);
+      
+      // 最下部近くにいた場合のみ自動スクロール
+      if (isNearBottom) {
+        logMessages.scrollTop = logMessages.scrollHeight;
+      }
+    }, 'ADD_LOG');
+  },
+
+  /**
+   * 結果を表示
+   * @param {string} message - 結果メッセージ
+   */
+  showResult(message) {
+    return ErrorHandler.safeDOMOperation(() => {
+      const el = document.getElementById('showResult');
+      if (el) {
+        el.innerHTML = message;
+        el.style.display = 'block';
+      }
+    }, 'SHOW_RESULT');
+  },
+
+  /**
+   * セレクトUIを非表示
+   */
+  hideSelect() {
+    if (selectContainer) {
+      selectContainer.style.display = 'none';
+    }
+  },
+
+  /**
+   * ショーUIを非表示
+   */
+  hideShow() {
+    if (showContainer) {
+      showContainer.style.display = 'none';
+    }
+  }
+};
+
+// UI初期化とイベントリスナー設定
+const initializeUI = () => {
+  // ログエリアのイベントリスナー
+  if (logToggleBtn) {
+    DOMUtils.addEventListenerSafe(logToggleBtn, 'click', () => UIManager.toggleLog());
+  }
+
+  if (logCloseBtn) {
+    DOMUtils.addEventListenerSafe(logCloseBtn, 'click', () => UIManager.closeLog());
+  }
+
+  // ログエリア外をクリックした時に閉じる
+  DOMUtils.addEventListenerSafe(document, 'click', (e) => {
+    if (logArea && logArea.classList.contains('open') && 
+        !logArea.contains(e.target) && 
+        !logToggleBtn.contains(e.target)) {
+      UIManager.closeLog();
+    }
   });
-}
+};
 
-// ログエリア外をクリックした時に閉じる（オプション）
-document.addEventListener('click', (e) => {
-  if (logArea.classList.contains('open') && 
-      !logArea.contains(e.target) && 
-      !logToggleBtn.contains(e.target)) {
-    logArea.classList.remove('open');
-    gameScreen.classList.remove('log-open');
-    logToggleBtn.textContent = '📝'; // 閉じた状態のアイコン
-  }
-});
+// 後方互換性のためのエイリアス
+const toggleLog = UIManager.toggleLog.bind(UIManager);
+const addLog = UIManager.addLog.bind(UIManager);
+const showResult = UIManager.showResult.bind(UIManager);
+const hideSelect = UIManager.hideSelect.bind(UIManager);
+const hideShow = UIManager.hideShow.bind(UIManager);
 
 // Anim 初期化（アニメ側へDOMを注入）
 Anim.init({
@@ -194,17 +453,10 @@ const menuBar    = document.getElementById('menuBar');
 const menuToggle = document.getElementById('menuToggle');
 const menuList   = document.getElementById('menuList');
 
-function openMenu() {
-  menuList.classList.add('open');
-  menuToggle.setAttribute('aria-expanded', 'true');
-}
-function closeMenu() {
-  menuList.classList.remove('open');
-  menuToggle.setAttribute('aria-expanded', 'false');
-}
-function toggleMenu() {
-  if (menuList.classList.contains('open')) closeMenu(); else openMenu();
-}
+// メニュー管理関数（UIManagerで統一）
+const openMenu = UIManager.openMenu.bind(UIManager);
+const closeMenu = UIManager.closeMenu.bind(UIManager);
+const toggleMenu = UIManager.toggleMenu.bind(UIManager);
 
 menuToggle.addEventListener('click', (e) => {
   e.stopPropagation(); // 外側クリック判定に食われないように
@@ -226,9 +478,7 @@ document.addEventListener('keydown', (e) => {
   const el = document.getElementById(id);
   if (el) {
     el.addEventListener('click', () => {
-      if (window.audioManager) {
-        window.audioManager.playSE('decision');
-      }
+      playDecisionSE();
       closeMenu();
       // 投降ボタンの場合は surrender 関数を実行
       if (id === 'surrenderButton') {
@@ -267,19 +517,19 @@ const seVolumeValue = document.getElementById('seVolumeValue');
 // 音量設定ボタンクリック
 audioSettingsButton.addEventListener('click', () => {
   audioModal.style.display = 'block';
-  if (window.audioManager) {
-    bgmVolumeSlider.value = window.audioManager.bgmVolume * 100;
-    seVolumeSlider.value = window.audioManager.seVolume * 100;
-    muteToggle.checked = window.audioManager.isMuted;
-    bgmVolumeValue.textContent = Math.round(window.audioManager.bgmVolume * 100) + '%';
-    seVolumeValue.textContent = Math.round(window.audioManager.seVolume * 100) + '%';
-    
-    // SE再生時間の初期値を設定
-    const selectedSE = seSelect.value;
-    const duration = window.audioManager.getSEDuration(selectedSE);
-    seDurationSlider.value = duration;
-    seDurationValue.textContent = duration.toFixed(1) + '秒';
-  }
+  updateAudioUI({
+    bgmVolumeSlider,
+    seVolumeSlider,
+    muteToggle,
+    bgmVolumeValue,
+    seVolumeValue
+  });
+  
+  // SE再生時間の初期値を設定
+  const selectedSE = seSelect.value;
+  const duration = getSEDuration(selectedSE);
+  seDurationSlider.value = duration;
+  seDurationValue.textContent = duration.toFixed(1) + '秒';
 });
 
 // 音量設定モーダルを閉じる
@@ -291,35 +541,24 @@ closeAudioBtn.addEventListener('click', () => {
 bgmVolumeSlider.addEventListener('input', (e) => {
   const volume = e.target.value / 100;
   bgmVolumeValue.textContent = e.target.value + '%';
-  if (window.audioManager) {
-    window.audioManager.setBGMVolume(volume);
-    window.audioManager.saveSettings();
-  }
+  setBGMVolume(volume);
 });
 
 // SE音量調整
 seVolumeSlider.addEventListener('input', (e) => {
   const volume = e.target.value / 100;
   seVolumeValue.textContent = e.target.value + '%';
-  if (window.audioManager) {
-    window.audioManager.setSEVolume(volume);
-    window.audioManager.saveSettings();
-  }
+  setSEVolume(volume);
 });
 
 // ミュート切り替え
 muteToggle.addEventListener('change', (e) => {
-  if (window.audioManager) {
-    window.audioManager.setMute(e.target.checked);
-    window.audioManager.saveSettings();
-  }
+  setMute(e.target.checked);
 });
 
 // SEテスト
 testSEButton.addEventListener('click', () => {
-  if (window.audioManager) {
-    window.audioManager.playSE('decision');
-  }
+  playDecisionSE();
 });
 
 // SE再生時間調整の要素を取得
@@ -544,6 +783,10 @@ function updateGameView(now) {
   }
 }
 
+// ===============================
+// Audio & Game Utilities
+// ===============================
+
 // 文字列→演出テキスト
 function getCharacterName(cardNumber) {
   cardNumber = parseInt(cardNumber, 10);
@@ -552,27 +795,6 @@ function getCharacterName(cardNumber) {
 }
 function getEffectDescription(cardNumber) {
   return messageManager.getEffectMessage(cardNumber);
-}
-
-// 効果音の再生をカード番号ごとに統一
-function playSEForCard(cardNum) {
-  if (!window.audioManager) {
-    return;
-  }
-  switch (cardNum) {
-    case 5: // 死神
-      window.audioManager.playSE('trauma');
-      break;
-    case 9: // 皇帝
-      window.audioManager.playSE('snap');
-      break;
-    case 10: // 英雄
-      window.audioManager.playSE('gameStart');
-      break;
-    default:
-      window.audioManager.playSE('cardPlace');
-      break;
-  }
 }
 
 // カード詳細情報を取得する関数
@@ -587,7 +809,7 @@ async function playCard(cardNumber, isBarriered = false) {
   const cardNum = parseInt(cardNumber, 10);
 
   // カード効果に応じて特別なSEを再生
-  playSEForCard(cardNum);
+  playCardSE(cardNum);
 
   // 手札から該当1枚を除去
   const myHands = playerHandZone.querySelectorAll('img');
@@ -598,28 +820,10 @@ async function playCard(cardNumber, isBarriered = false) {
     }
   }
 
-  const cname = getCharacterName(cardNumber);
   const text  = getEffectDescription(cardNumber);
 
   // ズーム演出（完了待ち）
   await Anim.zoomCard(imgSrc, text, 1.0);
-
-  // カードエフェクトの実行（バリア情報を使用）
-  if (cardNum === 6) {
-    // カード6の場合は、サーバーからの応答（相手のカード情報含む）を待つ
-    console.log('[Card6] Waiting for server response with hand info...');
-    // エフェクトの実行は yourTurn の update で行う（相手のカード情報が必要なため）
-    // ただし、バリア状態の確認はここで記録
-    window.__lastPlayedCardBySelf = 6;
-    window.__lastBarrierState = isBarriered;
-  } else if (cardNum === 2) {
-    // カード2（兵士）: 基本のカード効果アニメーションを先に実行
-    console.log('[Card2 playCard] Executing basic card effect animation first');
-    await Anim.playCardEffect(2, isBarriered);
-  } else {
-    // カード効果演出を実行（バリア状態を反映）
-    await Anim.playCardEffect(cardNum, isBarriered);
-  }
 
   // 場に配置
   const newCard = document.createElement('img');
@@ -638,47 +842,6 @@ async function playCard(cardNumber, isBarriered = false) {
   return 'done';
 }
 
-// カードを出す（相手）- サーバーからのバリア情報付き
-async function playCard_cpu_withBarrier(cardNumber, isBarriered) {
-  console.log('playCard_cpu_withBarrier called with:', cardNumber, 'バリア:', isBarriered); // デバッグログ追加
-  const imgSrc = getCardImagePath(cardNumber);
-  const cardNum = parseInt(cardNumber, 10);
-  // カード効果に応じて特別なSEを再生
-  playSEForCard(cardNum);
-  const cname  = getCharacterName(cardNumber);
-  const text   = getEffectDescription(cardNumber);
-
-  // カードのズーム表示のみを行い、プレイエリアへの追加はupdateGameViewに任せる
-  console.log('Showing zoom for opponent card:', cardNumber); // デバッグログ追加
-  await Anim.zoomCard(imgSrc, text, 1.5);
-  
-  // カード6の場合は手札情報を含めて演出を実行
-  if (parseInt(cardNumber, 10) === 6) {
-    let handInfo = getCurrentHandInfo() || {};
-    // セーフガード：無効化時は両側非開示、成功時は両側開示
-    if (isBarriered) {
-      handInfo.onlyReveal = { player: false, opponent: false };
-    } else {
-      handInfo.onlyReveal = { player: true, opponent: true };
-    }
-    console.log('Playing card 6 effect for opponent with hand info:', handInfo); // デバッグログ追加
-    await Anim.playCardEffect(parseInt(cardNumber, 10), isBarriered, handInfo);
-  } else {
-    // カード効果演出を実行（サーバーからのバリア情報を使用）
-    console.log('Playing card effect for opponent card:', cardNumber, 'with barrier:', isBarriered); // デバッグログ追加
-    await Anim.playCardEffect(parseInt(cardNumber, 10), isBarriered);
-  }
-  console.log('Card effect completed for opponent card:', cardNumber); // デバッグログ追加
-  
-  // 実際のカード追加処理はupdateGameViewで行われるため、ここでは行わない
-  // これにより重複表示を防ぐ
-}
-
-// カードを出す（相手）- 後方互換性のため残す
-async function playCard_cpu(cardNumber) {
-  await playCard_cpu_withBarrier(cardNumber, false);
-}
-
 // 現在の手札情報を取得する
 function getCurrentHandInfo() {
   if (!currentGameState) {
@@ -693,6 +856,7 @@ function getCurrentHandInfo() {
       .map(img => parseInt(img.dataset.card ?? img.value, 10))
       .filter(n => Number.isFinite(n));
   } catch (e) {}
+  
   // DOMから取得できない場合は、サーバー状態をフォールバック
   if (!playerCards || playerCards.length === 0) {
     playerCards = (currentGameState && currentGameState.myHands) ? currentGameState.myHands.slice() : [];
@@ -718,549 +882,6 @@ function getCurrentHandInfo() {
     opponentCards,
     gameState: currentGameState
   };
-}
-
-// カード画像のsrcからカード番号を抽出
-function extractCardNumberFromSrc(src) {
-  const match = src.match(/(\d+)\.jpg$/);
-  return match ? parseInt(match[1], 10) : null;
-}
-
-// サーバーの update データから handInfo を構築
-function buildHandInfoFromData(data) {
-  const handInfo = {
-    playerCards: Array.isArray(data?.myHands) ? data.myHands : [],
-    opponentCards: [],
-    gameState: data || null,
-  };
-  if (data && data.lookHands) {
-    try {
-      Object.keys(data.lookHands).forEach(turnNumber => {
-        const cards = data.lookHands[turnNumber];
-        if (Array.isArray(cards) && cards.length > 0) {
-          handInfo.opponentCards.push(...cards);
-        }
-      });
-    } catch (_) {}
-  }
-  return handInfo;
-}
-
-// 視点（攻撃側/防御側）を計算
-function computePerspective(myTurnNumber, targetTurn) {
-  if (typeof myTurnNumber === 'number' && typeof targetTurn === 'number') {
-    return myTurnNumber === targetTurn ? 'defender' : 'attacker';
-  }
-  return 'attacker';
-}
-
-// カード2の防御側判定アニメーション実行（フォールバック）
-async function executeCard2DefenderJudgment() {
-  console.log('[Card2 Defender Fallback] Executing defender judgment animation');
-  
-  try {
-    // 最後に受信したゲームデータから予想を取得する試行
-    let guessedCard = null;
-    
-    // 最近のゲーム状態から予想を探す
-    if (window.__lastGameData && window.__lastGameData.pred && window.__lastGameData.pred.length > 0) {
-      const lastPred = window.__lastGameData.pred[window.__lastGameData.pred.length - 1];
-      if (lastPred && lastPred.predCard) {
-        guessedCard = parseInt(lastPred.predCard, 10);
-        console.log('[Card2 Defender Fallback] Found prediction from last game data:', guessedCard);
-      }
-    }
-    
-    // currentGameStateからも確認
-    if (!guessedCard && currentGameState && currentGameState.pred && currentGameState.pred.length > 0) {
-      const predData = currentGameState.pred[currentGameState.pred.length - 1];
-      if (predData && predData.choice) {
-        guessedCard = parseInt(predData.choice, 10);
-        console.log('[Card2 Defender Fallback] Found prediction in current game state:', guessedCard);
-      } else if (predData && predData.predCard) {
-        guessedCard = parseInt(predData.predCard, 10);
-        console.log('[Card2 Defender Fallback] Found predCard in current game state:', guessedCard);
-      }
-    }
-    
-    // 攻撃者の手札から確率的に予想を生成（より現実的なフォールバック）
-    if (!guessedCard || isNaN(guessedCard)) {
-      // 自分の手札を確認して、最も可能性の高いカードを予想として使用
-      const myCards = Array.from(playerHandZone.querySelectorAll('img')).map(img => {
-        return parseInt(img.dataset.card || img.value, 10);
-      }).filter(card => !isNaN(card));
-      
-      if (myCards.length > 0) {
-        // 自分の手札の中からランダムに選択（相手が当てようとしそうなカード）
-        guessedCard = myCards[Math.floor(Math.random() * myCards.length)];
-        console.log('[Card2 Defender Fallback] Generated intelligent guess from own cards:', guessedCard);
-      } else {
-        // 最終フォールバック：完全ランダム
-        guessedCard = Math.floor(Math.random() * 10) + 1;
-        console.log('[Card2 Defender Fallback] Generated random guess:', guessedCard);
-      }
-    }
-    
-    // 自分の手札から判定
-    const myCards = Array.from(playerHandZone.querySelectorAll('img')).map(img => {
-      return parseInt(img.dataset.card || img.value, 10);
-    }).filter(card => !isNaN(card));
-    
-    console.log('[Card2 Defender Fallback] My cards:', myCards, 'Opponent guessed:', guessedCard);
-    
-    const isHit = myCards.includes(guessedCard);
-    console.log('[Card2 Defender Fallback] Judgment result - isHit:', isHit);
-    
-    // 判定アニメーション実行（防御側視点）
-    if (Anim && typeof Anim.enqueueGuessAnnounce === 'function') {
-      console.log('[Card2 Defender Fallback] Starting guess announce animation');
-      await Anim.enqueueGuessAnnounce(guessedCard, 'defender');
-      console.log('[Card2 Defender Fallback] Guess announce animation completed');
-    }
-    
-    if (Anim && typeof Anim.enqueueGuessResult === 'function') {
-      console.log('[Card2 Defender Fallback] Starting guess result animation');
-      await Anim.enqueueGuessResult(guessedCard, isHit, 'defender');
-      console.log('[Card2 Defender Fallback] Guess result animation completed');
-    }
-    // フラグ設定：判定完了
-    window.__card2JudgeDone = true;
-    
-  } catch (error) {
-    console.error('[Card2 Defender Fallback] Error in fallback judgment:', error);
-  }
-}
-
-// カード2の予想入力を要求
-async function requestCard2Prediction() {
-  return new Promise((resolve) => {
-    // カードベースの予想入力UI
-    const modal = document.createElement('div');
-    modal.style.cssText = `
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0, 0, 0, 0.8);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 10000;
-    `;
-    
-    const content = document.createElement('div');
-    content.style.cssText = `
-      background: linear-gradient(135deg, #2c3e50, #34495e);
-      padding: 30px;
-      border-radius: 15px;
-      text-align: center;
-      max-width: 80vw;
-      max-height: 80vh;
-      overflow-y: auto;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-    `;
-    
-    const title = document.createElement('h3');
-    title.textContent = '相手のカードを予想してください';
-    title.style.cssText = `
-      color: #fff;
-      font-size: 24px;
-      margin-bottom: 25px;
-      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
-    `;
-    
-    const cardGrid = document.createElement('div');
-    cardGrid.style.cssText = `
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(80px, 120px));
-      gap: 15px;
-      justify-content: center;
-      margin: 20px 0;
-    `;
-    
-    // カード1-10の画像カードを作成
-    for (let i = 1; i <= 10; i++) {
-      const cardContainer = document.createElement('div');
-      cardContainer.style.cssText = `
-        position: relative;
-        cursor: pointer;
-        border-radius: 12px;
-        overflow: hidden;
-        transition: all 0.3s ease;
-        border: 3px solid transparent;
-        background: #fff;
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-      `;
-      
-      const cardImage = document.createElement('img');
-      cardImage.src = `/images/${i}.webp`;
-      cardImage.alt = `カード${i}`;
-      cardImage.style.cssText = `
-        width: 100%;
-        height: auto;
-        display: block;
-        transition: transform 0.3s ease;
-      `;
-      
-      const cardNumber = document.createElement('div');
-      cardNumber.textContent = i.toString();
-      cardNumber.style.cssText = `
-        position: absolute;
-        bottom: 5px;
-        right: 5px;
-        background: rgba(0, 0, 0, 0.7);
-        color: #fff;
-        width: 24px;
-        height: 24px;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 12px;
-        font-weight: bold;
-      `;
-      
-      cardContainer.appendChild(cardImage);
-      cardContainer.appendChild(cardNumber);
-      
-      // ホバーエフェクト
-      cardContainer.addEventListener('mouseenter', () => {
-        cardContainer.style.transform = 'scale(1.05) translateY(-5px)';
-        cardContainer.style.borderColor = '#3498db';
-        cardContainer.style.boxShadow = '0 8px 16px rgba(52, 152, 219, 0.4)';
-      });
-      
-      cardContainer.addEventListener('mouseleave', () => {
-        cardContainer.style.transform = 'scale(1) translateY(0)';
-        cardContainer.style.borderColor = 'transparent';
-        cardContainer.style.boxShadow = '0 4px 8px rgba(0, 0, 0, 0.3)';
-      });
-      
-      cardContainer.addEventListener('click', () => {
-        // クリックエフェクト
-        cardContainer.style.transform = 'scale(0.95)';
-        setTimeout(() => {
-          document.body.removeChild(modal);
-          resolve(i);
-        }, 150);
-      });
-      
-      cardGrid.appendChild(cardContainer);
-    }
-    
-    content.appendChild(title);
-    content.appendChild(cardGrid);
-    modal.appendChild(content);
-    document.body.appendChild(modal);
-  });
-}
-
-// 予想データをゲーム状態に追加
-function addPredictionToGameState(guessedCard) {
-  if (!currentGameState) {
-    currentGameState = {};
-  }
-  
-  if (!currentGameState.pred) {
-    currentGameState.pred = [];
-  }
-  
-  const myTurn = currentGameState.myTurnNumber || 1;
-  
-  // 既存の予想を削除
-  currentGameState.pred = currentGameState.pred.filter(p => p.subject !== myTurn);
-  
-  // 新しい予想を追加
-  currentGameState.pred.push({
-    subject: myTurn,
-    predCard: guessedCard
-  });
-  
-  console.log('[Card2] Added prediction to game state:', {
-    subject: myTurn,
-    predCard: guessedCard
-  });
-}
-
-// カード2用のデモ判定結果を作成（予想データがない場合）
-function createDemoCard2Judgment(isFromOpponent = false) {
-  try {
-    // 防御側の手札を取得
-    let defenderCards = [];
-    
-    if (isFromOpponent) {
-      // 相手側からの呼び出し：自分の手札が防御側
-      defenderCards = Array.from(playerHandZone.querySelectorAll('img')).map(img => {
-        return parseInt(img.dataset.card || img.value, 10);
-      }).filter(card => !isNaN(card));
-      console.log('[Card2 Demo] From opponent - using player cards as defender:', defenderCards);
-    } else {
-      // 自分側からの呼び出し：相手の手札が防御側
-      defenderCards = Array.from(opponentHandZone.querySelectorAll('img')).map(img => {
-        return parseInt(img.dataset.card || img.value, 10);
-      }).filter(card => !isNaN(card));
-      console.log('[Card2 Demo] From self - using opponent cards as defender:', defenderCards);
-    }
-    
-    if (defenderCards.length === 0) {
-      console.warn('[Card2 Demo] No defender cards available for demo judgment');
-      // 防御側カードが取得できない場合はダミーデータを使用
-      defenderCards = [Math.floor(Math.random() * 10) + 1]; 
-      console.log('[Card2 Demo] Using dummy defender cards:', defenderCards);
-    }
-    
-    // 予想データから実際の予想カードを取得
-    let guessedCard;
-    const myTurn = currentGameState?.myTurnNumber || 1;
-    const predData = currentGameState?.pred;
-    
-    if (predData && Array.isArray(predData) && predData.length > 0) {
-      // 実際の予想データを使用
-      const attackerTurn = isFromOpponent ? (myTurn === 1 ? 2 : 1) : myTurn;
-      const prediction = predData.find(p => p.subject === attackerTurn);
-      guessedCard = prediction ? prediction.predCard : Math.floor(Math.random() * 10) + 1;
-      console.log('[Card2 Demo] Using actual prediction:', guessedCard, 'from attacker turn:', attackerTurn);
-    } else {
-      // 予想データがない場合はランダム
-      guessedCard = Math.floor(Math.random() * 10) + 1;
-      console.log('[Card2 Demo] No prediction data, using random guess:', guessedCard);
-    }
-    
-    const isHit = defenderCards.includes(guessedCard);
-    
-    // ターン番号を取得
-    const targetTurn = isFromOpponent ? myTurn : (myTurn === 1 ? 2 : 1);
-    
-    const demoResult = {
-      guessed: guessedCard,
-      isHit: isHit,
-      targetTurn: targetTurn
-    };
-    
-    console.log('[Card2 Demo] Generated demo judgment:', demoResult, 'isFromOpponent:', isFromOpponent);
-    return demoResult;
-  } catch (e) {
-    console.error('[Card2 Demo] Demo judgment creation failed:', e);
-    return null;
-  }
-}
-
-// カード2の予想判定をローカルで実行
-function performCard2LocalJudgment(data) {
-  try {
-    const now = data.now || currentGameState;
-    console.log('[Card2 Local] Input data.now:', now);
-    
-    if (!now || !now.pred || !Array.isArray(now.pred)) {
-      console.warn('[Card2 Local] No prediction data available in now:', now);
-      return null;
-    }
-
-    const myTurn = (typeof currentGameState?.myTurnNumber !== 'undefined')
-      ? currentGameState.myTurnNumber
-      : now.myTurnNumber;
-    
-    // カード2の使用者（攻撃者）と防御者を特定
-    let attackerTurn, defenderTurn;
-    
-    // data.choiceがundefinedまたは2以外の場合はanotherTurnからの呼び出し
-    const isFromAnotherTurn = !data.choice || data.choice != 2;
-    
-    if (isFromAnotherTurn) {
-      // anotherTurnで来た場合：相手が攻撃者、自分が防御者
-      attackerTurn = now.myTurnNumber;  // now は攻撃者視点
-      defenderTurn = myTurn;            // 現在の自分は防御者
-      console.log('[Card2 Local] Called from anotherTurn - opponent is attacker');
-    } else {
-      // playCardで来た場合：自分が攻撃者
-      attackerTurn = myTurn;
-      // 防御者を特定（相手のターン番号）
-      if (now.otherPlayers && Object.keys(now.otherPlayers).length > 0) {
-        defenderTurn = parseInt(Object.keys(now.otherPlayers)[0], 10);
-      } else {
-        console.warn('[Card2 Local] Cannot determine defender turn from otherPlayers');
-        // 2人プレイを仮定してdefenderTurnを推定
-        defenderTurn = attackerTurn === 1 ? 2 : 1;
-        console.log('[Card2 Local] Assuming 2-player game, defenderTurn:', defenderTurn);
-      }
-      console.log('[Card2 Local] Called from playCard - self is attacker');
-    }
-
-    console.log('[Card2 Local] Attacker turn:', attackerTurn, 'Defender turn:', defenderTurn);
-    
-    const prediction = now.pred.find(p => p.subject === attackerTurn);
-    if (!prediction) {
-      console.warn('[Card2 Local] No prediction found for attacker turn', attackerTurn);
-      return null;
-    }
-
-    console.log('[Card2 Local] Found prediction:', prediction);
-
-    // 防御側の手札を確認
-    let defenderCards;
-    if (defenderTurn === myTurn) {
-      // 自分が防御者の場合：DOMから取得
-      defenderCards = Array.from(playerHandZone.querySelectorAll('img')).map(img => {
-        return parseInt(img.dataset.card || img.value, 10);
-      }).filter(card => !isNaN(card));
-      console.log('[Card2 Local] Defender cards from DOM (self):', defenderCards);
-    } else {
-      // 相手が防御者の場合：attackerHands（サーバーから提供）を使用
-      if (now.attackerHands && defenderTurn && now.attackerHands[defenderTurn]) {
-        defenderCards = now.attackerHands[defenderTurn];
-        console.log('[Card2 Local] Defender cards from server data (opponent):', defenderCards);
-      } else {
-        console.warn('[Card2 Local] Cannot get defender cards for opponent');
-        return null;
-      }
-    }
-
-    const guessedCard = prediction.predCard;
-    const isHit = defenderCards.includes(guessedCard);
-
-    const result = {
-      guessed: guessedCard,
-      isHit: isHit,
-      targetTurn: defenderTurn
-    };
-
-    console.log('[Card2 Local] Final judgment result:', result);
-    return result;
-  } catch (e) {
-    console.error('[Card2 Local] Judgment failed:', e);
-    return null;
-  }
-}
-
-// カード6用の基本handInfo構築（現在は直接anotherTurnで処理するため使用頻度低）
-function buildCard6HandInfoForOpponent(isBarriered) {
-  const handInfo = getCurrentHandInfo() || {};
-  handInfo.onlyReveal = isBarriered
-    ? { player: false, opponent: false }
-    : { player: true, opponent: true };
-  return handInfo;
-}
-
-// カード2（兵士）の判定結果処理
-async function handleCard2Result(payload, data) {
-  const { guessed, isHit, targetTurn } = payload.predResult || {};
-  const myTurnNumber = (typeof currentGameState?.myTurnNumber !== 'undefined')
-    ? currentGameState.myTurnNumber
-    : data.now?.myTurnNumber;
-  const perspective = (myTurnNumber && targetTurn) ? (myTurnNumber === targetTurn ? 'defender' : 'attacker') : 'attacker';
-  
-  console.log('[Card2] Starting prediction animation:', {
-    guessed, isHit, targetTurn, myTurnNumber, perspective
-  });
-  
-  try {
-    if (Anim && typeof Anim.enqueueGuessAnnounce === 'function') {
-      console.log('[Card2] Starting guess announce animation');
-      await Anim.enqueueGuessAnnounce(guessed, perspective);
-      console.log('[Card2] Guess announce animation completed');
-    }
-    if (Anim && typeof Anim.enqueueGuessResult === 'function') {
-      console.log('[Card2] Starting guess result animation');
-      await Anim.enqueueGuessResult(guessed, !!isHit, perspective);
-      console.log('[Card2] Guess result animation completed');
-    }
-    console.log('[Card2] All prediction animations completed successfully');
-    return true; // 成功を明示的に返す
-  } catch (error) {
-    console.error('[Card2] Guess animation error:', error);
-    return false; // エラーを明示的に返す
-  }
-}
-
-// Promise追跡のユーティリティ関数
-function trackAnimationPromise(promise, promiseType = 'self') {
-  if (promiseType === 'self') {
-    window.__lastSelfAnimPromise = promise;
-    promise.finally(() => {
-      if (window.__lastSelfAnimPromise === promise) {
-        window.__lastSelfAnimPromise = null;
-      }
-    });
-  } else if (promiseType === 'opponent') {
-    window.__lastOpponentAnimPromise = promise;
-    promise.finally(() => {
-      if (window.__lastOpponentAnimPromise === promise) {
-        console.log('[trackAnimationPromise] Opponent animation promise cleared');
-        window.__lastOpponentAnimPromise = null;
-      }
-    });
-  }
-  return promise;
-}
-
-// カード6（貴族）のバリア結果処理
-async function handleCard6Result(data) {
-  const isBarriered = data.isBarriered || window.__lastBarrierState;
-  console.log(`[Card6] Received result from server: isBarriered=${isBarriered}`);
-  
-  try {
-    if (isBarriered) {
-      // バリア時：無効化演出を表示
-      console.log('[Card6] Playing barrier effect for self');
-      if (Anim && typeof Anim.enqueueBarrierEffect === 'function') {
-        await Anim.enqueueBarrierEffect();
-      } else {
-        await Anim.playBarrierEffect();
-      }
-      addLog('相手はカード4で守られているため、手札の確認ができませんでした！');
-    } else {
-      // 成功時：カード6を使った側は両方の手札の実際の画像でアニメーション
-      console.log('[Card6] Playing effect with actual card images (attacker perspective)');
-      
-      // 最新の手札情報を強制的に再取得
-      let handInfo = {
-        playerCards: [],
-        opponentCards: []
-      };
-      
-      // 自分の手札情報を最新のゲーム状態から取得
-      if (data && Array.isArray(data.myHands) && data.myHands.length > 0) {
-        handInfo.playerCards = [...data.myHands]; // 配列をコピー
-      } else if (currentGameState && Array.isArray(currentGameState.myHands)) {
-        handInfo.playerCards = [...currentGameState.myHands];
-      }
-      
-      // サーバーからの相手の手札情報を取得
-      if (data && data.lookHands) {
-        try {
-          const opponentCards = [];
-          Object.keys(data.lookHands).forEach(turnNumber => {
-            const cards = data.lookHands[turnNumber];
-            if (Array.isArray(cards) && cards.length > 0) {
-              opponentCards.push(...cards);
-            }
-          });
-          if (opponentCards.length > 0) {
-            handInfo.opponentCards = opponentCards;
-          }
-        } catch (e) {
-          console.warn('Failed to extract opponent cards from server data:', e);
-        }
-      }
-      
-      // 情報が不完全な場合の警告
-      if (handInfo.playerCards.length === 0 || handInfo.opponentCards.length === 0) {
-        console.warn('[Card6] Incomplete hand information:', handInfo);
-      }
-      
-      console.log('[Card6] Hand info for attacker animation:', handInfo);
-      // カード6を使った側は両方とも実際のカード画像を表示
-      handInfo.onlyReveal = { player: true, opponent: true };
-      await Anim.playCardEffect(6, false, handInfo);
-      addLog('相手の手札を確認しました！');
-    }
-    
-    // クリーンアップ
-    window.__lastBarrierState = undefined;
-  } catch (error) {
-    console.error('[Card6] Effect animation error:', error);
-  }
 }
 
 // 使用済みカードモーダル
@@ -1295,29 +916,7 @@ function closeUsedCards() {
   modal.style.display = 'none';
 }
 
-// ログ/結果
-function addLog(message) {
-  const logMessages = document.getElementById('log-messages');
-  
-  // ユーザーが最下部近くにいるかチェック（20px以内なら自動スクロール）
-
-  const isNearBottom = logMessages.scrollHeight - logMessages.scrollTop - logMessages.clientHeight < 20;
-  
-  const d = document.createElement('div');
-  d.textContent = message;
-  d.style.wordWrap = 'break-word'; // 長いメッセージの改行
-  logMessages.appendChild(d);
-  
-  // 最下部近くにいた場合のみ自動スクロール
-  if (isNearBottom) {
-    logMessages.scrollTop = logMessages.scrollHeight;
-  }
-}
-function showResult(message) {
-  const el = document.getElementById('showResult');
-  el.innerHTML = message;
-  el.style.display = 'block';
-}
+// ログ/結果関数は UIManager で統一済み
 
 // セレクトUI/公開UI
 async function select(choices, message = undefined) {
@@ -1638,14 +1237,18 @@ function goToTitle() {
   resetGame();
 }
 
-function hideSelect() { selectContainer.style.display = 'none'; }
-function hideShow()   { showContainer.style.display = 'none'; }
+// セレクト/ショー非表示関数は UIManager で統一済み
 
 // ===== ソケット =====
-socket.on('yourTurn', async (data, callback) => {
-  const otherHands = data.now.otherHands;
-  await updateGameView(data.now);
-  if (data.kind === 'draw') {
+// ===============================
+// Socket Event Handlers
+// ===============================
+
+const SocketHandlers = {
+  /**
+   * drawアクション処理
+   */
+  async handleDraw(data, callback) {
     if (data.choices.length > 2) {
       // 直前ターンの相手演出（FX）が残っている可能性があるため、短時間だけ待ってからセレクトを表示
       await Anim.waitForFxIdle(1200);
@@ -1653,11 +1256,11 @@ socket.on('yourTurn', async (data, callback) => {
       const idx = await select(data.choices, messageManager.getSelectMessage('draw'));
       hideSelect();
       const chosen = data.choices[idx];
+      
       // カード効果演出との重複を防ぐため、少し待機してからドロー
       await new Promise(resolve => setTimeout(resolve, 300));
-      if (window.audioManager) {
-        window.audioManager.playSE('cardDeal');
-      }
+      playCardDealSE();
+      
       const done = await Anim.drawCardToHand(chosen);
       if (done === 'done') {
         Anim.stopTurnTimer();
@@ -1667,9 +1270,8 @@ socket.on('yourTurn', async (data, callback) => {
     } else {
       // カード効果演出との重複を防ぐため、少し待機してからドロー
       await new Promise(resolve => setTimeout(resolve, 300));
-      if (window.audioManager) {
-        window.audioManager.playSE('cardDeal');
-      }
+      playCardDealSE();
+      
       const choice = data.choices[0];
       const done = await Anim.drawCardToHand(choice);
       if (done === 'done') {
@@ -1678,20 +1280,19 @@ socket.on('yourTurn', async (data, callback) => {
         callback([0]);
       }
     }
-  } else if (data.kind === 'opponentChoice') {
-    Anim.stopTurnTimer();
-    callback([0]);
-  } else if (data.kind === 'play_card') {
+  },
+
+  /**
+   * play_cardアクション処理
+   */
+  async handlePlayCard(data, callback) {
     Anim.startTurnTimer();
     const idx = await selectPlayableFromHand(data.choices);
     const selectedCard = parseInt(data.choices[idx], 10);
     const isBarriered = data.isBarriered; // 相手のバリアが有効か
     
     addLog(messageManager.getGameMessage('playCard', { card: data.choices[idx] }));
-    // addLog(messageManager.getGameMessage('work', {  }));
-    if (window.audioManager) {
-      window.audioManager.playSE('cardPlace');
-    }
+    playCardPlaceSE();
     console.log('Barrier状態:', isBarriered, 'カード:', selectedCard);
     
     // playCard関数にバリア状態を渡す
@@ -1700,52 +1301,46 @@ socket.on('yourTurn', async (data, callback) => {
       Anim.stopTurnTimer();
       callback([idx]);
     }
-  } else if (data.kind === 'pred') {
-    // カード2の予想処理（Card.jsのCard2.play()から呼ばれる）
+  },
+
+  /**
+   * predアクション処理（カード2の予想）
+   */
+  async handlePrediction(data, callback) {
+    const otherHands = parseInt(data.now.otherHands[Object.keys(data.now.otherHands)[0]]);
     console.log('[Card2 pred] Processing prediction request from server');
     console.log('[Card2 pred] Available choices:', data.choices);
     console.log('[Card2 pred] Other hands data:', otherHands);
     
     try {
       // 予想入力を促す
-      const guessedCard = await requestCard2Prediction();
+      const guessedCard = parseInt(await select([1, 2, 3, 4, 5, 6, 7, 8, 9, 10], messageManager.getSelectMessage('pred'))) + 1;
       console.log('[Card2 pred] User predicted card:', guessedCard);
+      hideSelect();
       
       // 相手の手札から判定（サーバーから提供されたデータを使用）
-      let opponentCards = [];
-      if (otherHands && otherHands.number) {
-        if (Array.isArray(otherHands.number)) {
-          opponentCards = otherHands.number.filter(card => !isNaN(parseInt(card, 10))).map(card => parseInt(card, 10));
-        } else {
-          opponentCards = [parseInt(otherHands.number, 10)].filter(card => !isNaN(card));
-        }
-      }
-      
+      const opponentCards = this.extractOpponentCards(otherHands);
       console.log('[Card2 pred] Opponent cards for judgment:', opponentCards, 'Guessed card:', guessedCard);
       
       // 判定結果を計算
-      const isHit = opponentCards.includes(guessedCard);
+      const isHit = (otherHands === guessedCard);
       console.log('[Card2 pred] Judgment result - isHit:', isHit);
       
       // 判定アニメーション実行（攻撃側視点）
       if (Anim && typeof Anim.enqueueGuessAnnounce === 'function') {
-        console.log('[Card2 pred] Starting guess announce animation');
+        console.log('[Card2] Starting guess announce animation');
         await Anim.enqueueGuessAnnounce(guessedCard, 'attacker');
-        console.log('[Card2 pred] Guess announce animation completed');
+        console.log('[Card2] Guess announce animation completed');
       }
-      
+
       if (Anim && typeof Anim.enqueueGuessResult === 'function') {
-        console.log('[Card2 pred] Starting guess result animation');
+        console.log('[Card2] Starting guess result animation');
         await Anim.enqueueGuessResult(guessedCard, isHit, 'attacker');
-        console.log('[Card2 pred] Guess result animation completed');
+        console.log('[Card2] Guess result animation completed');
       }
       
       // サーバーに予想選択を返す（data.choicesのインデックス）
-      const choiceIndex = data.choices.findIndex(choice => parseInt(choice, 10) === guessedCard);
-      const responseIndex = choiceIndex >= 0 ? choiceIndex : guessedCard - 1;
-      
-      console.log('[Card2 pred] Returning choice index:', responseIndex, 'for card:', guessedCard);
-      callback([responseIndex]);
+      callback([guessedCard - 1]);
       
     } catch (error) {
       console.error('[Card2 pred] Error in prediction processing:', error);
@@ -1753,32 +1348,12 @@ socket.on('yourTurn', async (data, callback) => {
       const randomIndex = Math.floor(Math.random() * data.choices.length);
       callback([randomIndex]);
     }
-  }else if (data.kind === 'update') {
-    // yourTurn 側の update（カード効果結果処理）
-    try {
-      // カード6やその他のカードエフェクト結果処理
-      if (data.isBarriered !== undefined && window.__lastPlayedCardBySelf) {
-        const cardNumber = window.__lastPlayedCardBySelf;
-        console.log(`[Card${cardNumber}] Received barrier result:`, data.isBarriered);
-        console.log(`[Card${cardNumber}] Full data from server:`, data); // デバッグ用
-        
-        if (cardNumber === 6) {
-          const card6EffectPromise = handleCard6Result(data);
-          trackAnimationPromise(card6EffectPromise, 'self');
-        }
-        
-        // 使用済みカード情報をクリア
-        window.__lastPlayedCardBySelf = null;
-      }
-      
-      // カード2の判定結果処理は削除 - playCard内でローカル判定を使用
-    } catch (e) {
-      console.warn('update handling error:', e);
-    } finally {
-      Anim.stopTurnTimer();
-      callback([0]);
-    }
-  } else if (data.kind === 'show') {
+  },
+
+  /**
+   * showアクション処理
+   */
+  async handleShow(data, callback) {
     try {
       await show(data.choices);
       addLog(messageManager.getGameMessage('opponentHandReveal', { card: data.choices[0] }));
@@ -1787,7 +1362,12 @@ socket.on('yourTurn', async (data, callback) => {
     } catch (e) {
       console.log(e);
     }
-  } else {
+  },
+
+  /**
+   * デフォルトアクション処理
+   */
+  async handleDefault(data, callback) {
     try {
       Anim.startTurnTimer();
       // data.kindに応じてメッセージを変更
@@ -1801,6 +1381,51 @@ socket.on('yourTurn', async (data, callback) => {
       Anim.stopTurnTimer();
       console.log(e);
     }
+  },
+
+  /**
+   * 相手の手札データを抽出
+   */
+  extractOpponentCards(otherHands) {
+    let opponentCards = [];
+    if (otherHands && otherHands.number) {
+      if (Array.isArray(otherHands.number)) {
+        opponentCards = otherHands.number.filter(card => !isNaN(parseInt(card, 10))).map(card => parseInt(card, 10));
+      } else {
+        opponentCards = [parseInt(otherHands.number, 10)].filter(card => !isNaN(card));
+      }
+    }
+    return opponentCards;
+  }
+};
+
+socket.on('yourTurn', async (data, callback) => {
+  await updateGameView(data.now);
+  
+  switch (data.kind) {
+    case 'draw':
+      await SocketHandlers.handleDraw(data, callback);
+      break;
+    case 'opponentChoice':
+      Anim.stopTurnTimer();
+      callback([0]);
+      break;
+    case 'play_card':
+      await SocketHandlers.handlePlayCard(data, callback);
+      break;
+    case 'pred':
+      await SocketHandlers.handlePrediction(data, callback);
+      break;
+    case 'update':
+      // await updateGameView(data.now);
+      callback([0]);
+      break;
+    case 'show':
+      await SocketHandlers.handleShow(data, callback);
+      break;
+    default:
+      await SocketHandlers.handleDefault(data, callback);
+      break;
   }
 });
 
@@ -1816,24 +1441,24 @@ socket.on('anotherTurn', async (data) => {
     console.log('[Card2 anotherTurn pred] Data received:', data);
     
     // タイムアウトをクリア（pred イベントが正常に届いた場合）
-    if (window.__card2PredTimeout) {
-      console.log('[Card2 anotherTurn pred] Clearing prediction timeout - pred event received');
-      clearTimeout(window.__card2PredTimeout);
-      window.__card2PredTimeout = null;
-    }
+    // if (window.__card2PredTimeout) {
+    //   console.log('[Card2 anotherTurn pred] Clearing prediction timeout - pred event received');
+    //   clearTimeout(window.__card2PredTimeout);
+    //   window.__card2PredTimeout = null;
+    // }
     // pred受信フラグを立て、フォールバックの重複実行を防止
-    window.__card2PredReceived = true;
-    if (window.__card2JudgeDone) {
-      console.log('[Card2 anotherTurn pred] Judgment already executed by fallback. Skipping pred animation.');
-      return;
-    }
+    // window.__card2PredReceived = true;
+    // if (window.__card2JudgeDone) {
+    //   console.log('[Card2 anotherTurn pred] Judgment already executed by fallback. Skipping pred animation.');
+    //   return;
+    // }
     
     try {
       // 相手の予想カードを取得（サーバーのchoices配列とchoiceインデックスを使用）
       let guessedCard = parseInt(data.choice, 10);
       
       // 判定結果を計算
-      const myCards = parseInt(data.now.myHands);
+      const myCards = parseInt(data.now.otherHands[Object.keys(data.now.otherHands)[0]]);
       const isHit = (myCards === guessedCard);
       console.log('[Card2 anotherTurn pred] Final judgment - guessed:', guessedCard, 'my cards:', myCards, 'isHit:', isHit);
       
@@ -1932,9 +1557,7 @@ socket.on('anotherTurn', async (data) => {
     addLog(messageManager.getGameMessage('opponentPlayCard', { card: data.choice }));
   } else if (data.kind === 'draw') {
     // カードドロー処理
-    if (window.audioManager) {
-      window.audioManager.playSE('cardDeal');
-    }
+    playCardDealSE();
     await Anim.cpuDrawCardToHand();
     for (let i = 0; i < data.now.playersLength + 1; i++) {
       const playerTurnNumber = data.now.playersHandsLengths[i];
@@ -2172,6 +1795,3 @@ function addCardTooltipEvents(cardElement, cardNumber) {
 // HTML から呼ぶもの
 window.goToTitle = goToTitle;
 window.surrender = surrender;
-window.closeUsedCards = closeUsedCards;
-
-
