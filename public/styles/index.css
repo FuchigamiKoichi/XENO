@@ -325,6 +325,34 @@ input[type="number"]::placeholder {
 
 
 
+/* ゲーム説明リンク：右下固定位置 */
+.info-section {
+    position: fixed;
+    bottom: 140px; /* 広告エリアの高さ（120px）+ マージン */
+    right: 20px;
+    z-index: 100;
+}
+
+.info-link {
+    display: inline-block;
+    background: rgba(0, 0, 0, 0.7);
+    color: white;
+    padding: 8px 12px;
+    border-radius: 6px;
+    text-decoration: none;
+    font-size: 12px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    backdrop-filter: blur(5px);
+}
+
+.info-link:hover {
+    background: rgba(0, 0, 0, 0.9);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
 /* レスポンシブ対応 */
 @media (max-width: 768px) {
     .input-panel {
@@ -346,5 +374,16 @@ input[type="number"]::placeholder {
     
     .select_rooms {
         margin: 0;
+    }
+    
+    /* モバイルでは少し調整 */
+    .info-section {
+        bottom: 110px; /* モバイルでは広告エリアが100px */
+        right: 15px;
+    }
+    
+    .info-link {
+        font-size: 11px;
+        padding: 6px 10px;
     }
 }

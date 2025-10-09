@@ -46,9 +46,9 @@ class GameService {
         finalChoice = GameService.getFallbackChoice(choices, kind, `invalid CPU response: ${mlChoice}`);
       }
       
-      // カードプレイや可視更新は他のプレイヤーに通知
-      if ((kind === 'play_card' || kind === 'update') && io) {
-        GameService.notifyOtherPlayers(now, finalChoice, kind, socketId, io);
+      // カードプレイ、可視更新、予想処理は他のプレイヤーに通知
+      if ((kind === 'play_card' || kind === 'update' || kind === 'pred') && io) {
+        GameService.notifyOtherPlayers(now, choices, finalChoice, kind, socketId, io);
       }
       
       return finalChoice;
@@ -238,7 +238,8 @@ class GameService {
     Logger.debug('choices:', choices);
 
     try {
-      const result = await GameService.emitWithAck(now, choices, kind, socketId, io);
+      const isBarriered = await GameService.checkIsBarrier(now);
+      const result = await GameService.emitWithAck(now, choices, kind, socketId, io, isBarriered);
       Logger.debug(`emitWithAckからの応答: ${result}`);
 
       if (GameService.isValidChoice(result, choices, kind)) {
@@ -255,9 +256,9 @@ class GameService {
           Logger.debug(`最終選択: ${result}`);
         }
         
-        // カードプレイや可視更新（例: 兵士の予想結果）を他のプレイヤーに通知
-        if (kind === 'play_card' || kind === 'update') {
-          GameService.notifyOtherPlayers(now, finalResult, kind, socketId, io);
+        // カードプレイ、可視更新、予想処理を他のプレイヤーに通知
+        if (kind === 'play_card' || kind === 'update' || kind === 'pred') {
+          GameService.notifyOtherPlayers(now, choices, finalResult, kind, socketId, io);
         }
         
         Logger.debug(`emitWithAckの結果: ${finalResult}`);
@@ -268,7 +269,7 @@ class GameService {
         // update は無効扱いにせず、そのままブロードキャスト（UI更新用）
         if (kind === CONFIG.GAME_RULES.CHOICE_TYPES.UPDATE) {
           try {
-            GameService.notifyOtherPlayers(now, result ?? choices, kind, socketId, io);
+            GameService.notifyOtherPlayers(now, choices, result ?? choices, kind, socketId, io);
           } catch (e) {}
           return result ?? choices;
         }
@@ -288,7 +289,7 @@ class GameService {
    * @param {string} actorSocketId - アクションを行ったプレイヤーのソケットID
    * @param {Object} io - Socket.IOインスタンス
    */
-  static notifyOtherPlayers(now, choice, kind, actorSocketId, io) {
+  static notifyOtherPlayers(now, choices, choice, kind, actorSocketId, io) {
     try {
       // ルームIDを取得（nowオブジェクトから）
       const roomId = now.roomId;
@@ -303,27 +304,51 @@ class GameService {
       // バリア効果の判定（カード効果が無効化されるかどうか）
       let isBarriered = false;
       if (kind === 'play_card') {
-        isBarriered = GameService.checkBarrierEffect(choice, now, actorSocketId, roomId);
+        isBarriered = GameService.checkIsBarrier(now);
+      }
+
+      // カード6と2の場合、防御側が正しく処理できるように相手の手札情報を追加
+      const enhancedNow = { ...now };
+      if (kind === 'play_card' && (choice == 6 || choice == 2)) {
+        try {
+          // 攻撃者の手札情報を相手に送信
+          const attackerTurn = now.myTurnNumber;
+          if (attackerTurn && now.hands && now.hands[attackerTurn]) {
+            enhancedNow.attackerHands = now.hands[attackerTurn];
+            Logger.debug(`カード${choice}: 攻撃者の手札情報を追加`, enhancedNow.attackerHands);
+          }
+        } catch (e) {
+          Logger.warn('攻撃者手札情報の追加に失敗:', e);
+        }
+      }
+      
+      // カード2の予想処理の場合、実際の予想カード情報を追加
+      if (kind === 'pred') {
+        try {
+          // choiceは配列のインデックスなので、実際のカード番号に変換
+          let guessedCard = choice;
+          if (Array.isArray(choices) && typeof choice === 'number' && choice >= 0 && choice < choices.length) {
+            guessedCard = choices[choice];
+          }
+          enhancedNow.guessedCard = parseInt(guessedCard, 10);
+          Logger.debug(`カード2予想: 予想カード${guessedCard}を防御側に送信`);
+        } catch (e) {
+          Logger.warn('予想カード情報の追加に失敗:', e);
+        }
       }
 
       const notificationData = {
+        choices: choices,
         choice: choice,
         kind: kind,
-        now: now,
+        now: enhancedNow,
         isBarriered: isBarriered
       };
       
-      // ルーム内の他のプレイヤーに onatherTurn イベントを送信
-      io.to(roomId).except(actorSocketId).emit('onatherTurn', notificationData);
+      // ルーム内の他のプレイヤーに anotherTurn イベントを送信
+      io.to(roomId).except(actorSocketId).emit('anotherTurn', notificationData);
       
-      // プレイヤー自身にもバリア効果情報を送信（自分のカード効果が無効化された場合）
-      if (kind === 'play_card' && isBarriered) {
-        io.to(actorSocketId).emit('cardEffectBarriered', {
-          cardNumber: choice,
-          isBarriered: isBarriered
-        });
-        Logger.debug(`プレイヤー自身にバリア効果通知: ${actorSocketId}, カード: ${choice}`);
-      }
+
       
       Logger.debug('他のプレイヤーへの通知完了');
     } catch (error) {
@@ -332,42 +357,82 @@ class GameService {
   }
 
   /**
+   * Socket.IOのACKレスポンスを正規化して選択値を取り出す
+   * - UPDATE: クライアントのpayloadをそのまま返す（なければchoices）
+   * - OPPONENT_CHOICE: インデックスから choices[idx].player を返す（または直接値を数値化）
+   * - その他: インデックスから choices[idx] を返す（または直接値）
+   */
+  static parseAckResponse(choices, kind, responses) {
+    try {
+      const first = Array.isArray(responses) ? responses[0] : responses;
+
+      if (kind === CONFIG.GAME_RULES.CHOICE_TYPES.UPDATE) {
+        return typeof first === 'undefined' || first === null ? choices : first;
+      }
+
+      if (Array.isArray(choices)) {
+        const idx = Number(first);
+        // インデックスの場合
+        if (!Number.isNaN(idx) && idx >= 0 && idx < choices.length) {
+          if (kind === CONFIG.GAME_RULES.CHOICE_TYPES.OPPONENT_CHOICE) {
+            // 相手プレイヤー指定の候補: { selectNumber, player }
+            const item = choices[idx];
+            if (item && Object.prototype.hasOwnProperty.call(item, 'player')) {
+              return item.player;
+            }
+          }
+          return choices[idx];
+        }
+        // 直接値が返ってきた場合（フォールバック）
+        return first;
+      }
+
+      // choicesが配列でない場合（例: UPDATEなど）
+      return first;
+    } catch (e) {
+      Logger.error('parseAckResponse中にエラー:', e);
+      return null;
+    }
+  }
+
+  /**
    * バリア効果（カード効果無効化）を判定する
-   * @param {string} cardNumber - プレイされたカード番号
    * @param {Object} gameState - 現在のゲーム状態
-   * @param {string} actorSocketId - カードをプレイしたプレイヤーのソケットID
-   * @param {string} roomId - ルームID
    * @returns {boolean} バリア効果が発動するかどうか
    */
-  static checkBarrierEffect(cardNumber, gameState, actorSocketId, roomId) {
+  static checkIsBarrier(gameState) {
   // 他プレイヤーを対象とするカードの一覧
   // 6(貴族)は相手の手札を公開するためバリア対象に含める
-  const targetingCards = [1, 2, 3, 5, 6, 8, 9, 10];
-    
-    if (!targetingCards.includes(parseInt(cardNumber))) {
-      return false;
+  // const targetingCards = [1, 2, 3, 5, 6, 8, 9, 10];
+
+  // if (!targetingCards.includes(parseInt(cardNumber))) {
+  //   return false;
+  // }
+  
+  // ゲーム状態から対象プレイヤーのaffected状態を確認
+  try {
+    // 対象プレイヤー（効果を受ける側）のaffected状態をチェック
+    const otherPlayersKeys = Object.keys(gameState.otherPlayers || {});
+    const playerData = gameState.otherPlayers[otherPlayersKeys[0]];
+    if (playerData && playerData.affected === false) {
+      Logger.debug(`相手（ターン${otherPlayersKeys[0]}）はバリアの効果が発動します`)
+      return true;
     }
+    // for (const turnNumber of otherPlayersKeys) {
+    //   const playerData = gameState.otherPlayers[turnNumber];
+      
+    //   // affected = false の場合、バリア効果発動
+    //   if (playerData && playerData.affected === false) {
+    //     Logger.debug(`バリア効果発動: ターン${turnNumber}のプレイヤーはaffected=false状態`);
+    //     return true;
+    //   }
+    // }
     
-    // ゲーム状態から対象プレイヤーのaffected状態を確認
-    try {
-      // 対象プレイヤー（効果を受ける側）のaffected状態をチェック
-      const otherPlayersKeys = Object.keys(gameState.otherPlayers || {});
-      
-      for (const turnNumber of otherPlayersKeys) {
-        const playerData = gameState.otherPlayers[turnNumber];
-        
-        // affected = false の場合、バリア効果発動
-        if (playerData && playerData.affected === false) {
-          Logger.debug(`バリア効果発動: ターン${turnNumber}のプレイヤーはaffected=false状態`);
-          return true;
-        }
-      }
-      
-      return false;
-    } catch (error) {
-      Logger.error('バリア効果判定中にエラー:', error);
-      return false;
-    }
+    return false;
+  } catch (error) {
+    Logger.error('バリア効果判定中にエラー:', error);
+    return false;
+  }
   }
 
   /**
@@ -379,14 +444,14 @@ class GameService {
    * @param {Object} io - Socket.IOインスタンス
    * @returns {Promise} プレイヤーの選択結果
    */
-  static emitWithAck(now, choices, kind, socketId, io) {
+  static emitWithAck(now, choices, kind, socketId, io, isBarriered) {
     return new Promise((resolve, reject) => {
       Logger.debug(`socketId: ${socketId}`);
       Logger.debug(`kind: ${kind}`);
       const util = require('util');
       Logger.debug('Choices:', util.inspect(choices, { depth: null }));
       
-      io.timeout(CONFIG.SOCKET_TIMEOUT).to(socketId).emit('yourTurn', {now: now, choices: choices, kind: kind}, (err, responses) => {
+      io.timeout(CONFIG.SOCKET_TIMEOUT).to(socketId).emit('yourTurn', {now: now, choices: choices, kind: kind, isBarriered: isBarriered}, (err, responses) => {
         if (err) {
           const targetSocket = io.sockets.sockets.get(socketId);
           if (!targetSocket) {
@@ -395,18 +460,9 @@ class GameService {
           }
           reject(err);
         } else {
-          if (responses && responses.length > 0) {
-            if (kind === CONFIG.GAME_RULES.CHOICE_TYPES.OPPONENT_CHOICE) {
-              const playerChoice = choices[responses].player;
-              Logger.debug(`responses: ${responses}`);
-              Logger.debug(`playerChoice: ${playerChoice}`);
-              resolve(playerChoice);
-            } else {
-              resolve(choices[responses[0]]);
-            }
-          } else {
-            resolve(null);
-          }
+          const value = GameService.parseAckResponse(choices, kind, responses);
+          Logger.debug(`ACK正規化結果: ${util.inspect(value, { depth: null })}`);
+          resolve(typeof value === 'undefined' ? null : value);
         }
       });
     });
