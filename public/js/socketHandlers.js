@@ -47,6 +47,13 @@ const SocketHandlers = {
     Anim.startTurnTimer();
     const idx = await selectPlayableFromHand(data.choices);
     const selectedCard = parseInt(data.choices[idx], 10);
+    let newMyHands = [];
+    for (let key of Object.keys(data.now.myHands)){
+      if (parseInt(data.now.myHands[key]) != selectedCard){
+        newMyHands.push(data.now.myHands[key]);
+      }
+    }
+    data.now.myHands = newMyHands;
     const isBarriered = data.isBarriered; // 相手のバリアが有効か
     const handInfo = getCurrentHandInfo(data);
     
