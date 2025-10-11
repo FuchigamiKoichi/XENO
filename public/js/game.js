@@ -1141,7 +1141,7 @@ socket.on('anotherTurn', async (data) => {
       
       // 判定結果を計算
       const handInfo = getCurrentHandInfo(data);
-      const myCards = parseInt(handInfo.playerCards);
+      const myCards = parseInt(handInfo.opponentCards);
       const isHit = (myCards === guessedCard);
       console.log('[Card2 anotherTurn pred] Final judgment - guessed:', guessedCard, 'my cards:', myCards, 'isHit:', isHit);
       
