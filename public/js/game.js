@@ -663,13 +663,6 @@ function updateGameView(now) {
 // ===============================
 // Audio & Game Utilities
 // ===============================
-
-// 文字列→演出テキスト
-function getCharacterName(cardNumber) {
-  cardNumber = parseInt(cardNumber, 10);
-  const characterNames = ['俺','探偵','エスパー','バリア','下痢','対決','正夢','能力交換','悪魔','彼女'];
-  return characterNames[cardNumber - 1];
-}
 function getEffectDescription(cardNumber) {
   return messageManager.getEffectMessage(cardNumber);
 }

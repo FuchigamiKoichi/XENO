@@ -660,38 +660,6 @@
     return scythe;
   }
 
-  function createDuelBackground() {
-    const bg = document.createElement('div');
-    bg.style.cssText = `
-      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-      background: radial-gradient(circle, rgba(220, 38, 38, 0.3) 0%, rgba(239, 68, 68, 0.5) 50%, rgba(127, 29, 29, 0.7) 100%);
-      pointer-events: none; z-index: 9998; opacity: 0; visibility: visible;
-    `;
-    return bg;
-  }
-
-  function createLightningEffect() {
-    const lightning = document.createElement('div');
-    lightning.style.cssText = `
-      position: fixed; top: 0; left: 50%; transform: translateX(-50%);
-      width: 8px; height: 100%; pointer-events: none; z-index: 9999;
-      background: linear-gradient(180deg, transparent 0%, #fbbf24 20%, #ffffff 50%, #fbbf24 80%, transparent 100%);
-      box-shadow: 0 0 20px #fbbf24;
-    `;
-    return lightning;
-  }
-
-  function createImpactEffect() {
-    const impact = document.createElement('div');
-    impact.style.cssText = `
-      position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-      width: 50px; height: 50px; pointer-events: none; z-index: 9999;
-      background: radial-gradient(circle, #ffffff 0%, rgba(255, 255, 255, 0.8) 30%, transparent 100%);
-      border-radius: 50%;
-    `;
-    return impact;
-  }
-
   function createMagicBookEffect() {
     const book = document.createElement('div');
     book.style.cssText = `
