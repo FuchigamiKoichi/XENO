@@ -23,125 +23,6 @@ initializeMessages();
 // ===============================
 // Error Handling & Logging
 // ===============================
-
-const ErrorHandler = {
-  /**
-   * エラーログを記録
-   * @param {string} context - エラーが発生したコンテキスト
-   * @param {Error|string} error - エラーオブジェクト
-   * @param {Object} additionalData - 追加データ
-   */
-  logError(context, error, additionalData = {}) {
-    const errorInfo = {
-      timestamp: new Date().toISOString(),
-      context,
-      error: error instanceof Error ? {
-        message: error.message,
-        stack: error.stack,
-        name: error.name
-      } : error,
-      additionalData,
-      userAgent: navigator.userAgent,
-      url: window.location.href
-    };
-
-    console.error(`[${context}] Error occurred:`, errorInfo);
-    
-    // 必要に応じてサーバーにエラーレポートを送信
-    // this.sendErrorReport(errorInfo);
-  },
-
-  /**
-   * 警告ログを記録
-   * @param {string} context - 警告が発生したコンテキスト
-   * @param {string} message - 警告メッセージ
-   * @param {Object} additionalData - 追加データ
-   */
-  logWarning(context, message, additionalData = {}) {
-    console.warn(`[${context}] Warning:`, message, additionalData);
-  },
-
-  /**
-   * 非同期処理を安全に実行
-   * @param {Function} asyncFn - 非同期関数
-   * @param {string} context - 実行コンテキスト
-   * @param {*} fallbackValue - エラー時のフォールバック値
-   */
-  async safeExecute(asyncFn, context, fallbackValue = null) {
-    try {
-      return await asyncFn();
-    } catch (error) {
-      this.logError(context, error);
-      return fallbackValue;
-    }
-  },
-
-  /**
-   * 安全なDOM操作
-   * @param {Function} domFn - DOM操作関数
-   * @param {string} context - 実行コンテキスト
-   */
-  safeDOMOperation(domFn, context) {
-    try {
-      return domFn();
-    } catch (error) {
-      this.logError(`DOM_${context}`, error);
-      return null;
-    }
-  },
-
-  /**
-   * アニメーションPromiseを安全に追跡
-   * @param {Promise} promise - アニメーションPromise
-   * @param {string} promiseType - Promiseタイプ
-   * @returns {Promise} 追跡されたPromise
-   */
-  trackAnimationPromise(promise, promiseType = 'animation') {
-    const trackedPromise = promise.catch(error => {
-      this.logError(`ANIMATION_${promiseType.toUpperCase()}`, error);
-      return null; // エラーでも処理を継続
-    });
-
-    // グローバル追跡用の設定
-    if (promiseType === 'self') {
-      window.__lastSelfAnimPromise = trackedPromise;
-      trackedPromise.finally(() => {
-        if (window.__lastSelfAnimPromise === trackedPromise) {
-          window.__lastSelfAnimPromise = null;
-        }
-      });
-    } else if (promiseType === 'opponent') {
-      window.__lastOpponentAnimPromise = trackedPromise;
-      trackedPromise.finally(() => {
-        if (window.__lastOpponentAnimPromise === trackedPromise) {
-          window.__lastOpponentAnimPromise = null;
-        }
-      });
-    }
-
-    return trackedPromise;
-  }
-};
-
-// 未捕捉のPromiseエラーをキャッチ
-window.addEventListener('unhandledrejection', function(event) {
-  ErrorHandler.logError('UNHANDLED_PROMISE_REJECTION', event.reason, {
-    promise: event.promise
-  });
-  // エラーを防ぐ（オプション）
-  event.preventDefault();
-});
-
-// 一般的なエラーをキャッチ
-window.addEventListener('error', function(event) {
-  ErrorHandler.logError('GLOBAL_ERROR', event.error, {
-    filename: event.filename,
-    lineno: event.lineno,
-    colno: event.colno
-  });
-});
-
-// ===============================
 // DOM & Image Utilities
 // ===============================
 
@@ -338,25 +219,23 @@ const UIManager = {
    * @param {string} message - ログメッセージ
    */
   addLog(message) {
-    return ErrorHandler.safeDOMOperation(() => {
-      const logMessages = document.getElementById('log-messages');
-      if (!logMessages) return;
+    const logMessages = document.getElementById('log-messages');
+    if (!logMessages) return;
 
-      // ユーザーが最下部近くにいるかチェック（20px以内なら自動スクロール）
-      const isNearBottom = logMessages.scrollHeight - logMessages.scrollTop - logMessages.clientHeight < 20;
-      
-      const d = DOMUtils.createElement('div', {
-        textContent: message,
-        styles: { wordWrap: 'break-word' }
-      });
-      
-      logMessages.appendChild(d);
-      
-      // 最下部近くにいた場合のみ自動スクロール
-      if (isNearBottom) {
-        logMessages.scrollTop = logMessages.scrollHeight;
-      }
-    }, 'ADD_LOG');
+    // ユーザーが最下部近くにいるかチェック（20px以内なら自動スクロール）
+    const isNearBottom = logMessages.scrollHeight - logMessages.scrollTop - logMessages.clientHeight < 20;
+    
+    const d = DOMUtils.createElement('div', {
+      textContent: message,
+      styles: { wordWrap: 'break-word' }
+    });
+    
+    logMessages.appendChild(d);
+    
+    // 最下部近くにいた場合のみ自動スクロール
+    if (isNearBottom) {
+      logMessages.scrollTop = logMessages.scrollHeight;
+    }
   },
 
   /**
@@ -364,13 +243,11 @@ const UIManager = {
    * @param {string} message - 結果メッセージ
    */
   showResult(message) {
-    return ErrorHandler.safeDOMOperation(() => {
-      const el = document.getElementById('showResult');
-      if (el) {
-        el.innerHTML = message;
-        el.style.display = 'block';
-      }
-    }, 'SHOW_RESULT');
+    const el = document.getElementById('showResult');
+    if (el) {
+      el.innerHTML = message;
+      el.style.display = 'block';
+    }
   },
 
   /**
@@ -804,7 +681,7 @@ function getCardDetails(cardNumber) {
 }
 
 // カードを出す（自分）
-async function playCard(cardNumber, isBarriered = false) {
+async function playCard(cardNumber, isBarriered = false, handInfo) {
   const imgSrc = getCardImagePath(cardNumber);
   const cardNum = parseInt(cardNumber, 10);
 
@@ -840,7 +717,6 @@ async function playCard(cardNumber, isBarriered = false) {
   playArea.appendChild(newCard);
   Anim.popIn(newCard);
 
-  const handInfo = getCurrentHandInfo();
   if (isBarriered && cardNum in [1,2,3,5,6,8,9]){
     await Anim.playBarrierEffect();
   }else{
@@ -851,44 +727,15 @@ async function playCard(cardNumber, isBarriered = false) {
 }
 
 // 現在の手札情報を取得する
-function getCurrentHandInfo() {
-  if (!currentGameState) {
-    console.warn('ゲーム状態が取得できません');
-  }
-
-  // まずはDOMから現在のプレイヤー手札を取得（最新かつ確実）
-  let playerCards = [];
-  try {
-    const imgs = playerHandZone ? Array.from(playerHandZone.querySelectorAll('img')) : [];
-    playerCards = imgs
-      .map(img => parseInt(img.dataset.card ?? img.value, 10))
-      .filter(n => Number.isFinite(n));
-  } catch (e) {}
-  
-  // DOMから取得できない場合は、サーバー状態をフォールバック
-  if (!playerCards || playerCards.length === 0) {
-    playerCards = (currentGameState && currentGameState.myHands) ? currentGameState.myHands.slice() : [];
-  }
-
-  const opponentCards = [];
-  try {
-    if (currentGameState && currentGameState.lookHands) {
-      const lookHandsKeys = Object.keys(currentGameState.lookHands);
-      lookHandsKeys.forEach(turnNumber => {
-        const cards = currentGameState.lookHands[turnNumber];
-        if (cards && cards.length > 0) {
-          opponentCards.push(...cards);
-        }
-      });
-    }
-  } catch (e) {}
+function getCurrentHandInfo(data) {
+  const playerCards = data.now.myHands[Object.keys(data.now.myHands)[0]];
+  const opponentCards = data.now.otherHands[Object.keys(data.now.otherHands)[0]];
 
   console.log('手札情報取得 - プレイヤー(DOM優先):', playerCards, '相手:', opponentCards);
 
   return {
     playerCards,
-    opponentCards,
-    gameState: currentGameState
+    opponentCards
   };
 }
 
@@ -1286,32 +1133,22 @@ socket.on('anotherTurn', async (data) => {
   Anim.stopTurnTimer();
   console.log('anotherTurn received:', data); // デバッグログ追加
   // 直近のゲームデータを保持（フォールバック参照用）
-  try { window.__lastGameData = data.now; } catch (_) {}
+  if (data.now) {
+    window.__lastGameData = data.now;
+  }
   
   if (data.kind === 'pred') {
     // カード2の予想処理（防御側視点）
     console.log('[Card2 anotherTurn pred] Processing prediction from opponent');
     console.log('[Card2 anotherTurn pred] Data received:', data);
     
-    // タイムアウトをクリア（pred イベントが正常に届いた場合）
-    // if (window.__card2PredTimeout) {
-    //   console.log('[Card2 anotherTurn pred] Clearing prediction timeout - pred event received');
-    //   clearTimeout(window.__card2PredTimeout);
-    //   window.__card2PredTimeout = null;
-    // }
-    // pred受信フラグを立て、フォールバックの重複実行を防止
-    // window.__card2PredReceived = true;
-    // if (window.__card2JudgeDone) {
-    //   console.log('[Card2 anotherTurn pred] Judgment already executed by fallback. Skipping pred animation.');
-    //   return;
-    // }
-    
     try {
       // 相手の予想カードを取得（サーバーのchoices配列とchoiceインデックスを使用）
       let guessedCard = parseInt(data.choice, 10);
       
       // 判定結果を計算
-      const myCards = parseInt(data.now.otherHands[Object.keys(data.now.otherHands)[0]]);
+      const handInfo = getCurrentHandInfo(data);
+      const myCards = parseInt(handInfo.playerCards);
       const isHit = (myCards === guessedCard);
       console.log('[Card2 anotherTurn pred] Final judgment - guessed:', guessedCard, 'my cards:', myCards, 'isHit:', isHit);
       
@@ -1337,11 +1174,13 @@ socket.on('anotherTurn', async (data) => {
   } else if (data.kind === 'play_card') {
     console.log('相手がカードをプレイ:', data.choice, 'バリア効果:', data.isBarriered); // デバッグログ追加
     // 直近のプレイカード番号を保持（リザルト遷移のグレース待機に利用）
-    try { window.__lastPlayedCard = parseInt(data.choice, 10); } catch (_) {}
+    if (data.choice !== undefined) {
+      window.__lastPlayedCard = parseInt(data.choice, 10);
+    }
 
     const cardNum = parseInt(data.choice, 10);
     
-    // カード2の場合は、pred イベントが来ない可能性があるため、ここで判定アニメーションの準備をする
+    // カード2の場合は、ここで判定アニメーションの準備をする
     if (cardNum === 2) {
       console.log('[Card2 anotherTurn play_card] Card 2 played by opponent, awaiting pred event (no guessedCard fallback).');
       // pred受信・判定状態を初期化
@@ -1358,39 +1197,13 @@ socket.on('anotherTurn', async (data) => {
     }
     const text = getEffectDescription(cardNum);
 
-    // handInfo 準備（カード6のみ開示フラグを調整）
     let handInfo;
-    if (cardNum === 6) {
-      // カード6の場合：最新の手札情報を取得
-      handInfo = getCurrentHandInfo() || {};
-      
-      // サーバーから攻撃者（相手）の手札情報が来ている場合は更新
-      if (data.now && data.now.attackerHands) {
-        console.log('[Card6 anotherTurn] Using fresh attacker hands from server:', data.now.attackerHands);
-        handInfo.opponentCards = data.now.attackerHands;
-      }
-      
-      // 自分の手札も最新の状態に更新（DOMから取得）
-      const currentPlayerCards = Array.from(playerHandZone.querySelectorAll('img')).map(img => {
-        return parseInt(img.dataset.card || img.value, 10);
-      }).filter(card => !isNaN(card));
-      
-      if (currentPlayerCards.length > 0) {
-        handInfo.playerCards = currentPlayerCards;
-        console.log('[Card6 anotherTurn] Updated player cards from DOM:', currentPlayerCards);
-      }
-      
-      // バリア状態に応じて表示フラグを設定
-      if (data.isBarriered) {
-        handInfo.onlyReveal = { player: false, opponent: false };
-      } else {
-        handInfo.onlyReveal = { player: true, opponent: true };
-      }
-    } else {
-      handInfo = getCurrentHandInfo() || {};
-    }
+    handInfo = getCurrentHandInfo(data) || {};
+    const myCard = handInfo.opponentCards;
+    handInfo.opponentCards = handInfo.playerCards;
+    handInfo.playerCards = myCard;
 
-    // 防御側にも無効化演出を見せる（カード6のバリア時）
+    // 防御側にも無効化演出を見せる
     if (isBarriered && cardNum in [1,2,3,5,6,8,9] ) {
       console.log('[anotherTurn] defender enqueue barrier effect');
       Anim.enqueueBarrierEffect();
@@ -1440,7 +1253,7 @@ socket.on('gameEnded', async (data) => {
     // 相手の演出待機
     if (window.__lastOpponentAnimPromise && typeof window.__lastOpponentAnimPromise.then === 'function') {
       console.log('[gameEnded] Waiting for opponent animation to complete...');
-      await window.__lastOpponentAnimPromise.catch(() => {});
+      await window.__lastOpponentAnimPromise;
       console.log('[gameEnded] Opponent animation completed');
     } else {
       console.log('[gameEnded] No opponent animation to wait for');
@@ -1448,7 +1261,7 @@ socket.on('gameEnded', async (data) => {
     // 自分の演出待機（カード6など）
     if (window.__lastSelfAnimPromise && typeof window.__lastSelfAnimPromise.then === 'function') {
       console.log('[gameEnded] Waiting for self animation to complete...');
-      await window.__lastSelfAnimPromise.catch(() => {});
+      await window.__lastSelfAnimPromise;
       console.log('[gameEnded] Self animation completed');
     } else {
       console.log('[gameEnded] No self animation to wait for');
@@ -1460,7 +1273,8 @@ socket.on('gameEnded', async (data) => {
       console.log('[gameEnded] FX idle completed');
     }
   } catch (e) {
-    console.debug('result navigation wait error:', e);
+    console.error('result navigation wait error:', e);
+    // エラーが発生してもリザルト画面への遷移は継続する
   }
 
   // アニメーション待機の成功・失敗に関わらず、リザルト画面に遷移
@@ -1486,7 +1300,7 @@ socket.on('redirectToResult', async (data) => {
     // 相手の演出待機
     if (window.__lastOpponentAnimPromise && typeof window.__lastOpponentAnimPromise.then === 'function') {
       console.log('[redirectToResult] Waiting for opponent animation to complete...');
-      await window.__lastOpponentAnimPromise.catch(() => {});
+      await window.__lastOpponentAnimPromise;
       console.log('[redirectToResult] Opponent animation completed');
     } else {
       console.log('[redirectToResult] No opponent animation to wait for');
@@ -1494,7 +1308,7 @@ socket.on('redirectToResult', async (data) => {
     // 自分の演出待機（カード6など）
     if (window.__lastSelfAnimPromise && typeof window.__lastSelfAnimPromise.then === 'function') {
       console.log('[redirectToResult] Waiting for self animation to complete...');
-      await window.__lastSelfAnimPromise.catch(() => {});
+      await window.__lastSelfAnimPromise;
       console.log('[redirectToResult] Self animation completed');
     } else {
       console.log('[redirectToResult] No self animation to wait for');
@@ -1505,7 +1319,8 @@ socket.on('redirectToResult', async (data) => {
       console.log('[redirectToResult] FX idle completed');
     }
   } catch (e) {
-    console.debug('redirect wait error:', e);
+    console.error('redirect wait error:', e);
+    // エラーが発生してもリダイレクトは継続する
   }
   console.log('[redirectToResult] Navigating to:', data.url);
   window.location.replace(data.url);

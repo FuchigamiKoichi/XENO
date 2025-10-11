@@ -48,13 +48,14 @@ const SocketHandlers = {
     const idx = await selectPlayableFromHand(data.choices);
     const selectedCard = parseInt(data.choices[idx], 10);
     const isBarriered = data.isBarriered; // 相手のバリアが有効か
+    const handInfo = getCurrentHandInfo(data);
     
     addLog(messageManager.getGameMessage('playCard', { card: data.choices[idx] }));
     playCardPlaceSE();
     console.log('Barrier状態:', isBarriered, 'カード:', selectedCard);
     
     // playCard関数にバリア状態を渡す
-    const done = await playCard(data.choices[idx], isBarriered);
+    const done = await playCard(data.choices[idx], isBarriered, handInfo);
     if (done === 'done') {
       Anim.stopTurnTimer();
       callback([idx]);

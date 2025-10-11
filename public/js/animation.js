@@ -978,14 +978,6 @@
       z-index: 10000;
       pointer-events: none;
     `;
-    
-  // どちらのサイドを開示してよいか（デフォルトは両方true）
-    const allowPlayerReveal = (handInfo && handInfo.onlyReveal && handInfo.onlyReveal.player !== undefined)
-      ? !!handInfo.onlyReveal.player
-      : false; // デフォルトは開示しない
-    const allowOpponentReveal = (handInfo && handInfo.onlyReveal && handInfo.onlyReveal.opponent !== undefined)
-      ? !!handInfo.onlyReveal.opponent
-      : false; // デフォルトは開示しない
 
     // プレイヤーカード
     const playerCard = document.createElement('div');
@@ -1008,8 +1000,8 @@
     `;
     
     // 実際のカード画像を表示
-    if (allowPlayerReveal && handInfo && handInfo.playerCards && handInfo.playerCards.length > 0) {
-      const playerCardNumber = handInfo.playerCards[0];
+    if (handInfo.playerCards) {
+      const playerCardNumber = parseInt(handInfo.playerCards);
       
       // カード画像を作成
       const cardImg = document.createElement('img');
@@ -1059,8 +1051,10 @@
     `;
     
     // 相手のカード画像を表示（カード6の効果では相手のカードも見える）
-    if (allowOpponentReveal && handInfo && handInfo.opponentCards && handInfo.opponentCards.length > 0) {
-      const opponentCardNumber = handInfo.opponentCards[0];
+    if (handInfo.opponentCards) {
+      const opponentCardNumber = parseInt(handInfo.opponentCards);
+      console.log('opponentCardNumber')
+      console.log(opponentCardNumber)
       
       // カード画像を作成
       const cardImg = document.createElement('img');

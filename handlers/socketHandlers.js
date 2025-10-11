@@ -4,7 +4,7 @@ const DataManager = require('../managers/dataManager');
 const RoomManager = require('../managers/roomManager');
 const GameService = require('../services/gameService');
 
-/**
+/*
  * Socket.IOイベント処理
  */
 class SocketHandlers {
