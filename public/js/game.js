@@ -721,8 +721,17 @@ async function playCard(cardNumber, isBarriered = false, handInfo) {
 
 // 現在の手札情報を取得する
 function getCurrentHandInfo(data) {
-  const playerCards = data.now.myHands[Object.keys(data.now.myHands)[0]];
-  const opponentCards = data.now.otherHands[Object.keys(data.now.otherHands)[0]];
+  let playerCards = []
+  for (let i=0; i<Object.keys(data.now.myHands).length; i++){
+    let key = Object.keys(data.now.myHands)[i];
+    playerCards.push(data.now.myHands[key]);
+  }
+
+  let opponentCards = []
+  for (let i=0; i<Object.keys(data.now.otherHands).length; i++){
+    let key = Object.keys(data.now.otherHands)[i];
+    opponentCards.push(data.now.otherHands[key]);
+  }
 
   console.log('手札情報取得 - プレイヤー(DOM優先):', playerCards, '相手:', opponentCards);
 

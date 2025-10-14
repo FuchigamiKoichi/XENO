@@ -47,15 +47,15 @@ const SocketHandlers = {
     Anim.startTurnTimer();
     const idx = await selectPlayableFromHand(data.choices);
     const selectedCard = parseInt(data.choices[idx], 10);
+    const handInfo = getCurrentHandInfo(data);
     let newMyHands = [];
-    for (let key of Object.keys(data.now.myHands)){
-      if (parseInt(data.now.myHands[key]) != selectedCard){
-        newMyHands.push(data.now.myHands[key]);
+    for(let i=0; i< handInfo.opponentCards.length; i++){
+      if (parseInt(handInfo.opponentCards[i]) != selectedCard){
+        newMyHands.push(handInfo.opponentCards[i]);
       }
     }
     data.now.myHands = newMyHands;
     const isBarriered = data.isBarriered; // 相手のバリアが有効か
-    const handInfo = getCurrentHandInfo(data);
     
     addLog(messageManager.getGameMessage('playCard', { card: data.choices[idx] }));
     playCardPlaceSE();
