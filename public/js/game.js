@@ -1377,41 +1377,13 @@ socket.on('onatherTurn', async (data) => {
       }
     }
   }
-  else if (data.kind === 'update') {
-    // 相手側からの update 通知（例: 兵士判定）。敗者側でも判定演出を見せるためにFXレーンに積み、
-    // リザルト遷移待機用に最後の相手演出Promiseも記録する。
-    try {
-      let payload = null;
-      if (data && data.choice && typeof data.choice === 'object') {
-        payload = data.choice;
-      } else if (Array.isArray(data.choice)) {
-        payload = data.choice[0];
-      } else if (Array.isArray(data.choices)) {
-        payload = data.choices[0];
-      }
-      const chosen = (payload && payload.type === 'card2' && payload.predResult) ? payload.predResult : null;
-      if (chosen) {
-        const { guessed, isHit, targetTurn } = chosen;
-        // onatherTurnのdata.nowは攻撃側視点の可能性があるため、ローカルのcurrentGameStateを優先
-        const myTurnNumber = (typeof currentGameState?.myTurnNumber !== 'undefined')
-          ? currentGameState.myTurnNumber
-          : data.now?.myTurnNumber;
-        const perspective = (myTurnNumber && targetTurn) ? (myTurnNumber === targetTurn ? 'defender' : 'attacker') : 'attacker';
-        const p = (async () => {
-          if (Anim && typeof Anim.enqueueGuessAnnounce === 'function') {
-            await Anim.enqueueGuessAnnounce(guessed, perspective);
-          }
-          if (Anim && typeof Anim.enqueueGuessResult === 'function') {
-            await Anim.enqueueGuessResult(guessed, !!isHit, perspective);
-          }
-        })();
-        window.__lastOpponentAnimPromise = p;
-        // 直近の相手側更新を記録（2の判定演出が直後に来る場合のグレース待機に利用）
-        window.__lastOpponentUpdate = { type: 'card2', at: Date.now() };
-      }
-    } catch (e) {
-      console.warn('onatherTurn update handling error:', e);
-    }
+});
+
+socket.on('ed', (data) => {
+  Anim.stopTurnTimer();
+  if (window.audioManager) {
+    window.audioManager.stopBGM();
+    window.audioManager.playBGM('ending', false);
   }
 });
 
