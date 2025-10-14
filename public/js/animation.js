@@ -1204,11 +1204,22 @@
   async function enqueuePlay(cardNumber, isBarriered = false, handInfo = null, effectText = '') {
     const imgSrc = `../images/${cardNumber}.jpg`;
     const text = typeof effectText === 'string' ? effectText : '';
+    let infoToUse = handInfo;
+    let newMyHands = [];
+    let frag = false;
+    for(let i=0; i< handInfo.playerCards.length; i++){
+      if (parseInt(handInfo.playerCards[i]) != cardNumber || frag){
+        newMyHands.push(parseInt(handInfo.playerCards[i]));
+      }else{
+        frag = true;
+      }
+    }
+    infoToUse.playerCards = handInfo.opponentCards;
+    infoToUse.opponentCards = newMyHands;
     return _enqueue('fx', async () => {
       // ズーム（短め保持）
       await zoomCard(imgSrc, text, 1.0);
       // 効果
-      let infoToUse = handInfo;
       await playCardEffect(parseInt(cardNumber, 10), isBarriered, infoToUse);
     });
   }

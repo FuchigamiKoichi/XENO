@@ -49,12 +49,15 @@ const SocketHandlers = {
     const selectedCard = parseInt(data.choices[idx], 10);
     const handInfo = getCurrentHandInfo(data);
     let newMyHands = [];
-    for(let i=0; i< handInfo.opponentCards.length; i++){
-      if (parseInt(handInfo.opponentCards[i]) != selectedCard){
-        newMyHands.push(handInfo.opponentCards[i]);
+    let frag = false;
+    for(let i=0; i< handInfo.playerCards.length; i++){
+      if (parseInt(handInfo.playerCards[i]) != selectedCard || frag){
+        newMyHands.push(parseInt(handInfo.playerCards[i]));
+      }else{
+        frag = true;
       }
     }
-    data.now.myHands = newMyHands;
+    handInfo.playerCards = newMyHands;
     const isBarriered = data.isBarriered; // 相手のバリアが有効か
     
     addLog(messageManager.getGameMessage('playCard', { card: data.choices[idx] }));

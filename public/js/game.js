@@ -1201,9 +1201,9 @@ socket.on('anotherTurn', async (data) => {
 
     let handInfo;
     handInfo = getCurrentHandInfo(data) || {};
-    const myCard = handInfo.opponentCards;
-    handInfo.opponentCards = handInfo.playerCards;
-    handInfo.playerCards = myCard;
+    // const myCard = handInfo.opponentCards;
+    // handInfo.opponentCards = handInfo.playerCards;
+    // handInfo.playerCards = myCard;
 
     // 防御側にも無効化演出を見せる
     if (isBarriered && cardNum in [1,2,3,5,6,8,9] ) {
