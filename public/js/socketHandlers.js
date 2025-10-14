@@ -22,7 +22,7 @@ const SocketHandlers = {
       const done = await Anim.drawCardToHand(chosen);
       if (done === 'done') {
         Anim.stopTurnTimer();
-        addLog(messageManager.getGameMessage('drawCard', { card: idx }));
+        addLog(messageManager.getGameMessage('drawCard', { card: chosen }));
         callback([idx]);
       }
     } else {
