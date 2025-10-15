@@ -710,7 +710,7 @@ async function playCard(cardNumber, isBarriered = false, handInfo) {
   playArea.appendChild(newCard);
   Anim.popIn(newCard);
 
-  if (isBarriered && cardNum in [1,2,3,5,6,8,9]){
+  if (isBarriered && [1,2,3,5,6,8,9].includes(cardNum)){
     await Anim.playBarrierEffect();
   }else{
     await Anim.playCardEffect( cardNum, isBarriered, handInfo);
@@ -1206,7 +1206,7 @@ socket.on('anotherTurn', async (data) => {
     // handInfo.playerCards = myCard;
 
     // 防御側にも無効化演出を見せる
-    if (isBarriered && cardNum in [1,2,3,5,6,8,9] ) {
+    if (isBarriered && [1,2,3,5,6,8,9].includes(cardNum) ) {
       console.log('[anotherTurn] defender enqueue barrier effect');
       Anim.enqueueBarrierEffect();
     }else {
