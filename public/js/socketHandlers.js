@@ -7,7 +7,7 @@ const SocketHandlers = {
    * drawアクション処理
    */
   async handleDraw(data, callback) {
-    if (data.choices.length > 2) {
+    if (data.choices.length > 1) {
       // 直前ターンの相手演出（FX）が残っている可能性があるため、短時間だけ待ってからセレクトを表示
       await Anim.waitForFxIdle(1200);
       Anim.startTurnTimer();
