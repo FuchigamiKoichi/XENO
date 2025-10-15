@@ -10,7 +10,7 @@ class AudioManager {
         // 音声ファイルのパス定義
         this.bgmPaths = {
             main: './sounds/bgm/MainBGM.mp3',     // メインBGM
-            ending: './sounds/bgm/EndingBGM.mp3'  // エンディングBGM
+            ending: './sounds/bgm/MainBGM.mp3'    // エンディングBGM（MainBGMに統一）
         };
         
         this.sePaths = {
