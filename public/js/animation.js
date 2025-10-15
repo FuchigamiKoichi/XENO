@@ -637,19 +637,6 @@
     return eye;
   }
 
-  function createBarrierEffect() {
-    const barrier = document.createElement('div');
-    barrier.style.cssText = `
-      position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-      width: 250px; height: 250px; pointer-events: none; z-index: 9999;
-      background: radial-gradient(circle, rgba(59,130,246,0.3) 0%, rgba(147,197,253,0.6) 50%, transparent 100%);
-      border: 3px solid #3b82f6; border-radius: 50%;
-      box-shadow: 0 0 40px #3b82f6; opacity: 1; visibility: visible;
-    `;
-    console.log('Created barrier with styles:', barrier.style.cssText);
-    return barrier;
-  }
-
   function createDarknessEffect() {
     const darkness = document.createElement('div');
     darkness.style.cssText = `
@@ -671,38 +658,6 @@
     `;
     console.log('Created scythe with styles:', scythe.style.cssText);
     return scythe;
-  }
-
-  function createDuelBackground() {
-    const bg = document.createElement('div');
-    bg.style.cssText = `
-      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-      background: radial-gradient(circle, rgba(220, 38, 38, 0.3) 0%, rgba(239, 68, 68, 0.5) 50%, rgba(127, 29, 29, 0.7) 100%);
-      pointer-events: none; z-index: 9998; opacity: 0; visibility: visible;
-    `;
-    return bg;
-  }
-
-  function createLightningEffect() {
-    const lightning = document.createElement('div');
-    lightning.style.cssText = `
-      position: fixed; top: 0; left: 50%; transform: translateX(-50%);
-      width: 8px; height: 100%; pointer-events: none; z-index: 9999;
-      background: linear-gradient(180deg, transparent 0%, #fbbf24 20%, #ffffff 50%, #fbbf24 80%, transparent 100%);
-      box-shadow: 0 0 20px #fbbf24;
-    `;
-    return lightning;
-  }
-
-  function createImpactEffect() {
-    const impact = document.createElement('div');
-    impact.style.cssText = `
-      position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-      width: 50px; height: 50px; pointer-events: none; z-index: 9999;
-      background: radial-gradient(circle, #ffffff 0%, rgba(255, 255, 255, 0.8) 30%, transparent 100%);
-      border-radius: 50%;
-    `;
-    return impact;
   }
 
   function createMagicBookEffect() {
@@ -849,8 +804,8 @@
   }
 
   // バリア演出（4の効果で無効化された場合）
-  function createBarrierEffect(cardNumber) {
-    console.log('Creating barrier effect for card:', cardNumber);
+  function createBarrierEffect() {
+    // console.log('Creating barrier effect for card:', cardNumber);
     
     const container = document.createElement('div');
     container.style.cssText = `
@@ -932,11 +887,9 @@
   }
 
   // バリア演出アニメーション
-  async function playBarrierEffect(cardNumber) {
-    console.log('playBarrierEffect starting for card:', cardNumber);
-    
+  async function playBarrierEffect() {
     return new Promise((resolve) => {
-      const elements = createBarrierEffect(cardNumber);
+      const elements = createBarrierEffect();
       const { container, shield, cross1, cross2, invalidText } = elements;
       
       const tl = gsap.timeline({
@@ -993,14 +946,6 @@
       z-index: 10000;
       pointer-events: none;
     `;
-    
-  // どちらのサイドを開示してよいか（デフォルトは両方true）
-    const allowPlayerReveal = (handInfo && handInfo.onlyReveal && handInfo.onlyReveal.player !== undefined)
-      ? !!handInfo.onlyReveal.player
-      : false; // デフォルトは開示しない
-    const allowOpponentReveal = (handInfo && handInfo.onlyReveal && handInfo.onlyReveal.opponent !== undefined)
-      ? !!handInfo.onlyReveal.opponent
-      : false; // デフォルトは開示しない
 
     // プレイヤーカード
     const playerCard = document.createElement('div');
@@ -1023,8 +968,8 @@
     `;
     
     // 実際のカード画像を表示
-    if (allowPlayerReveal && handInfo && handInfo.playerCards && handInfo.playerCards.length > 0) {
-      const playerCardNumber = handInfo.playerCards[0];
+    if (handInfo.playerCards) {
+      const playerCardNumber = parseInt(handInfo.playerCards);
       
       // カード画像を作成
       const cardImg = document.createElement('img');
@@ -1074,8 +1019,10 @@
     `;
     
     // 相手のカード画像を表示（カード6の効果では相手のカードも見える）
-    if (allowOpponentReveal && handInfo && handInfo.opponentCards && handInfo.opponentCards.length > 0) {
-      const opponentCardNumber = handInfo.opponentCards[0];
+    if (handInfo.opponentCards) {
+      const opponentCardNumber = parseInt(handInfo.opponentCards);
+      console.log('opponentCardNumber')
+      console.log(opponentCardNumber)
       
       // カード画像を作成
       const cardImg = document.createElement('img');
@@ -1218,14 +1165,6 @@
       testGSAP();
     }
     
-    // バリア効果が有効な場合は専用演出を実行
-    if (isBarriered) {
-      console.log('Playing barrier effect for card:', cardNumber);
-      await playBarrierEffect(cardNumber);
-      console.log('Barrier effect completed for card:', cardNumber);
-      return;
-    }
-    
     const effects = {
       1: cardEffect1,
       2: cardEffect2,
@@ -1262,19 +1201,25 @@
 
   // ===== スケジューリング用のヘルパ =====
   // 対戦相手のプレイ演出（ズーム→効果）を1本のFXレーンに積む
-  async function enqueueOpponentPlay(cardNumber, isBarriered = false, handInfo = null, effectText = '') {
+  async function enqueuePlay(cardNumber, isBarriered = false, handInfo = null, effectText = '') {
     const imgSrc = `../images/${cardNumber}.jpg`;
     const text = typeof effectText === 'string' ? effectText : '';
+    let infoToUse = handInfo;
+    let newMyHands = [];
+    let frag = false;
+    for(let i=0; i< handInfo.playerCards.length; i++){
+      if (parseInt(handInfo.playerCards[i]) != cardNumber || frag){
+        newMyHands.push(parseInt(handInfo.playerCards[i]));
+      }else{
+        frag = true;
+      }
+    }
+    infoToUse.playerCards = handInfo.opponentCards;
+    infoToUse.opponentCards = newMyHands;
     return _enqueue('fx', async () => {
       // ズーム（短め保持）
       await zoomCard(imgSrc, text, 1.0);
       // 効果
-      let infoToUse = handInfo;
-      if (parseInt(cardNumber, 10) === 6) {
-        // 実行時セーフガード：handInfoが無ければ非開示、バリア時は強制非開示
-        if (!infoToUse) infoToUse = { onlyReveal: { player: false, opponent: false } };
-        if (isBarriered) infoToUse.onlyReveal = { player: false, opponent: false };
-      }
       await playCardEffect(parseInt(cardNumber, 10), isBarriered, infoToUse);
     });
   }
@@ -1292,9 +1237,9 @@
   }
 
   // バリア演出のみをFXレーンに積む
-  async function enqueueBarrierEffect(cardNumber = null) {
+  async function enqueueBarrierEffect() {
     return _enqueue('fx', async () => {
-      await playBarrierEffect(cardNumber);
+      await playBarrierEffect();
     });
   }
 
@@ -1408,7 +1353,7 @@
     playCardEffect,
     playBarrierEffect,
     // 非同期に積むための新API（必要に応じて利用）
-    enqueueOpponentPlay,
+    enqueuePlay,
     enqueuePlayerDraw,
     enqueueCpuDraw,
     enqueueBarrierEffect,

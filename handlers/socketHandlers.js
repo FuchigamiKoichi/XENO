@@ -4,13 +4,13 @@ const DataManager = require('../managers/dataManager');
 const RoomManager = require('../managers/roomManager');
 const GameService = require('../services/gameService');
 
-/**
+/*
  * Socket.IOイベント処理
  */
 class SocketHandlers {
   static setupHandlers(io, activeGames, pendingChoices) {
     io.on('connection', (socket) => {
-              // プレイヤー名からプレイヤーデータを検索   Logger.info('ユーザ接続:', socket.id);
+      Logger.info('ユーザ接続:', socket.id);
 
       // プレイヤー登録
       socket.on('registPlayer', (data) => {
@@ -69,7 +69,7 @@ class SocketHandlers {
 
       // プレイヤーアクション
       socket.on('playerAction', (roomId, actionData) => {
-        this.handlePlayerAction(roomId, actionData, io);
+        this.handlePlayerAction(socket, roomId, actionData, io);
       });
 
       // リザルトページ識別
@@ -306,6 +306,99 @@ class SocketHandlers {
   }
 
   /**
+   * 結果配列を正規化して winners / losers を取得
+   * result 仕様:
+   *  - 正常終了: [true, gameLog, winners[], losers[]]
+   *  - 早期終了等: [false, winners[], losers[]]
+   */
+  static normalizeGameResult(result) {
+    try {
+      if (Array.isArray(result) && result.length > 0 && result[0] === true) {
+        return {
+          winners: Array.isArray(result[2]) ? result[2] : [],
+          losers: Array.isArray(result[3]) ? result[3] : [],
+          ok: true,
+        };
+      }
+      
+      // 不正データの場合でも、常に配列を返すように修正
+      const winners = (result && Array.isArray(result[1])) ? result[1] : [];
+      const losers = (result && Array.isArray(result[2])) ? result[2] : [];
+      
+      return {
+        winners,
+        losers,
+        ok: false,
+      };
+    } catch (error) {
+      // エラーが発生した場合でも安全なデフォルトを返す
+      Logger.warn('normalizeGameResult error:', error);
+      return {
+        winners: [],
+        losers: [],
+        ok: false,
+      };
+    }
+  }
+
+  /**
+   * プレイヤー名から { id, player } を返す。未発見なら null
+   */
+  static findPlayerByName(jsonData, playerName) {
+    if (!jsonData || !jsonData.players) {
+      return null;
+    }
+    for (const [id, player] of Object.entries(jsonData.players)) {
+      if (player && player.name === playerName) {
+        return { id, player };
+      }
+    }
+    return null;
+  }
+
+  /**
+   * リザルトURL生成
+   */
+  static buildResultUrl(resultType, roomId, playerId, reasonText = 'ゲーム終了') {
+    const reason = encodeURIComponent(reasonText);
+    return `result.html?result=${resultType}&reason=${reason}&roomId=${roomId}&playerId=${playerId}`;
+  }
+
+  /**
+   * 勝者・敗者に結果を送信
+   * options: { reasonText?: string, excludeCpu?: boolean }
+   */
+  static sendResultsToPlayers(io, roomId, winners, losers, jsonData, options = {}) {
+    const { reasonText = 'ゲーム終了', excludeCpu = true } = options;
+
+    // 敗者通知
+    for (const loser of losers || []) {
+      if (excludeCpu && typeof loser?.name === 'string' && loser.name.startsWith('cpu_')) {
+        continue;
+      }
+      const found = this.findPlayerByName(jsonData, loser.name);
+      if (found && found.player && found.player.socketId) {
+        const url = this.buildResultUrl('lose', roomId, found.id, reasonText);
+        io.to(found.player.socketId).emit('redirectToResult', { url });
+        Logger.debug(`[Result] 敗者リダイレクト送信: ${loser.name}`);
+      }
+    }
+
+    // 勝者通知
+    for (const winner of winners || []) {
+      if (excludeCpu && typeof winner?.name === 'string' && winner.name.startsWith('cpu_')) {
+        continue;
+      }
+      const found = this.findPlayerByName(jsonData, winner.name);
+      if (found && found.player && found.player.socketId) {
+        const url = this.buildResultUrl('win', roomId, found.id, reasonText);
+        io.to(found.player.socketId).emit('redirectToResult', { url });
+        Logger.debug(`[Result] 勝者リダイレクト送信: ${winner.name}`);
+      }
+    }
+  }
+
+  /**
    * Ready状態処理
    */
   static async handleReady(data, io, activeGames) {
@@ -325,89 +418,17 @@ class SocketHandlers {
       Logger.info('CPU戦が選択されました');
       // CPU戦の場合は1人でもゲーム開始可能
       const result = await GameService.startGame(data.roomId, io, activeGames);
-      
-      if (result[0]) {
-        const gameLog = result[1];
-        const winners = result[2] || [];
-        const losers = result[3] || [];
-        Logger.debug(`[Result] CPU戦正常終了処理開始: 勝者${winners.length}人, 敗者${losers.length}人`);
-        
-        // プレイヤーに結果を送信
-        DataManager.loadData();
-        const currentJsonData = DataManager.getJsonData();
-        
-        // 敗者への通知
-        for (const loser of losers) {
-          if (loser.name !== 'cpu_1') {
-            // プレイヤー名からプレイヤーデータを検索
-            const playerName = loser.name;
-            const loserData = Object.values(currentJsonData.players).find(p => p.name === playerName);
-            if (loserData && loserData.socketId) {
-              const reason = encodeURIComponent('ゲーム終了');
-              const url = `result.html?result=lose&reason=${reason}&roomId=${data.roomId}&playerId=${Object.keys(currentJsonData.players).find(key => currentJsonData.players[key] === loserData)}`;
-              io.to(loserData.socketId).emit('redirectToResult', { url: url });
-              Logger.debug(`[Result] 敗者リダイレクト送信: ${playerName}`);
-            }
-          }
-        }
-        
-        // 勝者への通知
-        for (const winner of winners) {
-          if (winner.name !== 'cpu_1') {
-            // プレイヤー名からプレイヤーデータを検索
-            const playerName = winner.name;
-            const winnerData = Object.values(currentJsonData.players).find(p => p.name === playerName);
-            if (winnerData && winnerData.socketId) {
-              const reason = encodeURIComponent('ゲーム終了');
-              const url = `result.html?result=win&reason=${reason}&roomId=${data.roomId}&playerId=${Object.keys(currentJsonData.players).find(key => currentJsonData.players[key] === winnerData)}`;
-              io.to(winnerData.socketId).emit('redirectToResult', { url: url });
-              Logger.debug(`[Result] 勝者リダイレクト送信: ${playerName}`);
-            }
-          }
-        }
-        
-        Logger.debug(`[Result] CPU戦ゲーム終了結果送信完了: 勝者${winners.length}人, 敗者${losers.length}人`);
+      const { winners, losers, ok } = this.normalizeGameResult(result);
+      Logger.debug(`[Result] CPU戦${ok ? '正常' : '早期'}終了処理開始: 勝者${winners.length}人, 敗者${losers.length}人`);
+
+      // プレイヤーに結果を送信
+      DataManager.loadData();
+      const currentJsonData = DataManager.getJsonData();
+      this.sendResultsToPlayers(io, data.roomId, winners, losers, currentJsonData, { reasonText: 'ゲーム終了', excludeCpu: true });
+
+      Logger.debug(`[Result] CPU戦ゲーム終了結果送信完了: 勝者${winners.length}人, 敗者${losers.length}人`);
+      if (ok) {
         DataManager.saveData();
-      } else {
-        // ゲーム終了時の結果処理
-        Logger.debug(`[Result] ゲーム終了処理開始: result=${JSON.stringify(result)}`);
-        const winners = result[1];
-        const losers = result[2];
-        Logger.debug(`[Result] 勝者: ${winners.length}人, 敗者: ${losers.length}人`);
-        
-        // プレイヤーに結果を送信
-        DataManager.loadData();
-        const currentJsonData = DataManager.getJsonData();
-        
-        // 敗者への通知
-        for (const loser of losers) {
-          if (loser.name !== 'cpu_1') {
-            // プレイヤー名からプレイヤーデータを検索
-            const playerName = loser.name;
-            const loserData = Object.values(currentJsonData.players).find(p => p.name === playerName);
-            if (loserData && loserData.socketId) {
-              const reason = encodeURIComponent('ゲーム終了');
-              const url = `result.html?result=lose&reason=${reason}&roomId=${data.roomId}&playerId=${Object.keys(currentJsonData.players).find(key => currentJsonData.players[key] === loserData)}`;
-              io.to(loserData.socketId).emit('redirectToResult', { url: url });
-            }
-          }
-        }
-        
-        // 勝者への通知
-        for (const winner of winners) {
-          if (winner.name !== 'cpu_1') {
-            // プレイヤー名からプレイヤーデータを検索
-            const playerName = winner.name;
-            const winnerData = Object.values(currentJsonData.players).find(p => p.name === playerName);
-            if (winnerData && winnerData.socketId) {
-              const reason = encodeURIComponent('ゲーム終了');
-              const url = `result.html?result=win&reason=${reason}&roomId=${data.roomId}&playerId=${Object.keys(currentJsonData.players).find(key => currentJsonData.players[key] === winnerData)}`;
-              io.to(winnerData.socketId).emit('redirectToResult', { url: url });
-            }
-          }
-        }
-        
-        Logger.debug(`[Result] ゲーム終了結果送信完了: 勝者${winners.length}人, 敗者${losers.length}人`);
       }
     } else {
       DataManager.loadData();
@@ -473,77 +494,57 @@ class SocketHandlers {
                 }
             }
           }else{
-            // 敗者への通知
-            for (const loser of losers) {
-              // プレイヤー名からプレイヤーデータを検索
-              const playerName = loser.name;
-              const loserData = Object.values(currentJsonData.players).find(p => p.name === playerName);
-              if (loserData && loserData.socketId) {
-                const reason = encodeURIComponent('ゲーム終了');
-                const url = `result.html?result=lose&reason=${reason}&roomId=${data.roomId}&playerId=${Object.keys(currentJsonData.players).find(key => currentJsonData.players[key] === loserData)}`;
-                io.to(loserData.socketId).emit('redirectToResult', { url: url });
-                Logger.debug(`[Result] 敗者リダイレクト送信: ${playerName}`);
+            if (winners.length === 0 && losers.length === 2) {
+              Logger.debug('[Result] 引き分け処理開始');
+              const room = currentJsonData.rooms[data.roomId];
+              if (room) {
+                // ルームにいるプレイヤー全員に通知
+                for (const playerId of room.players) {
+                  const playerData = currentJsonData.players[playerId];
+                  if (playerData && playerData.socketId && playerData.name !== 'cpu_1') {
+                    const reason = encodeURIComponent('引き分け');
+                    const url = `result.html?result=draw&reason=${reason}&roomId=${data.roomId}&playerId=${playerId}`;
+                    io.to(playerData.socketId).emit('redirectToResult', { url: url });
+                    Logger.debug(`[Result] 引き分けリダイレクト送信: ${playerData.name}`);
+                  }
+                }
               }
-            }
+             }else{
+              // 敗者への通知
+              for (const loser of losers) {
+                // プレイヤー名からプレイヤーデータを検索
+                const playerName = loser.name;
+                const loserData = Object.values(currentJsonData.players).find(p => p.name === playerName);
+                if (loserData && loserData.socketId) {
+                  const reason = encodeURIComponent('ゲーム終了');
+                  const url = `result.html?result=lose&reason=${reason}&roomId=${data.roomId}&playerId=${Object.keys(currentJsonData.players).find(key => currentJsonData.players[key] === loserData)}`;
+                  io.to(loserData.socketId).emit('redirectToResult', { url: url });
+                  Logger.debug(`[Result] 敗者リダイレクト送信: ${playerName}`);
+                }
+              }
 
-            // 勝者への通知
-            for (const winner of winners) {
-              // プレイヤー名からプレイヤゲータを検索
-              const playerName = winner.name;
-              const winnerData = Object.values(currentJsonData.players).find(p => p.name === playerName);
-              if (winnerData && winnerData.socketId) {
-                const reason = encodeURIComponent('ゲーム終了');
-                const url = `result.html?result=win&reason=${reason}&roomId=${data.roomId}&playerId=${Object.keys(currentJsonData.players).find(key => currentJsonData.players[key] === winnerData)}`;
-                io.to(winnerData.socketId).emit('redirectToResult', { url: url });
-                Logger.debug(`[Result] 勝者リダイレクト送信: ${playerName}`);
+              // 勝者への通知
+              for (const winner of winners) {
+                // プレイヤー名からプレイヤゲータを検索
+                const playerName = winner.name;
+                const winnerData = Object.values(currentJsonData.players).find(p => p.name === playerName);
+                if (winnerData && winnerData.socketId) {
+                  const reason = encodeURIComponent('ゲーム終了');
+                  const url = `result.html?result=win&reason=${reason}&roomId=${data.roomId}&playerId=${Object.keys(currentJsonData.players).find(key => currentJsonData.players[key] === winnerData)}`;
+                  io.to(winnerData.socketId).emit('redirectToResult', { url: url });
+                  Logger.debug(`[Result] 勝者リダイレクト送信: ${playerName}`);
+                }
               }
             }
+            Logger.debug(`[Result] プレイヤー戦ゲーム終了結果送信完了: 勝者${winners.length}人, 敗者${losers.length}人`);
+            DataManager.saveData();
           }
-          
-          Logger.debug(`[Result] プレイヤー戦ゲーム終了結果送信完了: 勝者${winners.length}人, 敗者${losers.length}人`);
-          DataManager.saveData();
         } else {
-          // ゲーム終了時の結果処理
-          Logger.debug(`[Result] プレイヤー戦ゲーム終了処理開始: result=${JSON.stringify(result)}`);
-          const winners = result[1];
-          const losers = result[2];
-          Logger.debug(`[Result] 勝者: ${winners.length}人, 敗者: ${losers.length}人`);
-          
-          // プレイヤーに結果を送信
-          DataManager.loadData();
-          const currentJsonData = DataManager.getJsonData();
-          
-          // 敗者への通知
-          for (const loser of losers) {
-            // プレイヤー名からプレイヤーデータを検索
-            const playerName = loser.name;
-            const loserData = Object.values(currentJsonData.players).find(p => p.name === playerName);
-            if (loserData && loserData.socketId) {
-              const reason = encodeURIComponent('ゲーム終了');
-              const url = `result.html?result=lose&reason=${reason}&roomId=${data.roomId}&playerId=${Object.keys(currentJsonData.players).find(key => currentJsonData.players[key] === loserData)}`;
-              io.to(loserData.socketId).emit('redirectToResult', { url: url });
-            }
-          }
-          
-          // 勝者への通知
-          for (const winner of winners) {
-            // プレイヤー名からプレイヤーデータを検索
-            const playerName = winner.name;
-            const winnerData = Object.values(currentJsonData.players).find(p => p.name === playerName);
-            if (winnerData && winnerData.socketId) {
-              const reason = encodeURIComponent('ゲーム終了');
-              const url = `result.html?result=win&reason=${reason}&roomId=${data.roomId}&playerId=${Object.keys(currentJsonData.players).find(key => currentJsonData.players[key] === winnerData)}`;
-              io.to(winnerData.socketId).emit('redirectToResult', { url: url });
-            }
-          }
-          
-          Logger.debug(`[Result] プレイヤー戦ゲーム終了結果送信完了: 勝者${winners.length}人, 敗者${losers.length}人`);
+          Logger.debug(`ゲーム開始条件未満足: ready=${ready}/${room.players.length}, 最小人数=2`);
         }
-      } else {
-        Logger.debug(`ゲーム開始条件未満足: ready=${ready}/${room.players.length}, 最小人数=2`);
       }
+      Logger.debug('=== Ready Event Debug End ===');
     }
-    Logger.debug('=== Ready Event Debug End ===');
   }
 
   static handlePlayerSurrender(data, io, activeGames, pendingChoices) {
@@ -606,8 +607,7 @@ class SocketHandlers {
 
     const loserSocketId = jsonData.players[loserId].socketId;
     if (loserSocketId) {
-        const reason = encodeURIComponent('あなたが降参しました。');
-        const url = `result.html?result=lose&reason=${reason}&roomId=${roomId}&playerId=${loserId}`;
+    const url = this.buildResultUrl('lose', roomId, loserId, 'あなたが降参しました。');
         Logger.info('敗者リダイレクト送信', { loserSocketId });
         io.to(loserSocketId).emit('redirectToResult', { url: url });
     } else {
@@ -617,8 +617,7 @@ class SocketHandlers {
     if (winnerId && !isCpuGame) {
         const winnerSocketId = jsonData.players[winnerId].socketId;
         if (winnerSocketId) {
-            const reason = encodeURIComponent('相手が降参しました。');
-            const url = `result.html?result=win&reason=${reason}&roomId=${roomId}&playerId=${winnerId}`;
+      const url = this.buildResultUrl('win', roomId, winnerId, '相手が降参しました。');
             Logger.info('勝者リダイレクト送信', { winnerSocketId });
             io.to(winnerSocketId).emit('redirectToResult', { url: url });
         } else {
@@ -699,7 +698,7 @@ class SocketHandlers {
   /**
    * プレイヤーアクション処理
    */
-  static handlePlayerAction(roomId, actionData, io) {
+  static handlePlayerAction(socket, roomId, actionData, io) {
     DataManager.loadData();
     const jsonData = DataManager.getJsonData();
     const room = jsonData.rooms[roomId];

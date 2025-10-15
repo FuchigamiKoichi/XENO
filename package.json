@@ -4,11 +4,16 @@
   "description": "",
   "main": "index.js",
   "nodemonConfig": {
-    "ignore": ["*.json"]
+    "ignore": [
+      "*.json"
+    ]
   },
   "scripts": {
     "start": "cp origin.json data.json && node server.js",
-    "dev": "cp origin.json data.json && nodemon server.js"
+    "dev": "cp origin.json data.json && nodemon server.js",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage"
   },
   "keywords": [],
   "author": "",
@@ -16,5 +21,11 @@
   "dependencies": {
     "express": "^4.21.2",
     "socket.io": "^4.8.1"
+  },
+  "devDependencies": {
+    "@jest/globals": "^30.2.0",
+    "jest": "^30.2.0",
+    "jest-environment-jsdom": "^30.2.0",
+    "jsdom": "^27.0.0"
   }
 }
