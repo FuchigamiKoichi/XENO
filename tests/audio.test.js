@@ -89,7 +89,7 @@ describe('XENO Audio System - Ideal Unit Tests', () => {
           this.activeTimers = new Map();
           this.bgmPaths = {
             main: './sounds/bgm/MainBGM.mp3',
-            ending: './sounds/bgm/EndingBGM.mp3'
+            ending: './sounds/bgm/MainBGM.mp3'
           };
           this.sePaths = {
             hover: './sounds/se/hover.mp3',
