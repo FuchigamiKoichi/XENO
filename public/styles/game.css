@@ -308,6 +308,7 @@ body {
   width: 100vw; height: 100vh;
   background-color: rgba(0,0,0,0.8);
   display: none; justify-content: center; align-items: center;
+  transform: translateX(10vw);
   z-index: 1000;
 }
 #cardZoom img { width: 200px; height: 300px; }
