@@ -155,7 +155,7 @@ const UIManager = {
   openLog() {
     logArea.classList.add('open');
     gameScreen.classList.add('log-open');
-    logToggleBtn.textContent = '�'; // 開いた状態のアイコン
+    logToggleBtn.textContent = '✖'; // 開いた状態のアイコン（×で閉じることを示す）
   },
 
   /**
@@ -164,7 +164,7 @@ const UIManager = {
   closeLog() {
     logArea.classList.remove('open');
     gameScreen.classList.remove('log-open');
-    logToggleBtn.textContent = '�'; // 閉じた状態のアイコン
+    logToggleBtn.textContent = '📋'; // 閉じた状態のアイコン（ログを開くことを示す）
   },
 
   /**
@@ -273,6 +273,8 @@ const UIManager = {
 const initializeUI = () => {
   // ログエリアのイベントリスナー
   if (logToggleBtn) {
+    // 初期状態のアイコンを設定
+    logToggleBtn.textContent = '📋';
     DOMUtils.addEventListenerSafe(logToggleBtn, 'click', () => UIManager.toggleLog());
   }
 
