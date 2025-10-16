@@ -51,7 +51,27 @@ class Game extends EventEmitter{
         console.log(`[isContinue] デッキ残り: ${field.deck.length}, 生存者数: ${liveCount}`);
 
         // 生存者が1人以下の場合は即座にゲーム終了
-        if (liveCount <= 1 || field.deck.length === 0) {
+        if (liveCount <= 1) {
+            // 生存者が1人以下の場合の通常の勝敗処理
+            const livePlayers = players.filter(p => p.live);
+            const deadPlayers = players.filter(p => !p.live);
+            
+            for (let i = 0; i < players.length; i++) {
+                if (players[i].live) {
+                    this.log[i].push('win');
+                } else {
+                    this.log[i].push('lose');
+                }
+            }
+            
+            console.log(`[isContinue判定結果] 生存者数により勝敗決定 -> 勝者: ${livePlayers.map(p => p.name)}, 敗者: ${deadPlayers.map(p => p.name)}`);
+            return [false, livePlayers, deadPlayers];
+        }
+        
+        // 山札が空の場合は手札の数値で勝敗を決定
+        if (field.deck.length === 0) {
+            console.log('[isContinue] 山札が空 - 手札の数値で勝敗決定');
+            
             if (liveCount >= 2) {
                 // 手札があるプレイヤーだけを対象にする
                 const playersWithHands = players.filter(p => p.live && p.hands.length > 0);
@@ -80,46 +100,56 @@ class Game extends EventEmitter{
 
                 if (eq) {
                     // 同点の場合は全員ドロー
+                    console.log('[isContinue] 山札切れ - 全員同値でドロー');
                     for (let i = 0; i < players.length; i++) {
                         this.log[i].push('draw');
                     }
+                    return [false, [], players]; // 引き分け
                 } else {
                     // 勝者と敗者を決定
                     const maxPlayer = playersWithHands[maxArg];
+                    const winners = [];
+                    const losers = [];
+                    
+                    console.log(`[isContinue] 山札切れ - 手札${maxPlayer.hands[0].number}で${maxPlayer.name}が勝利`);
+                    
                     for (let i = 0; i < players.length; i++) {
                         const player = players[i];
                         if (player.live && player.hands.length > 0 && 
                             player.hands[0].number === maxPlayer.hands[0].number) {
                             this.log[i].push('win');
-                            this.winners.push(player);
+                            winners.push(player);
                         } else {
                             this.log[i].push('lose');
-                            this.losers.push(player);
+                            losers.push(player);
                         }
                     }
+                    return [false, winners, losers];
                 }
             } else {
-                // 生存者が1人以下の場合
-                if (liveCount === 1) {
+                // 生存者が1人以下の場合（山札が空）
+                console.log('[isContinue] 山札切れかつ生存者1人以下');
+                const livePlayers = players.filter(p => p.live);
+                const deadPlayers = players.filter(p => !p.live);
+                
+                if (livePlayers.length === 1) {
                     // 最後の生存者が勝者
                     for (let i = 0; i < players.length; i++) {
                         if (players[i].live) {
                             this.log[i].push('win');
-                            this.winners.push(players[i]);
                         } else {
                             this.log[i].push('lose');
-                            this.losers.push(players[i]);
                         }
                     }
+                    return [false, livePlayers, deadPlayers];
                 } else {
                     // 生存者が0人の場合（全員脱落）
                     for (let i = 0; i < players.length; i++) {
                         this.log[i].push('lose');
-                        this.losers.push(players[i]);
                     }
+                    return [false, [], players];
                 }
             }
-            return [false, this.winners, this.losers];
         }
         return [true];
     }
@@ -255,8 +285,21 @@ class Game extends EventEmitter{
                 return [false, info, this.log];
             }
         }
+        
         console.log('ゲームが終了しました。最終的な勝敗を決定します。');
-        return { success: true, reason: endReason, log: this.log };
+        
+        // デッキが空になった場合の最終勝敗を再確認
+        if (this.field.deck.length === 0) {
+            console.log('[デッキ空] 山札が空のため最終勝敗を決定します。');
+            const finalState = this.isContinue();
+            if (!finalState[0]) {
+                this.winners = finalState[1];
+                this.losers = finalState[2];
+                console.log(`[最終勝敗] 勝者: ${this.winners.map(p => p.name)}, 敗者: ${this.losers.map(p => p.name)}`);
+            }
+        }
+        
+        return [true, this.log, this.winners, this.losers];
     }
 }
 

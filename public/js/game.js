@@ -1117,7 +1117,7 @@ socket.on('yourTurn', async (data, callback) => {
       callback([0]);
       break;
     case 'play_card':
-      await SocketHandlers.handlePlayCard(data, callback);
+      await SocketHandlers.Card(data, callback);
       break;
     case 'pred':
       await SocketHandlers.handlePrediction(data, callback);
