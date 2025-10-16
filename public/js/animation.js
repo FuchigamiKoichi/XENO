@@ -163,7 +163,7 @@
       desc.textContent = effectText;
 
       gsap.set(zoomArea, { display: 'flex', autoAlpha: 0 });
-      gsap.set(zoomedCard, { scale: 0.5 });
+      gsap.set(zoomedCard, { scale: 0.2 });
 
       gsap.timeline({
         onComplete: () => {
