@@ -43,7 +43,7 @@ const SocketHandlers = {
   /**
    * play_cardアクション処理
    */
-  async handlePlayCard(data, callback) {
+  async Card(data, callback) {
     Anim.startTurnTimer();
     const idx = await selectPlayableFromHand(data.choices);
     const selectedCard = parseInt(data.choices[idx], 10);

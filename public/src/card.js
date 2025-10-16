@@ -88,7 +88,21 @@ class Card1 extends Card {
         if (playedCards.some(card => card instanceof Card1)) {
             this.move(player);
             const opponent = await this.opponentChoice(player, roomId);
-            if (opponent && this.field.deck.length > 0) {
+            if (opponent) {
+                if (this.field.deck.length === 0) {
+                    console.log('Card1: 山札が空のため効果をスキップ');
+                    await choice(
+                        createData(this.field, player),
+                        ["", ""],
+                        'update',
+                        player.socketId,
+                        roomId
+                    );
+                    return;
+                }
+                
+                console.log('Card1: 効果実行 - 相手にドローさせて手札を確認');
+                
                 await choice(
                     createData(this.field, player),
                     ["", ""],
@@ -239,7 +253,21 @@ class Card5 extends Card {
         this.move(player);
         const opponent = await this.opponentChoice(player, roomId);
         
-        if (opponent && this.field.deck.length > 0) {
+        if (opponent) {
+            if (this.field.deck.length === 0) {
+                console.log('Card5: 山札が空のため効果をスキップ');
+                await choice(
+                    createData(this.field, player),
+                    ["", ""],
+                    'update',
+                    player.socketId,
+                    roomId
+                );
+                return;
+            }
+            
+            console.log('Card5: 効果実行 - 相手にドローさせてランダム廃棄');
+            
             await choice(
                 createData(this.field, player),
                 ["", ""],
@@ -374,7 +402,21 @@ class Card9 extends Card {
         this.move(player);
         const opponent = await this.opponentChoice(player, roomId);
         
-        if (opponent && this.field.deck.length > 0) {
+        if (opponent) {
+            if (this.field.deck.length === 0) {
+                console.log('Card9: 山札が空のため効果をスキップ');
+                await choice(
+                    createData(this.field, player),
+                    ["", ""],
+                    'update',
+                    player.socketId,
+                    roomId
+                );
+                return;
+            }
+            
+            console.log('Card9: 効果実行 - 相手にドローさせて手札を選択廃棄');
+            
             await choice(
                 createData(this.field, player),
                 ["", ""],
