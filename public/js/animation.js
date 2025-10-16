@@ -1346,9 +1346,9 @@
    * @param {boolean} isPlayer - プレイヤー自身かどうか
    * @returns {Promise} アニメーション完了のPromise
    */
-  function trushCard(cardNumber, isPlayer = true) {
+  function trashCard(cardNumber, isPlayer = true) {
     return new Promise((resolve) => {
-      console.log(`trushCard animation starting: card ${cardNumber}, isPlayer: ${isPlayer}`);
+      console.log(`trashCard animation starting: card ${cardNumber}, isPlayer: ${isPlayer}`);
       
       const handZone = isPlayer ? refs.playerHandZone : refs.opponentHandZone;
       if (!handZone) {
@@ -1358,12 +1358,12 @@
       }
 
       // 手札検索ではなく、カード番号から直接画像を生成してアニメーション
-      console.log(`[trush] Creating animation card for number ${cardNumber}`);
+      console.log(`[trash] Creating animation card for number ${cardNumber}`);
       
       // カード画像要素を動的に生成
       const animCard = document.createElement('img');
       animCard.src = `../images/${cardNumber}.webp`;
-      animCard.classList.add('trush-animation-card');
+      animCard.classList.add('trash-animation-card');
       animCard.style.cssText = `
         position: absolute;
         width: 100px;
@@ -1389,12 +1389,12 @@
       // ゲームコンテナに追加
       gameContainer.appendChild(animCard);
       
-      console.log(`[trush] Animation card created and positioned at (${initialX}, ${initialY})`);
+      console.log(`[trash] Animation card created and positioned at (${initialX}, ${initialY})`);
 
       // アニメーション実行
       const timeline = gsap.timeline({
         onComplete: () => {
-          console.log(`trushCard animation completed for card ${cardNumber}`);
+          console.log(`trashCard animation completed for card ${cardNumber}`);
           // アニメーション用カード要素を削除
           if (animCard.parentNode) {
             animCard.parentNode.removeChild(animCard);
@@ -1427,21 +1427,21 @@
   }
 
   /**
-   * trushアニメーションをキューに追加（プレイヤー側）
+   * trashアニメーションをキューに追加（プレイヤー側）
    * @param {number} cardNumber - 捨てられるカードの番号
    * @returns {Promise} 完了Promise
    */
-  function enqueuePlayerTrush(cardNumber) {
-    return _enqueue('draw', () => trushCard(cardNumber, true));
+  function enqueuePlayerTrash(cardNumber) {
+    return _enqueue('draw', () => trashCard(cardNumber, true));
   }
 
   /**
-   * trushアニメーションをキューに追加（相手側）
+   * trashアニメーションをキューに追加（相手側）
    * @param {number} cardNumber - 捨てられるカードの番号
    * @returns {Promise} 完了Promise
    */
-  function enqueueOpponentTrush(cardNumber) {
-    return _enqueue('draw', () => trushCard(cardNumber, false));
+  function enqueueOpponentTrash(cardNumber) {
+    return _enqueue('draw', () => trashCard(cardNumber, false));
   }
 
   // 効果音再生関数（存在しない場合は無音で処理）
@@ -1469,10 +1469,10 @@
     stopTurnTimer,
     playCardEffect,
     playBarrierEffect,
-    // trushアニメーション
-    trushCard,
-    enqueuePlayerTrush,
-    enqueueOpponentTrush,
+    // trashアニメーション
+    trashCard,
+    enqueuePlayerTrash,
+    enqueueOpponentTrash,
     // 非同期に積むための新API（必要に応じて利用）
     enqueuePlay,
     enqueuePlayerDraw,

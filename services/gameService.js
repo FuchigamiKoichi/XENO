@@ -257,7 +257,7 @@ class GameService {
         }
         
         // カードプレイ、可視更新、予想処理、カード捨て処理を他のプレイヤーに通知
-        if (kind === 'play_card' || kind === 'update' || kind === 'pred' || kind === 'trush' || kind === 'trash') {
+        if (kind === 'play_card' || kind === 'update' || kind === 'pred' || kind === 'trash') {
           GameService.notifyOtherPlayers(now, choices, finalResult, kind, socketId, io);
         }
         

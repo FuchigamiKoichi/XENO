@@ -134,6 +134,48 @@ const SocketHandlers = {
   },
 
   /**
+   * trashアクション処理（カード捨て選択）
+   */
+  async handleTrash(data, callback) {
+    try {
+      if (data.choices.length > 1){
+        Anim.startTurnTimer();
+        console.log('[handleTrash] カード捨て選択開始:', data);
+        
+        // カード9の場合など、相手の手札を見て選択する
+        const message = messageManager.getSelectMessage('trash');
+        const idx = await select(data.choices, message);
+        hideSelect();
+        
+        const selectedCard = parseInt(data.choices[idx], 10);
+        console.log(`[handleTrash] プレイヤーが相手のカード${selectedCard}を選択して捨てさせます`);
+        
+        // ログに追加（選択したプレイヤー視点）
+        addLog(`相手のカード${selectedCard}を捨てさせました`);
+        
+        Anim.stopTurnTimer();
+        callback([idx]);
+      }else{
+        Anim.startTurnTimer();
+        console.log('[handleTrash] カード捨て選択開始:', data);
+
+        const selectedCard = parseInt(data.choices[0], 10);
+        console.log(`[handleTrash] プレイヤーが相手のカード${selectedCard}を選択して捨てさせます`);
+
+        // ログに追加（選択したプレイヤー視点）
+        addLog(`相手のカード${selectedCard}を捨てさせました`);
+        
+        Anim.stopTurnTimer();
+        callback([0]);
+      }
+    } catch (e) {
+      Anim.stopTurnTimer();
+      console.error('[handleTrash] エラーが発生しました:', e);
+      callback([0]); // フォールバック
+    }
+  },
+
+  /**
    * defaultアクション処理
    */
   async handleDefault(data, callback) {
@@ -144,15 +186,6 @@ const SocketHandlers = {
       
       const idx = await select(data.choices, message);
       hideSelect();
-      
-      // trushの場合はログを追加（アニメーションは相手側で実行される）
-      if (data.kind === 'trush' || data.kind === 'trash') {
-        const selectedCard = parseInt(data.choices[idx], 10);
-        console.log(`プレイヤーが相手のカード${selectedCard}を選択して捨てさせます`);
-        
-        // ログに追加（選択したプレイヤー視点）
-        addLog(`相手のカード${selectedCard}を捨てさせました`);
-      }
       
       Anim.stopTurnTimer();
       callback([idx]);
