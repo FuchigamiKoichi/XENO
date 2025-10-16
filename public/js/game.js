@@ -1124,6 +1124,10 @@ socket.on('yourTurn', async (data, callback) => {
     case 'show':
       await SocketHandlers.handleShow(data, callback);
       break;
+    case 'trush':
+    case 'trash':
+      await SocketHandlers.handleDefault(data, callback);
+      break;
     default:
       await SocketHandlers.handleDefault(data, callback);
       break;
@@ -1137,6 +1141,30 @@ socket.on('anotherTurn', async (data) => {
   // 直近のゲームデータを保持（フォールバック参照用）
   if (data.now) {
     window.__lastGameData = data.now;
+  }
+  
+  // trushイベントの場合は、アニメーション実行前にupdateGameViewを呼ばない
+  // 手札の現在状態を保持してアニメーションを実行する
+  if (data.kind === 'trush') {
+    // trush処理（自分のカードが捨てられる場合）
+    console.log('自分のカードがtrushされる:', data);
+    
+    if (data.choice !== undefined) {
+      const trashedCard = parseInt(data.choice, 10);
+      console.log(`自分のカード${trashedCard}が捨てられます`);
+      
+      // アニメーション実行（ゲーム状態更新前に手札の現在の状態でアニメーション）
+      console.log('trushアニメーション実行前の手札状態確認');
+      await Anim.enqueuePlayerTrush(trashedCard);
+      
+      // アニメーション完了後にログのみ追加（ゲーム状態更新は行わない）
+      addLog(`あなたのカード${trashedCard}が捨てられました`);
+      
+      // 注意: data.nowは相手視点のデータなので、updateGameView()は呼ばない
+      // ゲーム状態の更新は次のyourTurnイベントで正しく行われる
+      console.log('trush処理完了：ゲーム状態更新は次のyourTurnイベントを待機');
+    }
+    return; // 他の処理をスキップ
   }
   
   if (data.kind === 'pred') {
@@ -1196,6 +1224,11 @@ socket.on('anotherTurn', async (data) => {
         }
         console.warn('[Card2 anotherTurn play_card] pred event timeout. Skipping guess animations to avoid incorrect display.');
       }, 12000);
+    }
+    
+    // trushカード（5: 下痢、9: 悪魔）の場合、相手側でもアニメーション準備
+    if (cardNum === 5 || cardNum === 9) {
+      console.log(`[anotherTurn play_card] trushカード${cardNum}が使用されました - 後続のtrushイベントでアニメーション実行予定`);
     }
     const text = getEffectDescription(cardNum);
 

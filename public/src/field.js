@@ -21,14 +21,20 @@ class Field {
             new Card10(this)
         ];
 
-        // デッキの生成
+        // デッキの生成（通常構成）
         let deck = [];
+        
+        // 通常のデッキ構成：各カード2枚ずつ（カード10は1枚のみ）
         for (let number = 0; number < 10; number++) {
             if (number + 1 <= 8) {
-                for (let _ = 0; _ < 2; _++) {
-                    deck.push(cards[number]);
-                }
-            } else {
+                // カード1-8は各2枚
+                deck.push(cards[number]);
+                deck.push(cards[number]);
+            } else if (number + 1 === 9) {
+                // カード9は1枚
+                deck.push(cards[number]);
+            } else if (number + 1 === 10) {
+                // カード10（英雄）は1枚
                 deck.push(cards[number]);
             }
         }
