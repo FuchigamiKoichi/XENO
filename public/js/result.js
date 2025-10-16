@@ -5,8 +5,34 @@ let playerId = null;
 let players = {};
 let response = {};
 socket.emit('changeSocketid', {id:playerId, roomId: roomId})
+
+// 音楽システムを初期化
+function initAudioManager() {
+    if (typeof AudioManager !== 'undefined') {
+        window.audioManager = new AudioManager();
+        console.log('[AudioManager] リザルト画面用に初期化完了');
+        
+        // エンディングBGMを再生
+        setTimeout(() => {
+            if (window.audioManager) {
+                window.audioManager.playBGM('ending', true); // ループ再生
+                console.log('[AudioManager] エンディングBGM再生開始');
+            }
+        }, 500); // 少し遅延させて安定性を向上
+    } else {
+        console.warn('[AudioManager] AudioManagerクラスが見つかりません');
+    }
+}
+
 // (1) ページが読み込まれたら、すぐに実行
 window.addEventListener('DOMContentLoaded', () => {
+    // 音楽システムを初期化
+    initAudioManager();
+    
+    // ボタン音効果を初期化
+    setTimeout(() => {
+        addButtonSounds();
+    }, 100);
     
     // (2) URLからパラメータを取得
     const params = new URLSearchParams(window.location.search);
@@ -42,8 +68,28 @@ window.addEventListener('DOMContentLoaded', () => {
     resultReason.textContent = reason;
 });
 
+// ボタン音効果を追加
+function addButtonSounds() {
+    const buttons = document.querySelectorAll('button');
+    buttons.forEach(button => {
+        // ホバー音
+        button.addEventListener('mouseenter', () => {
+            if (window.audioManager) {
+                window.audioManager.playSE('hover');
+            }
+        });
+        
+        // クリック音
+        button.addEventListener('click', () => {
+            if (window.audioManager) {
+                window.audioManager.playSE('decision');
+            }
+        });
+    });
+}
+
 // 「もう1度遊ぶ」ボタンの処理
-document.getElementById('play-again-btn').addEventListener('click', () => {
+document.getElementById('play-again-btn').addEventListener('click', (event) => {
     // IDが取得できていれば、room.htmlにIDを付けて戻る
     if (roomId) {
         console.log(`再戦リクエストを送信: roomId=${roomId}, playerId=${playerId}`);
@@ -75,6 +121,10 @@ socket.on('opponentRequestedRematch', (data) => {
 socket.on('navigateToGame', (data) => {
     console.log('サーバーからゲーム画面への遷移指示を受け取りました:', data.url);
     if (data && data.url) {
+        // 再戦時はBGMを停止してからゲーム画面に移動
+        if (window.audioManager) {
+            window.audioManager.stopBGM();
+        }
         window.location.replace(data.url);
     }
 });
@@ -138,6 +188,10 @@ function showAccessibleModal(message, callback) {
 
 socket.on('roomDissolved', (data) => {
     console.log('ルーム解散通知:', data);
+    // BGMを停止
+    if (window.audioManager) {
+        window.audioManager.stopBGM();
+    }
     showAccessibleModal(data.reason, () => {
         window.location.href = '/';
     });
@@ -145,6 +199,11 @@ socket.on('roomDissolved', (data) => {
 // (4) 「ロビーに戻る」ボタン
 document.getElementById('return-to-lobby-btn').addEventListener('click', () => {
     if (roomId && playerId) {
+        // BGMを停止
+        if (window.audioManager) {
+            window.audioManager.stopBGM();
+        }
+        
         // サーバーにロビー復帰の意思を通知
         socket.emit('returnToLobby', { roomId, playerId });
         
@@ -158,6 +217,10 @@ document.getElementById('return-to-lobby-btn').addEventListener('click', () => {
             window.location.href = '/';
         }, 1000);
     } else {
+        // BGMを停止
+        if (window.audioManager) {
+            window.audioManager.stopBGM();
+        }
         window.location.href = '/';
     }
 });
