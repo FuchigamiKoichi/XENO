@@ -46,8 +46,8 @@ class GameService {
         finalChoice = GameService.getFallbackChoice(choices, kind, `invalid CPU response: ${mlChoice}`);
       }
       
-      // カードプレイ、可視更新、予想処理は他のプレイヤーに通知
-      if ((kind === 'play_card' || kind === 'update' || kind === 'pred') && io) {
+      // カードプレイ、可視更新、予想処理、カード捨て処理は他のプレイヤーに通知
+      if ((kind === 'play_card' || kind === 'update' || kind === 'pred' || kind === 'trush' || kind === 'trash') && io) {
         GameService.notifyOtherPlayers(now, choices, finalChoice, kind, socketId, io);
       }
       
@@ -256,8 +256,8 @@ class GameService {
           Logger.debug(`最終選択: ${result}`);
         }
         
-        // カードプレイ、可視更新、予想処理を他のプレイヤーに通知
-        if (kind === 'play_card' || kind === 'update' || kind === 'pred') {
+        // カードプレイ、可視更新、予想処理、カード捨て処理を他のプレイヤーに通知
+        if (kind === 'play_card' || kind === 'update' || kind === 'pred' || kind === 'trash') {
           GameService.notifyOtherPlayers(now, choices, finalResult, kind, socketId, io);
         }
         

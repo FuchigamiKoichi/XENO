@@ -1338,6 +1338,123 @@
     });
   }
 
+  // ===== TRUSH（カードを捨てる）アニメーション =====
+
+  /**
+   * プレイヤーがカードを捨てるアニメーション（手札検索なしver）
+   * @param {number} cardNumber - 捨てられるカードの番号
+   * @param {boolean} isPlayer - プレイヤー自身かどうか
+   * @returns {Promise} アニメーション完了のPromise
+   */
+  function trashCard(cardNumber, isPlayer = true) {
+    return new Promise((resolve) => {
+      console.log(`trashCard animation starting: card ${cardNumber}, isPlayer: ${isPlayer}`);
+      
+      const handZone = isPlayer ? refs.playerHandZone : refs.opponentHandZone;
+      if (!handZone) {
+        console.error('Hand zone not found');
+        resolve();
+        return;
+      }
+
+      // 手札検索ではなく、カード番号から直接画像を生成してアニメーション
+      console.log(`[trash] Creating animation card for number ${cardNumber}`);
+      
+      // カード画像要素を動的に生成
+      const animCard = document.createElement('img');
+      animCard.src = `../images/${cardNumber}.webp`;
+      animCard.classList.add('trash-animation-card');
+      animCard.style.cssText = `
+        position: absolute;
+        width: 100px;
+        height: 150px;
+        z-index: 1000;
+        pointer-events: none;
+        border-radius: 8px;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+      `;
+      
+      // 手札エリアの中央付近に初期配置
+      const handRect = handZone.getBoundingClientRect();
+      const gameContainer = document.getElementById('gameScreen') || document.body;
+      const containerRect = gameContainer.getBoundingClientRect();
+      
+      // 手札エリア相対の初期位置を計算
+      const initialX = handRect.left - containerRect.left + (handRect.width / 2) - 50; // カード幅の半分を引く
+      const initialY = handRect.top - containerRect.top + (handRect.height / 2) - 75;  // カード高さの半分を引く
+      
+      animCard.style.left = `${initialX}px`;
+      animCard.style.top = `${initialY}px`;
+      
+      // ゲームコンテナに追加
+      gameContainer.appendChild(animCard);
+      
+      console.log(`[trash] Animation card created and positioned at (${initialX}, ${initialY})`);
+
+      // アニメーション実行
+      const timeline = gsap.timeline({
+        onComplete: () => {
+          console.log(`trashCard animation completed for card ${cardNumber}`);
+          // アニメーション用カード要素を削除
+          if (animCard.parentNode) {
+            animCard.parentNode.removeChild(animCard);
+          }
+          resolve();
+        }
+      });
+
+      // カードを捨てるアニメーション：回転しながら上に飛んでフェードアウト
+      timeline
+        .to(animCard, {
+          y: -150,
+          rotation: isPlayer ? 360 : -360, // 1回転
+          scale: 1.2,
+          duration: 0.6,
+          ease: 'power2.out'
+        })
+        .to(animCard, {
+          opacity: 0,
+          y: -300,
+          rotation: isPlayer ? 540 : -540, // さらに半回転
+          scale: 0.2,
+          duration: 0.4,
+          ease: 'power2.in'
+        }, 0.3);
+
+      // 捨てる効果音を再生
+      playCardDropSE();
+    });
+  }
+
+  /**
+   * trashアニメーションをキューに追加（プレイヤー側）
+   * @param {number} cardNumber - 捨てられるカードの番号
+   * @returns {Promise} 完了Promise
+   */
+  function enqueuePlayerTrash(cardNumber) {
+    return _enqueue('draw', () => trashCard(cardNumber, true));
+  }
+
+  /**
+   * trashアニメーションをキューに追加（相手側）
+   * @param {number} cardNumber - 捨てられるカードの番号
+   * @returns {Promise} 完了Promise
+   */
+  function enqueueOpponentTrash(cardNumber) {
+    return _enqueue('draw', () => trashCard(cardNumber, false));
+  }
+
+  // 効果音再生関数（存在しない場合は無音で処理）
+  function playCardDropSE() {
+    try {
+      if (window.AudioManager && typeof window.AudioManager.playSE === 'function') {
+        window.AudioManager.playSE('cardDrop', 0.7);
+      }
+    } catch (e) {
+      console.log('Card drop SE not available');
+    }
+  }
+
   // 公開
   window.Anim = {
     init,
@@ -1352,6 +1469,10 @@
     stopTurnTimer,
     playCardEffect,
     playBarrierEffect,
+    // trashアニメーション
+    trashCard,
+    enqueuePlayerTrash,
+    enqueueOpponentTrash,
     // 非同期に積むための新API（必要に応じて利用）
     enqueuePlay,
     enqueuePlayerDraw,

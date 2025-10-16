@@ -127,18 +127,18 @@ class Card1 extends Card {
                 const responce = await choice(
                     createData(field, player),
                     choices,
-                    'trush',
+                    'trash',
                     player.socketId,
                     roomId
                 )
                 const cardNumber = parseInt(responce);
-                createLog(createData(field, player), choices, 'trush', field, player, cardNumber);
+                createLog(createData(field, player), choices, 'trash', field, player, cardNumber);
                 
-                const trushIndex = opponent.hands.findIndex(card => card.number === cardNumber);
-                const trushCard = opponent.hands.splice(trushIndex, 1)[0];
-                field.played[opponent.turnNumber - 1].push(trushCard);
+                const trashIndex = opponent.hands.findIndex(card => card.number === cardNumber);
+                const trashCard = opponent.hands.splice(trashIndex, 1)[0];
+                field.played[opponent.turnNumber - 1].push(trashCard);
                 
-                if (trushCard.number === 10) {
+                if (trashCard.number === 10) {
                     this.kill10(opponent);
                 }
             }
@@ -285,6 +285,13 @@ class Card5 extends Card {
             const dropCard = opponent.hands.splice(randomIndex, 1)[0];
             opponent.looked.push({ subject: player, card: dropCard });
             this.field.played[opponent.turnNumber - 1].push(dropCard);
+            await choice(
+                createData(this.field, player),
+                [dropCard.number],
+                'trash',
+                player.socketId,
+                roomId
+            )
             
             if (dropCard.number === 10) {
                 this.kill10(opponent);
@@ -440,18 +447,18 @@ class Card9 extends Card {
             const responce = await choice(
                 createData(this.field, player),
                 choices,
-                'trush',
+                'trash',
                 player.socketId,
                 roomId
             )
             const choiceNumber = parseInt(responce);
-            createLog(createData(this.field, player), choices, 'trush', this.field, player, choiceNumber);
+            createLog(createData(this.field, player), choices, 'trash', this.field, player, choiceNumber);
             
             const choiceIndex = opponent.hands.findIndex(card => card.number === choiceNumber);
-            const trushCard = opponent.hands.splice(choiceIndex, 1)[0];
-            this.field.played[opponent.turnNumber - 1].push(trushCard);
+            const trashCard = opponent.hands.splice(choiceIndex, 1)[0];
+            this.field.played[opponent.turnNumber - 1].push(trashCard);
             
-            if (trushCard.number === 10) {
+            if (trashCard.number === 10) {
                 this.kill(opponent);
             }
         }
