@@ -14,93 +14,97 @@ class SocketHandlers {
 
       // プレイヤー登録
       socket.on('registPlayer', (data) => {
-        this.handleRegistPlayer(socket, data);
+        SocketHandlers.handleRegistPlayer(socket, data);
       });
 
       // ルーム作成
       socket.on('createRoom', (data, callback) => {
-        this.handleCreateRoom(socket, data, callback);
+        SocketHandlers.handleCreateRoom(socket, data, callback);
       });
 
       // ルーム参加
       socket.on('joinRoom', (roomId, callback) => {
-        this.handleJoinRoom(socket, roomId, callback);
+        SocketHandlers.handleJoinRoom(socket, roomId, callback);
       });
 
       // ルーム表示
       socket.on('showRooms', (data, callback) => {
-        this.handleShowRooms(callback);
+        SocketHandlers.handleShowRooms(callback);
       });
 
       // SocketID変更
       socket.on('changeSocketid', (data) => {
-        this.handleChangeSocketId(socket, data, io);
+        SocketHandlers.handleChangeSocketId(socket, data, io);
       });
 
       // プレイヤー名取得
       socket.on('getPlayerNames', (data, callback) => {
-        this.handleGetPlayerNames(data, callback);
+        SocketHandlers.handleGetPlayerNames(data, callback);
       });
 
       // 権限クラス取得
       socket.on('getPermissionClass', (data, callback) => {
-        this.handleGetPermissionClass(data, callback);
+        SocketHandlers.handleGetPermissionClass(data, callback);
       });
 
       // ゲーム状態確認
       socket.on('checkGameStatus', (data, callback) => {
-        this.handleCheckGameStatus(data, callback);
+        SocketHandlers.handleCheckGameStatus(data, callback);
       });
 
       // ゲーム開始
       socket.on('startGame', (roomId) => {
-        this.handleStartGame(roomId, io);
+        SocketHandlers.handleStartGame(roomId, io);
       });
 
       // Ready状態
       socket.on('ready', async (data) => {
-        await this.handleReady(data, io, activeGames);
+        await SocketHandlers.handleReady(data, io, activeGames);
       });
 
       // プレイヤー投降
       socket.on('playerSurrender', (data) => {
-        this.handlePlayerSurrender(data, io, activeGames, pendingChoices);
+        SocketHandlers.handlePlayerSurrender(data, io, activeGames, pendingChoices);
       });
 
       // 再戦リクエスト
       socket.on('requestRematch', (data) => {
-        this.handleRequestRematch(socket, data, io);
+        SocketHandlers.handleRequestRematch(socket, data, io);
       });
 
       // プレイヤーアクション
       socket.on('playerAction', (roomId, actionData) => {
-        this.handlePlayerAction(socket, roomId, actionData, io);
+        SocketHandlers.handlePlayerAction(socket, roomId, actionData, io);
       });
 
       // リザルトページ識別
       socket.on('identifyResultPage', (data) => {
-        this.handleIdentifyResultPage(socket, data);
+        SocketHandlers.handleIdentifyResultPage(socket, data);
       });
 
       // ルーム削除リクエスト（管理者用）
       socket.on('deleteRoom', (data, callback) => {
-        this.handleDeleteRoom(socket, data, callback, io);
+        SocketHandlers.handleDeleteRoom(socket, data, callback, io);
+        // setTimeout(() => {
+        //   SocketHandlers.handleDeleteRoom(socket, data, callback, io);
+        // }, 60000 * 5); 
       });
 
-
+      // ゲーム状態確認（リザルト遷移確認用）
+      socket.on('checkGameStatus', (data, callback) => {
+        SocketHandlers.handleCheckGameStatus(data, callback);
+      });
 
       // ロビーに戻る選択
       socket.on('returnToLobby', (data) => {
-        this.handleReturnToLobby(socket, data, io);
+        SocketHandlers.handleReturnToLobby(socket, data, io);
       });
 
       socket.on('disconnect', () => {
         Logger.info(`ユーザ切断: ${socket.id}`);
         
-        // 切断時に空ルームをクリーンアップ
-        setTimeout(() => {
-          RoomManager.cleanupEmptyRooms();
-        }, 5000); // 5秒後にクリーンアップ実行
+        // 切断時に適切なクリーンアップを実行
+        SocketHandlers.handlePlayerDisconnect(socket.id, io);
       });
     });
   }
@@ -115,7 +119,7 @@ class SocketHandlers {
    * ルーム作成処理
    */
   static handleCreateRoom(socket, data, callback) {
-    const roomId = this.generateRoomId();
+    const roomId = SocketHandlers.generateRoomId();
     const roomData = {
       id: roomId, 
       owner: socket.id, 
@@ -397,7 +401,55 @@ class SocketHandlers {
   }
 
   /**
-   * ルームのプレイヤーリストから実際のプレイヤーを特定
+   * ゲーム内playerオブジェクトからplayerIdを取得し、data.jsonから正確な情報を取得
+   * @param {Object} gamePlayer - ゲーム内のplayerオブジェクト
+   * @param {Object} jsonData - data.json全体のデータ
+   * @returns {Object|null} {id: playerIdString, player: playerObject} または null
+   */
+  static getPlayerInfoFromGame(gamePlayer, jsonData) {
+    try {
+      if (!gamePlayer) {
+        Logger.error(`[getPlayerInfoFromGame] gamePlayerが未定義です`);
+        return null;
+      }
+      
+      // PlayerクラスのidプロパティまたはplayerIdプロパティをチェック
+      const playerId = gamePlayer.id || gamePlayer.playerId;
+      
+      if (!playerId || typeof playerId !== 'string') {
+        Logger.error(`[getPlayerInfoFromGame] 無効なplayerId:`, { 
+          playerId, 
+          hasId: !!gamePlayer.id, 
+          hasPlayerId: !!gamePlayer.playerId,
+          playerName: gamePlayer.name,
+          playerType: typeof gamePlayer,
+          isPlayer: gamePlayer.constructor?.name
+        });
+        return null;
+      }
+      
+      Logger.debug(`[getPlayerInfoFromGame] Player情報確認: name=${gamePlayer.name}, id=${playerId}`);
+      
+      // data.jsonからplayerIdで検索
+      if (jsonData && jsonData.players && jsonData.players[playerId]) {
+        Logger.debug(`[getPlayerInfoFromGame] data.jsonから発見: playerId=${playerId}, socketId=${jsonData.players[playerId].socketId}`);
+        return {
+          id: playerId,
+          player: jsonData.players[playerId]
+        };
+      }
+
+      Logger.error(`[getPlayerInfoFromGame] data.jsonにplayerId=${playerId}が見つかりません`);
+      Logger.debug(`[getPlayerInfoFromGame] data.json.players keys:`, Object.keys(jsonData.players || {}));
+      return null;
+    } catch (error) {
+      Logger.error(`[getPlayerInfoFromGame] エラー:`, error);
+      return null;
+    }
+  }
+
+  /**
+   * ルームのプレイヤーリストから実際のプレイヤーを特定（フォールバック用）
    * @param {Object} jsonData - ゲームデータ
    * @param {string} roomId - ルームID
    * @param {Object} gamePlayer - ゲームのPlayerオブジェクト (name, socketIdを持つ)
@@ -406,26 +458,47 @@ class SocketHandlers {
   static findRoomPlayer(jsonData, roomId, gamePlayer) {
     const room = jsonData.rooms?.[roomId];
     if (!room || !room.players) {
-      console.warn(`[findRoomPlayer] ルームまたはプレイヤーリストが見つかりません: ${roomId}`);
+      Logger.warn(`[findRoomPlayer] ルームまたはプレイヤーリストが見つかりません: ${roomId}`);
+      // フォールバック: 全プレイヤーから名前で検索
+      Logger.debug(`[findRoomPlayer] フォールバック検索を実行: ${gamePlayer.name}`);
+      for (const [playerId, player] of Object.entries(jsonData.players || {})) {
+        if (player && player.name === gamePlayer.name && player.socketId) {
+          Logger.debug(`[findRoomPlayer] フォールバック検索で見つかりました: ${playerId} -> ${player.name} (socketId: ${player.socketId})`);
+          return { id: playerId, player };
+        }
+      }
+      Logger.warn(`[findRoomPlayer] フォールバック検索でも見つかりません: ${gamePlayer.name}`);
       return null;
     }
 
     // CPU プレイヤーの場合はスキップ
     if (gamePlayer.name && gamePlayer.name.startsWith('cpu_')) {
-      console.log(`[findRoomPlayer] CPUプレイヤーをスキップ: ${gamePlayer.name}`);
+      Logger.debug(`[findRoomPlayer] CPUプレイヤーをスキップ: ${gamePlayer.name}`);
       return null;
     }
 
     // ルームのプレイヤーリストから該当プレイヤーを検索
     for (const playerId of room.players) {
       const player = jsonData.players?.[playerId];
+      
       if (player && player.name === gamePlayer.name) {
-        console.log(`[findRoomPlayer] 見つかりました: ${playerId} -> ${player.name} (socketId: ${player.socketId})`);
+        Logger.debug(`[findRoomPlayer] 見つかりました: ${playerId} -> ${player.name} (socketId: ${player.socketId})`);
         return { id: playerId, player };
       }
     }
 
-    console.warn(`[findRoomPlayer] ルーム内でプレイヤーが見つかりません: ${gamePlayer.name} in room ${roomId}`);
+    Logger.warn(`[findRoomPlayer] ルーム内でプレイヤーが見つかりません: ${gamePlayer.name} in room ${roomId}`);
+    
+    // フォールバック: 全プレイヤーから名前で検索
+    Logger.debug(`[findRoomPlayer] フォールバック検索を実行: ${gamePlayer.name}`);
+    for (const [playerId, player] of Object.entries(jsonData.players || {})) {
+      if (player && player.name === gamePlayer.name && player.socketId) {
+        Logger.debug(`[findRoomPlayer] フォールバック検索で見つかりました: ${playerId} -> ${player.name} (socketId: ${player.socketId})`);
+        return { id: playerId, player };
+      }
+    }
+    
+    Logger.warn(`[findRoomPlayer] フォールバック検索でも見つかりません: ${gamePlayer.name}`);
     return null;
   }
 
@@ -451,15 +524,18 @@ class SocketHandlers {
       if (excludeCpu && typeof loser?.name === 'string' && loser.name.startsWith('cpu_')) {
         continue;
       }
-      const found = this.findRoomPlayer(jsonData, roomId, loser);
-      Logger.debug(`[Result] 敗者検索結果 ${loser.name}:`, found);
-      if (found && found.player && found.player.socketId) {
-        const url = this.buildResultUrl('lose', roomId, found.id, reasonText);
-        Logger.debug(`[Result] 敗者リダイレクトURL: ${url}, socketId: ${found.player.socketId}`);
-        io.to(found.player.socketId).emit('redirectToResult', { url });
+      
+      // gamePlayerオブジェクトからplayerIdを取得し、data.jsonから正確な情報を取得
+      const playerInfo = SocketHandlers.getPlayerInfoFromGame(loser, jsonData);
+      Logger.debug(`[Result] 敗者検索結果 ${loser.name}:`, playerInfo);
+      
+      if (playerInfo && playerInfo.player && playerInfo.player.socketId) {
+        const url = SocketHandlers.buildResultUrl('lose', roomId, playerInfo.id, reasonText);
+        Logger.debug(`[Result] 敗者リダイレクトURL: ${url}, socketId: ${playerInfo.player.socketId}`);
+        io.to(playerInfo.player.socketId).emit('redirectToResult', { url });
         Logger.debug(`[Result] 敗者リダイレクト送信完了: ${loser.name}`);
       } else {
-        Logger.error(`[Result] 敗者 ${loser.name} の接続情報が見つかりません:`, found);
+        Logger.error(`[Result] 敗者 ${loser.name} の接続情報が見つかりません:`, playerInfo);
       }
     }
 
@@ -468,15 +544,18 @@ class SocketHandlers {
       if (excludeCpu && typeof winner?.name === 'string' && winner.name.startsWith('cpu_')) {
         continue;
       }
-      const found = this.findRoomPlayer(jsonData, roomId, winner);
-      Logger.debug(`[Result] 勝者検索結果 ${winner.name}:`, found);
-      if (found && found.player && found.player.socketId) {
-        const url = this.buildResultUrl('win', roomId, found.id, reasonText);
-        Logger.debug(`[Result] 勝者リダイレクトURL: ${url}, socketId: ${found.player.socketId}`);
-        io.to(found.player.socketId).emit('redirectToResult', { url });
+      
+      // gamePlayerオブジェクトからplayerIdを取得し、data.jsonから正確な情報を取得
+      const playerInfo = SocketHandlers.getPlayerInfoFromGame(winner, jsonData);
+      Logger.debug(`[Result] 勝者検索結果 ${winner.name}:`, playerInfo);
+      
+      if (playerInfo && playerInfo.player && playerInfo.player.socketId) {
+        const url = SocketHandlers.buildResultUrl('win', roomId, playerInfo.id, reasonText);
+        Logger.debug(`[Result] 勝者リダイレクトURL: ${url}, socketId: ${playerInfo.player.socketId}`);
+        io.to(playerInfo.player.socketId).emit('redirectToResult', { url });
         Logger.debug(`[Result] 勝者リダイレクト送信完了: ${winner.name}`);
       } else {
-        Logger.error(`[Result] 勝者 ${winner.name} の接続情報が見つかりません:`, found);
+        Logger.error(`[Result] 勝者 ${winner.name} の接続情報が見つかりません:`, playerInfo);
       }
     }
   }
@@ -501,15 +580,22 @@ class SocketHandlers {
       Logger.info('CPU戦が選択されました');
       // CPU戦の場合は1人でもゲーム開始可能
       const result = await GameService.startGame(data.roomId, io, activeGames);
-      const { winners, losers, ok } = this.normalizeGameResult(result);
+      const { winners, losers, ok } = SocketHandlers.normalizeGameResult(result);
       Logger.debug(`[Result] CPU戦${ok ? '正常' : '早期'}終了処理開始: 勝者${winners.length}人, 敗者${losers.length}人`);
 
       // プレイヤーに結果を送信
       DataManager.loadData();
       const currentJsonData = DataManager.getJsonData();
-      this.sendResultsToPlayers(io, data.roomId, winners, losers, currentJsonData, { reasonText: 'ゲーム終了', excludeCpu: true });
+      SocketHandlers.sendResultsToPlayers(io, data.roomId, winners, losers, currentJsonData, { reasonText: 'ゲーム終了', excludeCpu: true });
 
       Logger.debug(`[Result] CPU戦ゲーム終了結果送信完了: 勝者${winners.length}人, 敗者${losers.length}人`);
+      
+      // CPU戦終了後の処理
+      RoomManager.setRoomPlayingStatus(data.roomId, false);
+      
+      // プレイヤーに結果を送信してから適切なタイミングで部屋を処理
+      SocketHandlers.handleGameEndCleanup(data.roomId, io);
+      
       if (ok) {
         DataManager.saveData();
       }
@@ -602,7 +688,7 @@ class SocketHandlers {
                 // IDベースの検索のみを使用
                 if (loser.id && currentJsonData.players[loser.id]) {
                   const playerId = loser.id;
-                  const playerFound = this.findPlayerById(currentJsonData, playerId);
+                  const playerFound = SocketHandlers.findPlayerById(currentJsonData, playerId);
                   
                   if (playerFound && playerFound.player.socketId) {
                     const reason = encodeURIComponent('ゲーム終了');
@@ -625,7 +711,7 @@ class SocketHandlers {
                 // IDベースの検索のみを使用
                 if (winner.id && currentJsonData.players[winner.id]) {
                   const playerId = winner.id;
-                  const playerFound = this.findPlayerById(currentJsonData, playerId);
+                  const playerFound = SocketHandlers.findPlayerById(currentJsonData, playerId);
                   
                   if (playerFound && playerFound.player.socketId) {
                     const reason = encodeURIComponent('ゲーム終了');
@@ -642,6 +728,11 @@ class SocketHandlers {
               }
             }
             Logger.debug(`[Result] プレイヤー戦ゲーム終了結果送信完了: 勝者${winners.length}人, 敗者${losers.length}人`);
+            
+            // ゲーム終了後の適切なクリーンアップ
+            RoomManager.setRoomPlayingStatus(data.roomId, false);
+            SocketHandlers.handleGameEndCleanup(data.roomId, io);
+            
             DataManager.saveData();
           }
         } else {
@@ -712,7 +803,7 @@ class SocketHandlers {
 
     const loserSocketId = jsonData.players[loserId].socketId;
     if (loserSocketId) {
-    const url = this.buildResultUrl('lose', roomId, loserId, 'あなたが降参しました。');
+    const url = SocketHandlers.buildResultUrl('lose', roomId, loserId, 'あなたが降参しました。');
         Logger.info('敗者リダイレクト送信', { loserSocketId });
         io.to(loserSocketId).emit('redirectToResult', { url: url });
     } else {
@@ -722,7 +813,7 @@ class SocketHandlers {
     if (winnerId && !isCpuGame) {
         const winnerSocketId = jsonData.players[winnerId].socketId;
         if (winnerSocketId) {
-      const url = this.buildResultUrl('win', roomId, winnerId, '相手が降参しました。');
+      const url = SocketHandlers.buildResultUrl('win', roomId, winnerId, '相手が降参しました。');
             Logger.info('勝者リダイレクト送信', { winnerSocketId });
             io.to(winnerSocketId).emit('redirectToResult', { url: url });
         } else {
@@ -740,6 +831,10 @@ class SocketHandlers {
     }
     
     RoomManager.setRoomPlayingStatus(roomId, false);
+    
+    // 投降によるゲーム終了後の適切なクリーンアップ
+    SocketHandlers.handleGameEndCleanup(roomId, io);
+    
     Logger.info('投降処理完了', { roomId, playerId });
   }
 
@@ -823,6 +918,70 @@ class SocketHandlers {
     if (roomId && playerId) {
         Logger.info(`リザルトページのクライアント ${playerId} をルーム ${roomId} に参加させます。`);
         socket.join(roomId);
+        
+        // プレイヤーがリザルト画面に到達したことを記録
+        SocketHandlers.markPlayerReachedResult(roomId, playerId);
+    }
+  }
+
+  /**
+   * プレイヤーがリザルト画面に到達したことを記録
+   * @param {string} roomId - ルームID
+   * @param {string} playerId - プレイヤーID
+   */
+  static markPlayerReachedResult(roomId, playerId) {
+    try {
+      DataManager.loadData();
+      const jsonData = DataManager.getJsonData();
+      
+      if (jsonData.rooms[roomId] && jsonData.players[playerId]) {
+        if (!jsonData.rooms[roomId].playersReachedResult) {
+          jsonData.rooms[roomId].playersReachedResult = [];
+        }
+        
+        if (!jsonData.rooms[roomId].playersReachedResult.includes(playerId)) {
+          jsonData.rooms[roomId].playersReachedResult.push(playerId);
+          Logger.debug(`[RoomCleanup] プレイヤー ${playerId} がリザルト画面に到達`);
+          
+          DataManager.saveData();
+          
+          // 全プレイヤーがリザルト画面に到達した場合、クリーンアップを加速
+          SocketHandlers.checkAllPlayersReachedResult(roomId);
+        }
+      }
+    } catch (e) {
+      Logger.error(`[RoomCleanup] リザルト到達記録エラー ${roomId}/${playerId}:`, e);
+    }
+  }
+
+  /**
+   * 全プレイヤーがリザルト画面に到達したかチェック
+   * @param {string} roomId - ルームID
+   */
+  static checkAllPlayersReachedResult(roomId) {
+    try {
+      DataManager.loadData();
+      const jsonData = DataManager.getJsonData();
+      const room = jsonData.rooms[roomId];
+      
+      if (!room) return;
+      
+      const humanPlayers = room.players.filter(playerId => {
+        const player = jsonData.players[playerId];
+        return player && !player.name.startsWith('cpu_');
+      });
+      
+      const reachedPlayers = room.playersReachedResult || [];
+      
+      if (humanPlayers.length > 0 && reachedPlayers.length >= humanPlayers.length) {
+        Logger.info(`[RoomCleanup] 全プレイヤーがリザルト到達、ルーム ${roomId} の即座クリーンアップを実行`);
+        // 少し遅延を設けて安全に削除
+        setTimeout(() => {
+          RoomManager.removeRoom(roomId);
+        }, 5000);
+      }
+    } catch (e) {
+      Logger.error(`[RoomCleanup] 全プレイヤー到達チェックエラー ${roomId}:`, e);
     }
   }
 
@@ -928,6 +1087,11 @@ class SocketHandlers {
         // ルーム削除実行
         RoomManager.removeRoom(roomId);
         Logger.info(`全プレイヤー合意によりルーム削除: ${roomId}`);
+        
+        // クライアントに適切な通知
+        io.emit('roomCleaned', { roomId });
+      } else {
+        Logger.debug(`[ReturnToLobby] ルーム ${roomId} が見つかりません`);
       }
     }
   }
@@ -937,20 +1101,21 @@ class SocketHandlers {
    * @param {Object} data - { roomId, playerId }
    * @param {Function} callback - コールバック関数
    */
-  handleCheckGameStatus(data, callback) {
+  static handleCheckGameStatus(data, callback) {
     try {
       const { roomId, playerId } = data;
-      logger.debug(`[CheckGameStatus] roomId: ${roomId}, playerId: ${playerId}`);
+      Logger.debug(`[CheckGameStatus] roomId: ${roomId}, playerId: ${playerId}`);
       
       if (!roomId || !playerId) {
         return callback({ error: 'Invalid parameters', gameEnded: false });
       }
       
-      const jsonData = dataManager.loadData();
+      DataManager.loadData();
+      const jsonData = DataManager.getJsonData();
       const room = jsonData.rooms[roomId];
       
       if (!room) {
-        logger.debug(`[CheckGameStatus] ルーム ${roomId} が存在しません`);
+        Logger.debug(`[CheckGameStatus] ルーム ${roomId} が存在しません`);
         return callback({ gameEnded: true, reason: 'room_not_found' });
       }
       
@@ -958,14 +1123,14 @@ class SocketHandlers {
       const playerExists = room.players.includes(playerId);
       
       if (!playerExists) {
-        logger.debug(`[CheckGameStatus] プレイヤー ${playerId} がルーム ${roomId} に存在しません`);
+        Logger.debug(`[CheckGameStatus] プレイヤー ${playerId} がルーム ${roomId} に存在しません`);
         return callback({ gameEnded: true, reason: 'player_not_in_room' });
       }
       
       // ゲームが終了しているか確認
       const gameEnded = !room.playing;
       
-      logger.debug(`[CheckGameStatus] ルーム ${roomId} playing: ${room.playing}, gameEnded: ${gameEnded}`);
+      Logger.debug(`[CheckGameStatus] ルーム ${roomId} playing: ${room.playing}, gameEnded: ${gameEnded}`);
       
       callback({
         gameEnded: gameEnded,
@@ -975,9 +1140,87 @@ class SocketHandlers {
       });
       
     } catch (error) {
-      logger.error(`[CheckGameStatus] エラー:`, error);
+      Logger.error(`[CheckGameStatus] エラー:`, error);
       callback({ error: 'Internal error', gameEnded: true });
     }
+  }
+
+  /**
+   * ゲーム終了後の適切なクリーンアップ処理
+   * @param {string} roomId - 対象ルームID
+   * @param {object} io - Socket.IOサーバーインスタンス
+   */
+  static handleGameEndCleanup(roomId, io) {
+    Logger.debug(`[GameEndCleanup] ルーム ${roomId} のゲーム終了後クリーンアップ開始`);
+    
+    // リザルト画面の表示時間を考慮して適切な遅延を設定
+    setTimeout(() => {
+      DataManager.loadData();
+      const jsonData = DataManager.getJsonData();
+      const room = jsonData.rooms[roomId];
+      
+      if (!room) {
+        Logger.debug(`[GameEndCleanup] ルーム ${roomId} は既に削除済み`);
+        return;
+      }
+      
+      // プレイヤーが0人になったら即座に削除、そうでなければプレイヤーの意思に委ねる
+      if (room.players.length === 0) {
+        RoomManager.removeRoom(roomId);
+        Logger.info(`[GameEndCleanup] 空ルーム削除: ${roomId}`);
+        io.emit('roomCleaned', { roomId });
+      } else {
+        Logger.debug(`[GameEndCleanup] ルーム ${roomId} にはまだプレイヤーが残っています (${room.players.length}人)`);
+        // プレイヤーが残っている場合は自動削除しない
+        // returnToLobby処理に委ねる
+      }
+    }, 10000); // 10秒後（リザルト画面表示に十分な時間）
+  }
+
+  /**
+   * プレイヤー切断時の処理
+   * @param {string} socketId - 切断されたプレイヤーのSocketID
+   * @param {object} io - Socket.IOサーバーインスタンス
+   */
+  static handlePlayerDisconnect(socketId, io) {
+    Logger.debug(`[PlayerDisconnect] プレイヤー切断処理開始: ${socketId}`);
+    
+    // 即座にクリーンアップを実行
+    setTimeout(() => {
+      const cleanedRooms = RoomManager.cleanupEmptyRooms();
+      if (cleanedRooms.length > 0) {
+        Logger.info(`[PlayerDisconnect] 切断によるクリーンアップ完了: ${cleanedRooms.length}ルーム削除`);
+        cleanedRooms.forEach(roomId => {
+          io.emit('roomCleaned', { roomId });
+        });
+      }
+    }, 2000); // 2秒後（データ整合性確保）
+  }
+
+  /**
+   * ルームのクリーンアップをスケジュール（レガシー、非推奨）
+   * @param {string} roomId - クリーンアップするルームID
+   * @param {object} io - Socket.IOサーバーインスタンス
+   * @deprecated handleGameEndCleanupを使用してください
+   */
+  static scheduleRoomCleanup(roomId, io) {
+    Logger.debug(`[RoomCleanup] ルーム ${roomId} のクリーンアップをスケジュール`);
+    
+    // 30秒後にルームをクリーンアップ
+    setTimeout(() => {
+      try {
+        const removed = RoomManager.removeRoom(roomId);
+        if (removed) {
+          Logger.info(`[RoomCleanup] ルーム ${roomId} のスケジュールクリーンアップ完了`);
+          // 必要に応じてクライアントに通知
+          io.emit('roomCleaned', { roomId });
+        } else {
+          Logger.debug(`[RoomCleanup] ルーム ${roomId} は既に削除済み`);
+        }
+      } catch (error) {
+        Logger.error(`[RoomCleanup] ルーム ${roomId} のクリーンアップエラー:`, error);
+      }
+    }, 30000); // 30秒後
   }
 
   /**

@@ -18,11 +18,16 @@ selectContainer.style.display = 'none';
 showContainer.style.display   = 'none';
 
 // ゲーム終了監視用変数
-let connectionCheckInterval = null;
 let gameEndTimeout = null;
 let gameEnded = false;
 let redirectProcessing = false;
 let isCPUGame = false;  // CPU対戦かどうかのフラグ
+
+// 接続監視用変数
+let connectionCheckInterval = null;
+
+// ナビゲーション用定数
+const MAX_NAVIGATION_ATTEMPTS = 3;
 
 // メッセージ初期化
 initializeMessages();
@@ -1372,8 +1377,22 @@ socket.on('gameEnded', async (data) => {
 });
 
 // より確実なページ遷移処理
-function safeNavigateToResult(url) {
-  console.log('[SafeNavigation] Attempting navigation to:', url);
+function safeNavigateToResult(url, attempt = 1) {
+  console.log(`[SafeNavigation] Attempting navigation to: ${url} (attempt ${attempt}/${MAX_NAVIGATION_ATTEMPTS})`);
+  
+  // 重複遷移の防止
+  if (window.__navigating) {
+    console.log('[SafeNavigation] Navigation already in progress, skipping');
+    return;
+  }
+  window.__navigating = true;
+  
+  // 失敗回数が上限に達した場合の強制処理
+  if (attempt > MAX_NAVIGATION_ATTEMPTS) {
+    console.error('[SafeNavigation] Max attempts reached, forcing window.open');
+    window.open(url, '_self');
+    return;
+  }
   
   // 重複実行を防ぐ
   if (window.navigationInProgress || redirectProcessing) {
@@ -1591,7 +1610,15 @@ socket.on('redirectToResult', async (data) => {
     console.error('redirect wait error:', e);
     // エラーが発生してもリダイレクトは継続する
   }
-  location.replace(data.url);
+  
+  // 重複遷移の防止
+  if (window.__navigating) {
+    console.log('[redirectToResult] Navigation already in progress, skipping');
+    return;
+  }
+  
+  console.log('[redirectToResult] Starting safe navigation to:', data.url);
+  safeNavigateToResult(data.url);
 });
 
 socket.on('waitingForOpponent', (data) => {
