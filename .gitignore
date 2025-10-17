@@ -1,5 +1,6 @@
 result/*
 data.Manager.json
+data.json
 cpu.py
 cpu.ipynb
 xeno.py
