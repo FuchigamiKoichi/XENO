@@ -261,21 +261,45 @@
   }
 
   // ターンタイマー
-  let turnTween;
-  function startTurnTimer() {
-    if (!refs.timerBar) return;
-    if (turnTween) turnTween.kill();
-    gsap.set(refs.timerBar, { width: '100%' });
-    turnTween = gsap.to(refs.timerBar, {
-      width: '0%',
-      duration: FX.long,
-      ease: 'none'
-    });
+  let turnStartTime = 0;     // ターン開始時刻
+  let turnDurationMs = 0;    // 制限時間（ミリ秒）
+  let timerRafId = null;
+
+  // タイマー更新
+  function _updateTimer() {
+      const elapsedTime = Date.now() - turnStartTime;
+      const remainingRatio = 1 - (elapsedTime / turnDurationMs);
+
+      // バーの幅を実際の残り時間の割合に設定
+      if (refs.timerBar) {
+          refs.timerBar.style.width = `${Math.max(0, remainingRatio * 100)}%`;
+      }
+      // 時間切れチェック
+      if (remainingRatio > 0) {
+          timerRafId = requestAnimationFrame(_updateTimer);
+      }
   }
+
+  function startTurnTimer(durationSec = 60) {
+      if (!refs.timerBar) return;
+      
+      stopTurnTimer();
+      turnStartTime = Date.now();
+      turnDurationMs = durationSec * 1000;
+
+      refs.timerBar.style.width = '100%';
+      // 更新ループ
+      timerRafId = requestAnimationFrame(_updateTimer);
+  }
+
   function stopTurnTimer() {
-    if (!refs.timerBar) return;
-    if (turnTween) turnTween.kill();
-    gsap.set(refs.timerBar, { width: '100%' });
+      if (timerRafId) {
+          cancelAnimationFrame(timerRafId);
+          timerRafId = null;
+      }
+      if (refs.timerBar) {
+          refs.timerBar.style.width = '100%';
+      }
   }
 
   // ===== カード演出アニメーション =====
