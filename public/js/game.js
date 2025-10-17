@@ -1329,7 +1329,7 @@ function safeNavigateToResult(url) {
   
   try {
     // 方法1: location.replace()を試す
-    window.location.replace(url);
+    location.replace(url);
   } catch (e1) {
     console.warn('[SafeNavigation] location.replace() failed:', e1);
     

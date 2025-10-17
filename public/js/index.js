@@ -25,7 +25,7 @@ function joinRoom(roomId){
     if (!response || !response.success) {
         alert(response ? response.message : 'ルーム参加に失敗しました');
     } else {
-        window.location.replace(`game.html?roomId=${roomId}&playerId=${response.playerId}&players=${response.players}`)
+        location.replace(`game.html?roomId=${roomId}&playerId=${response.playerId}&players=${response.players}`)
     }
     });
 }
@@ -128,7 +128,7 @@ joinRoomBtn.addEventListener('click', () => {
     if (!response || !response.success) {
         alert(response ? response.message : 'ルーム参加に失敗しました');
     } else {
-        window.location.replace(`game.html?roomId=${roomId}&playerId=${response.playerId}&players=${response.players}`)
+        location.replace(`game.html?roomId=${roomId}&playerId=${response.playerId}&players=${response.players}`)
     }
     });
 });
