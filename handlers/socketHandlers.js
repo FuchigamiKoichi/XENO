@@ -79,7 +79,10 @@ class SocketHandlers {
 
       // ルーム削除リクエスト（管理者用）
       socket.on('deleteRoom', (data, callback) => {
-        this.handleDeleteRoom(socket, data, callback, io);
+        // this.handleDeleteRoom(socket, data, callback, io);
+        setTimeout(() => {
+          this.handleDeleteRoom(socket, data, callback, io);
+        }, 5000); // 5秒後にクリーンアップ実行
       });
 
       // ゲーム状態確認（リザルト遷移確認用）
