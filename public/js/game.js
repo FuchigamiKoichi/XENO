@@ -24,6 +24,12 @@ let gameEndTimeout = null;
 // メッセージ初期化
 initializeMessages();
 
+// SocketHandlers初期化
+if (typeof SocketHandlers !== 'undefined') {
+  SocketHandlers.isAnimationInProgress = false;
+  SocketHandlers.timeoutWarningTimer = null;
+}
+
 // ===============================
 // Error Handling & Logging
 // ===============================

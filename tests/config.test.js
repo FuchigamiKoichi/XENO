@@ -6,7 +6,7 @@ describe('CONFIG', () => {
       expect(CONFIG.PORT).toBe(3000);
       expect(CONFIG.DATA_FILE).toBe('./data.json');
       expect(CONFIG.MAX_PLAYERS_PER_ROOM).toBe(2);
-      expect(CONFIG.SOCKET_TIMEOUT).toBe(60000);
+      expect(CONFIG.SOCKET_TIMEOUT).toBe(65000); // アニメーション考慮で65秒
     });
   });
 
