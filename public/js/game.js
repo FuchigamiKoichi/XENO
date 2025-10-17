@@ -310,7 +310,7 @@ Anim.init({
   playArea,
   opponentArea,
   timerBar,
-  longSec: 300, // 必要に応じて変更
+  longSec: 60, // 1分に設定
 });
 
 // デッキクリックでシャッフルアニメーション

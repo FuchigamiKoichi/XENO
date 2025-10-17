@@ -277,6 +277,13 @@ class GameService {
       }
     } catch (e) {
       Logger.error("choice (yourTurn) failed:", e);
+      
+      // タイムアウトエラーの場合のみ、nullを返してゲーム側でタイムアウト処理を行わせる
+      if (e.message && e.message.toLowerCase().includes('timeout')) {
+        Logger.warn(`プレイヤー ${socketId} がタイムアウトしました`);
+        return null;  // タイムアウト時はnullを返す
+      }
+      
       return GameService.getFallbackChoice(choices, kind, `player choice error: ${e.message}`);
     }
   }
@@ -458,7 +465,9 @@ class GameService {
             Logger.debug(`既に切断済みのソケット (${socketId}) に対するタイムアウトのため、エラー処理をスキップ。`);
             return resolve(null); 
           }
-          reject(err);
+          // タイムアウトエラーの場合、エラーメッセージを明確にする
+          const timeoutError = new Error(`timeout: ${err.message}`);
+          reject(timeoutError);
         } else {
           const value = GameService.parseAckResponse(choices, kind, responses);
           Logger.debug(`ACK正規化結果: ${util.inspect(value, { depth: null })}`);
