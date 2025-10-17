@@ -1474,7 +1474,7 @@ socket.on('redirectToResult', async (data) => {
   clearTimeout(gameEndTimeout);
   console.log('[GameEndMonitor] Redirect received, stopping monitoring');
   
-  console.log('[redirectToResult] Starting result transition...');
+  console.log('画面遷移:', data.url);
   if (!data || !data.url) return;
   // 相手演出が残っていれば完了を待つ（待機時間を短縮）
   try {
@@ -1503,8 +1503,7 @@ socket.on('redirectToResult', async (data) => {
     console.error('redirect wait error:', e);
     // エラーが発生してもリダイレクトは継続する
   }
-  console.log('[redirectToResult] Navigating to:', data.url);
-  window.location.replace(data.url);
+  location.replace(data.url);
 });
 
 socket.on('waitingForOpponent', (data) => {
