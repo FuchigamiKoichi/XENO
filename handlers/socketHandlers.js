@@ -82,7 +82,10 @@ class SocketHandlers {
         this.handleDeleteRoom(socket, data, callback, io);
       });
 
-
+      // ゲーム状態確認（リザルト遷移確認用）
+      socket.on('checkGameStatus', (data, callback) => {
+        this.handleCheckGameStatus(data, callback);
+      });
 
       // ロビーに戻る選択
       socket.on('returnToLobby', (data) => {
@@ -427,6 +430,10 @@ class SocketHandlers {
       this.sendResultsToPlayers(io, data.roomId, winners, losers, currentJsonData, { reasonText: 'ゲーム終了', excludeCpu: true });
 
       Logger.debug(`[Result] CPU戦ゲーム終了結果送信完了: 勝者${winners.length}人, 敗者${losers.length}人`);
+      
+      // CPU戦終了後のルーム状態更新とクリーンアップ
+      this.scheduleRoomCleanup(data.roomId, io);
+      
       if (ok) {
         DataManager.saveData();
       }
@@ -537,6 +544,10 @@ class SocketHandlers {
               }
             }
             Logger.debug(`[Result] プレイヤー戦ゲーム終了結果送信完了: 勝者${winners.length}人, 敗者${losers.length}人`);
+            
+            // ゲーム終了後のルーム状態更新とクリーンアップ
+            this.scheduleRoomCleanup(data.roomId, io);
+            
             DataManager.saveData();
           }
         } else {
@@ -635,6 +646,10 @@ class SocketHandlers {
     }
     
     RoomManager.setRoomPlayingStatus(roomId, false);
+    
+    // 投降によるゲーム終了後のルームクリーンアップ
+    this.scheduleRoomCleanup(roomId, io);
+    
     Logger.info('投降処理完了', { roomId, playerId });
   }
 
@@ -718,6 +733,70 @@ class SocketHandlers {
     if (roomId && playerId) {
         Logger.info(`リザルトページのクライアント ${playerId} をルーム ${roomId} に参加させます。`);
         socket.join(roomId);
+        
+        // プレイヤーがリザルト画面に到達したことを記録
+        this.markPlayerReachedResult(roomId, playerId);
+    }
+  }
+
+  /**
+   * プレイヤーがリザルト画面に到達したことを記録
+   * @param {string} roomId - ルームID
+   * @param {string} playerId - プレイヤーID
+   */
+  static markPlayerReachedResult(roomId, playerId) {
+    try {
+      DataManager.loadData();
+      const jsonData = DataManager.getJsonData();
+      
+      if (jsonData.rooms[roomId] && jsonData.players[playerId]) {
+        if (!jsonData.rooms[roomId].playersReachedResult) {
+          jsonData.rooms[roomId].playersReachedResult = [];
+        }
+        
+        if (!jsonData.rooms[roomId].playersReachedResult.includes(playerId)) {
+          jsonData.rooms[roomId].playersReachedResult.push(playerId);
+          Logger.debug(`[RoomCleanup] プレイヤー ${playerId} がリザルト画面に到達`);
+          
+          DataManager.saveData();
+          
+          // 全プレイヤーがリザルト画面に到達した場合、クリーンアップを加速
+          this.checkAllPlayersReachedResult(roomId);
+        }
+      }
+    } catch (e) {
+      Logger.error(`[RoomCleanup] リザルト到達記録エラー ${roomId}/${playerId}:`, e);
+    }
+  }
+
+  /**
+   * 全プレイヤーがリザルト画面に到達したかチェック
+   * @param {string} roomId - ルームID
+   */
+  static checkAllPlayersReachedResult(roomId) {
+    try {
+      DataManager.loadData();
+      const jsonData = DataManager.getJsonData();
+      const room = jsonData.rooms[roomId];
+      
+      if (!room) return;
+      
+      const humanPlayers = room.players.filter(playerId => {
+        const player = jsonData.players[playerId];
+        return player && !player.name.startsWith('cpu_');
+      });
+      
+      const reachedPlayers = room.playersReachedResult || [];
+      
+      if (humanPlayers.length > 0 && reachedPlayers.length >= humanPlayers.length) {
+        Logger.info(`[RoomCleanup] 全プレイヤーがリザルト到達、ルーム ${roomId} の即座クリーンアップを実行`);
+        // 少し遅延を設けて安全に削除
+        setTimeout(() => {
+          RoomManager.removeRoom(roomId);
+        }, 5000);
+      }
+    } catch (e) {
+      Logger.error(`[RoomCleanup] 全プレイヤー到達チェックエラー ${roomId}:`, e);
     }
   }
 
@@ -824,6 +903,124 @@ class SocketHandlers {
         RoomManager.removeRoom(roomId);
         Logger.info(`全プレイヤー合意によりルーム削除: ${roomId}`);
       }
+    }
+  }
+
+  /**
+   * ゲーム終了後の安全なルームクリーンアップ
+   * @param {string} roomId - ルームID
+   * @param {Object} io - Socket.IOインスタンス
+   */
+  static scheduleRoomCleanup(roomId, io) {
+    Logger.debug(`[RoomCleanup] ルーム ${roomId} のクリーンアップをスケジュール`);
+    
+    // 即座にルーム状態を更新
+    this.updateRoomGameEndStatus(roomId);
+    
+    // プレイヤーがリザルト画面に遷移する時間を考慮して、10秒後にクリーンアップ
+    setTimeout(() => {
+      this.performSafeRoomCleanup(roomId, io);
+    }, 10000);
+  }
+
+  /**
+   * ルームのゲーム終了状態を更新
+   * @param {string} roomId - ルームID
+   */
+  static updateRoomGameEndStatus(roomId) {
+    try {
+      DataManager.loadData();
+      const jsonData = DataManager.getJsonData();
+      
+      if (jsonData.rooms[roomId]) {
+        jsonData.rooms[roomId].playing = false;
+        jsonData.rooms[roomId].gameStatus = 'ended';
+        jsonData.rooms[roomId].lastActivity = Date.now();
+        
+        DataManager.saveData();
+        Logger.debug(`[RoomCleanup] ルーム ${roomId} の状態を更新: playing=false, gameStatus=ended`);
+      }
+    } catch (e) {
+      Logger.error(`[RoomCleanup] ルーム状態更新エラー ${roomId}:`, e);
+    }
+  }
+
+  /**
+   * 安全なルームクリーンアップの実行
+   * @param {string} roomId - ルームID  
+   * @param {Object} io - Socket.IOインスタンス
+   */
+  static performSafeRoomCleanup(roomId, io) {
+    try {
+      DataManager.loadData();
+      const jsonData = DataManager.getJsonData();
+      const room = jsonData.rooms[roomId];
+      
+      if (!room) {
+        Logger.debug(`[RoomCleanup] ルーム ${roomId} は既に削除済み`);
+        return;
+      }
+      
+      // 接続中のプレイヤーをチェック
+      const connectedPlayers = room.players.filter(playerId => {
+        const player = jsonData.players[playerId];
+        return player && player.socketId && io.sockets.sockets.has(player.socketId);
+      });
+      
+      if (connectedPlayers.length === 0) {
+        // 全プレイヤーが切断済みの場合、安全にルームを削除
+        RoomManager.removeRoom(roomId);
+        Logger.info(`[RoomCleanup] 全プレイヤー切断によりルーム削除: ${roomId}`);
+      } else {
+        // 一部プレイヤーがまだ接続中の場合、再スケジュール
+        Logger.debug(`[RoomCleanup] ${connectedPlayers.length}人接続中、ルーム ${roomId} のクリーンアップを延期`);
+        setTimeout(() => {
+          this.performSafeRoomCleanup(roomId, io);
+        }, 30000); // 30秒後に再試行
+      }
+      
+    } catch (e) {
+      Logger.error(`[RoomCleanup] ルームクリーンアップエラー ${roomId}:`, e);
+    }
+  }
+
+  /**
+   * ゲーム状態確認ハンドラー
+   * @param {Object} data - { roomId, playerId }
+   * @param {Function} callback - レスポンスコールバック
+   */
+  static handleCheckGameStatus(data, callback) {
+    try {
+      DataManager.loadData();
+      const jsonData = DataManager.getJsonData();
+      const room = jsonData.rooms[data.roomId];
+      
+      if (!room) {
+        // ルームが存在しない = ゲーム終了済み
+        callback({ 
+          gameEnded: true, 
+          resultUrl: `result.html?result=timeout&reason=${encodeURIComponent('ルームが見つかりません')}&roomId=${data.roomId}&playerId=${data.playerId}` 
+        });
+        return;
+      }
+      
+      // ゲーム中でなければ終了とみなす
+      if (room.gameStatus !== 'playing') {
+        callback({ 
+          gameEnded: true,
+          resultUrl: `result.html?result=timeout&reason=${encodeURIComponent('ゲーム状態異常')}&roomId=${data.roomId}&playerId=${data.playerId}` 
+        });
+        return;
+      }
+      
+      callback({ gameEnded: false });
+      
+    } catch (e) {
+      Logger.error('ゲーム状態確認エラー:', e);
+      callback({ 
+        gameEnded: true, 
+        resultUrl: `result.html?result=error&reason=${encodeURIComponent('状態確認エラー')}&roomId=${data.roomId}&playerId=${data.playerId}` 
+      });
     }
   }
 

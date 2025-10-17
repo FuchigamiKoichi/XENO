@@ -18,8 +18,10 @@ selectContainer.style.display = 'none';
 showContainer.style.display   = 'none';
 
 // ゲーム終了監視用変数
-let connectionCheckInterval = null;
 let gameEndTimeout = null;
+let connectionCheckInterval = null;
+let resultNavigationAttempts = 0;
+const MAX_NAVIGATION_ATTEMPTS = 3;
 
 // メッセージ初期化
 initializeMessages();
@@ -1362,8 +1364,22 @@ socket.on('gameEnded', async (data) => {
 });
 
 // より確実なページ遷移処理
-function safeNavigateToResult(url) {
-  console.log('[SafeNavigation] Attempting navigation to:', url);
+function safeNavigateToResult(url, attempt = 1) {
+  console.log(`[SafeNavigation] Attempting navigation to: ${url} (attempt ${attempt}/${MAX_NAVIGATION_ATTEMPTS})`);
+  
+  // 重複遷移の防止
+  if (window.__navigating) {
+    console.log('[SafeNavigation] Navigation already in progress, skipping');
+    return;
+  }
+  window.__navigating = true;
+  
+  // 失敗回数が上限に達した場合の強制処理
+  if (attempt > MAX_NAVIGATION_ATTEMPTS) {
+    console.error('[SafeNavigation] Max attempts reached, forcing window.open');
+    window.open(url, '_self');
+    return;
+  }
   
   try {
     // 方法1: location.replace()を試す
@@ -1384,14 +1400,23 @@ function safeNavigateToResult(url) {
       } catch (e3) {
         console.error('[SafeNavigation] All navigation methods failed:', e3);
         
-        // 方法4: ユーザーに手動遷移を促す
-        const userConfirm = confirm(`ゲームが終了しました。結果画面に移動しますか？\n${url}`);
-        if (userConfirm) {
-          window.open(url, '_self');
-        }
+        // 1秒後にリトライ
+        window.__navigating = false;
+        setTimeout(() => {
+          safeNavigateToResult(url, attempt + 1);
+        }, 1000);
       }
     }
   }
+  
+  // 3秒後にナビゲーションが完了していない場合はリトライ
+  setTimeout(() => {
+    if (window.location.pathname === '/game.html') {
+      console.warn('[SafeNavigation] Navigation timeout, retrying...');
+      window.__navigating = false;
+      safeNavigateToResult(url, attempt + 1);
+    }
+  }, 3000);
 }
 
 // リザルト遷移を分離して確実に実行
@@ -1433,11 +1458,28 @@ function checkGameEndStatus() {
   if (!socket.connected) {
     console.warn('[GameEndMonitor] Socket disconnected, attempting reconnection...');
     socket.connect();
+    
+    // 10秒待って再度確認
+    setTimeout(() => {
+      if (!socket.connected) {
+        console.error('[GameEndMonitor] Connection failed, forcing timeout result...');
+        const resultUrl = `result.html?result=timeout&reason=${encodeURIComponent('サーバー接続タイムアウト')}&roomId=${roomId}&playerId=${playerId}&players=${players}`;
+        safeNavigateToResult(resultUrl);
+      }
+    }, 10000);
     return;
   }
   
-  // サーバーにゲーム状態を問い合わせ
+  // サーバーにゲーム状態を問い合わせ（タイムアウト付き）
+  const statusCheckTimeout = setTimeout(() => {
+    console.warn('[GameEndMonitor] Status check timeout, forcing result navigation...');
+    const resultUrl = `result.html?result=timeout&reason=${encodeURIComponent('状態確認タイムアウト')}&roomId=${roomId}&playerId=${playerId}&players=${players}`;
+    safeNavigateToResult(resultUrl);
+  }, 5000);
+  
   socket.emit('checkGameStatus', { roomId, playerId }, (response) => {
+    clearTimeout(statusCheckTimeout);
+    
     if (response && response.gameEnded) {
       console.log('[GameEndMonitor] Server confirmed game ended, forcing result navigation...');
       
@@ -1503,7 +1545,15 @@ socket.on('redirectToResult', async (data) => {
     console.error('redirect wait error:', e);
     // エラーが発生してもリダイレクトは継続する
   }
-  location.replace(data.url);
+  
+  // 重複遷移の防止
+  if (window.__navigating) {
+    console.log('[redirectToResult] Navigation already in progress, skipping');
+    return;
+  }
+  
+  console.log('[redirectToResult] Starting safe navigation to:', data.url);
+  safeNavigateToResult(data.url);
 });
 
 socket.on('waitingForOpponent', (data) => {
