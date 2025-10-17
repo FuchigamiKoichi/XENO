@@ -47,6 +47,11 @@ class SocketHandlers {
         this.handleGetPermissionClass(data, callback);
       });
 
+      // ゲーム状態確認
+      socket.on('checkGameStatus', (data, callback) => {
+        this.handleCheckGameStatus(data, callback);
+      });
+
       // ゲーム開始
       socket.on('startGame', (roomId) => {
         this.handleStartGame(roomId, io);
@@ -296,6 +301,40 @@ class SocketHandlers {
   }
 
   /**
+   * ゲーム状態確認処理
+   */
+  static handleCheckGameStatus(data, callback) {
+    Logger.debug('[checkGameStatus] クライアントからの状態確認要求:', data);
+    
+    DataManager.loadData();
+    const jsonData = DataManager.getJsonData();
+    
+    if (!data.roomId) {
+      if (callback) callback({ success: false, message: 'roomIdが必要です' });
+      return;
+    }
+    
+    const roomData = jsonData.rooms[data.roomId];
+    if (!roomData) {
+      if (callback) callback({ success: false, message: 'ルームが存在しません' });
+      return;
+    }
+    
+    const response = {
+      success: true,
+      playing: roomData.playing,
+      playerCount: roomData.players.length,
+      maxPlayers: roomData.maxPlayers
+    };
+    
+    Logger.debug('[checkGameStatus] 状態確認結果:', response);
+    
+    if (callback) {
+      callback(response);
+    }
+  }
+
+  /**
    * ゲーム開始処理
    */
   static handleStartGame(roomId, io) {
@@ -342,19 +381,55 @@ class SocketHandlers {
   }
 
   /**
-   * プレイヤー名から { id, player } を返す。未発見なら null
+   * プレイヤーIDからプレイヤー情報を取得
+   * @param {Object} jsonData - ゲームデータ
+   * @param {string} playerId - プレイヤーID
+   * @returns {Object|null} プレイヤー情報 { id, player }
    */
-  static findPlayerByName(jsonData, playerName) {
-    if (!jsonData || !jsonData.players) {
-      return null;
+  static findPlayerById(jsonData, playerId) {
+    const player = jsonData.players?.[playerId];
+    if (player) {
+      console.log(`[findPlayerById] 見つかりました: ${playerId} -> ${player.name} (socketId: ${player.socketId})`);
+      return { id: playerId, player };
     }
-    for (const [id, player] of Object.entries(jsonData.players)) {
-      if (player && player.name === playerName) {
-        return { id, player };
-      }
-    }
+    console.warn(`[findPlayerById] プレイヤーが見つかりません: ${playerId}`);
     return null;
   }
+
+  /**
+   * ルームのプレイヤーリストから実際のプレイヤーを特定
+   * @param {Object} jsonData - ゲームデータ
+   * @param {string} roomId - ルームID
+   * @param {Object} gamePlayer - ゲームのPlayerオブジェクト (name, socketIdを持つ)
+   * @returns {Object|null} プレイヤー情報 { id, player }
+   */
+  static findRoomPlayer(jsonData, roomId, gamePlayer) {
+    const room = jsonData.rooms?.[roomId];
+    if (!room || !room.players) {
+      console.warn(`[findRoomPlayer] ルームまたはプレイヤーリストが見つかりません: ${roomId}`);
+      return null;
+    }
+
+    // CPU プレイヤーの場合はスキップ
+    if (gamePlayer.name && gamePlayer.name.startsWith('cpu_')) {
+      console.log(`[findRoomPlayer] CPUプレイヤーをスキップ: ${gamePlayer.name}`);
+      return null;
+    }
+
+    // ルームのプレイヤーリストから該当プレイヤーを検索
+    for (const playerId of room.players) {
+      const player = jsonData.players?.[playerId];
+      if (player && player.name === gamePlayer.name) {
+        console.log(`[findRoomPlayer] 見つかりました: ${playerId} -> ${player.name} (socketId: ${player.socketId})`);
+        return { id: playerId, player };
+      }
+    }
+
+    console.warn(`[findRoomPlayer] ルーム内でプレイヤーが見つかりません: ${gamePlayer.name} in room ${roomId}`);
+    return null;
+  }
+
+
 
   /**
    * リザルトURL生成
@@ -376,11 +451,15 @@ class SocketHandlers {
       if (excludeCpu && typeof loser?.name === 'string' && loser.name.startsWith('cpu_')) {
         continue;
       }
-      const found = this.findPlayerByName(jsonData, loser.name);
+      const found = this.findRoomPlayer(jsonData, roomId, loser);
+      Logger.debug(`[Result] 敗者検索結果 ${loser.name}:`, found);
       if (found && found.player && found.player.socketId) {
         const url = this.buildResultUrl('lose', roomId, found.id, reasonText);
+        Logger.debug(`[Result] 敗者リダイレクトURL: ${url}, socketId: ${found.player.socketId}`);
         io.to(found.player.socketId).emit('redirectToResult', { url });
-        Logger.debug(`[Result] 敗者リダイレクト送信: ${loser.name}`);
+        Logger.debug(`[Result] 敗者リダイレクト送信完了: ${loser.name}`);
+      } else {
+        Logger.error(`[Result] 敗者 ${loser.name} の接続情報が見つかりません:`, found);
       }
     }
 
@@ -389,11 +468,15 @@ class SocketHandlers {
       if (excludeCpu && typeof winner?.name === 'string' && winner.name.startsWith('cpu_')) {
         continue;
       }
-      const found = this.findPlayerByName(jsonData, winner.name);
+      const found = this.findRoomPlayer(jsonData, roomId, winner);
+      Logger.debug(`[Result] 勝者検索結果 ${winner.name}:`, found);
       if (found && found.player && found.player.socketId) {
         const url = this.buildResultUrl('win', roomId, found.id, reasonText);
+        Logger.debug(`[Result] 勝者リダイレクトURL: ${url}, socketId: ${found.player.socketId}`);
         io.to(found.player.socketId).emit('redirectToResult', { url });
-        Logger.debug(`[Result] 勝者リダイレクト送信: ${winner.name}`);
+        Logger.debug(`[Result] 勝者リダイレクト送信完了: ${winner.name}`);
+      } else {
+        Logger.error(`[Result] 勝者 ${winner.name} の接続情報が見つかりません:`, found);
       }
     }
   }
@@ -473,6 +556,8 @@ class SocketHandlers {
           const winners = result[2] || [];
           const losers = result[3] || [];
           Logger.debug(`[Result] プレイヤー戦正常終了処理開始: 勝者${winners.length}人, 敗者${losers.length}人`);
+          // Logger.debug('[Result] Winners data:', JSON.stringify(winners, null, 2));
+          // Logger.debug('[Result] Losers data:', JSON.stringify(losers, null, 2));
           
           // プレイヤーに結果を送信
           DataManager.loadData();
@@ -512,27 +597,47 @@ class SocketHandlers {
              }else{
               // 敗者への通知
               for (const loser of losers) {
-                // プレイヤー名からプレイヤーデータを検索
-                const playerName = loser.name;
-                const loserData = Object.values(currentJsonData.players).find(p => p.name === playerName);
-                if (loserData && loserData.socketId) {
-                  const reason = encodeURIComponent('ゲーム終了');
-                  const url = `result.html?result=lose&reason=${reason}&roomId=${data.roomId}&playerId=${Object.keys(currentJsonData.players).find(key => currentJsonData.players[key] === loserData)}`;
-                  io.to(loserData.socketId).emit('redirectToResult', { url: url });
-                  Logger.debug(`[Result] 敗者リダイレクト送信: ${playerName}`);
+                Logger.debug(`[Result] 敗者データ: id=${loser.id}, name=${loser.name}, constructor=${loser.constructor.name}`);
+                
+                // IDベースの検索のみを使用
+                if (loser.id && currentJsonData.players[loser.id]) {
+                  const playerId = loser.id;
+                  const playerFound = this.findPlayerById(currentJsonData, playerId);
+                  
+                  if (playerFound && playerFound.player.socketId) {
+                    const reason = encodeURIComponent('ゲーム終了');
+                    const url = `result.html?result=lose&reason=${reason}&roomId=${data.roomId}&playerId=${playerId}`;
+                    Logger.debug(`[Result] 敗者リダイレクトURL: ${url}, socketId: ${playerFound.player.socketId}`);
+                    io.to(playerFound.player.socketId).emit('redirectToResult', { url: url });
+                    Logger.debug(`[Result] 敗者リダイレクト送信完了: ${playerFound.player.name} (${playerId})`);
+                  } else {
+                    Logger.warn(`[Result] 敗者プレイヤーが見つからないかSocketIDがありません: id=${loser.id}, name=${loser.name}`);
+                  }
+                } else {
+                  Logger.warn(`[Result] 敗者IDが無効またはプレイヤーが存在しません: id=${loser.id}, name=${loser.name}`);
                 }
               }
 
               // 勝者への通知
               for (const winner of winners) {
-                // プレイヤー名からプレイヤゲータを検索
-                const playerName = winner.name;
-                const winnerData = Object.values(currentJsonData.players).find(p => p.name === playerName);
-                if (winnerData && winnerData.socketId) {
-                  const reason = encodeURIComponent('ゲーム終了');
-                  const url = `result.html?result=win&reason=${reason}&roomId=${data.roomId}&playerId=${Object.keys(currentJsonData.players).find(key => currentJsonData.players[key] === winnerData)}`;
-                  io.to(winnerData.socketId).emit('redirectToResult', { url: url });
-                  Logger.debug(`[Result] 勝者リダイレクト送信: ${playerName}`);
+                Logger.debug(`[Result] 勝者データ: id=${winner.id}, name=${winner.name}, constructor=${winner.constructor.name}`);
+                
+                // IDベースの検索のみを使用
+                if (winner.id && currentJsonData.players[winner.id]) {
+                  const playerId = winner.id;
+                  const playerFound = this.findPlayerById(currentJsonData, playerId);
+                  
+                  if (playerFound && playerFound.player.socketId) {
+                    const reason = encodeURIComponent('ゲーム終了');
+                    const url = `result.html?result=win&reason=${reason}&roomId=${data.roomId}&playerId=${playerId}`;
+                    Logger.debug(`[Result] 勝者リダイレクトURL: ${url}, socketId: ${playerFound.player.socketId}`);
+                    io.to(playerFound.player.socketId).emit('redirectToResult', { url: url });
+                    Logger.debug(`[Result] 勝者リダイレクト送信完了: ${playerFound.player.name} (${playerId})`);
+                  } else {
+                    Logger.warn(`[Result] 勝者プレイヤーが見つからないかSocketIDがありません: id=${winner.id}, name=${winner.name}`);
+                  }
+                } else {
+                  Logger.warn(`[Result] 勝者IDが無効またはプレイヤーが存在しません: id=${winner.id}, name=${winner.name}`);
                 }
               }
             }
@@ -824,6 +929,54 @@ class SocketHandlers {
         RoomManager.removeRoom(roomId);
         Logger.info(`全プレイヤー合意によりルーム削除: ${roomId}`);
       }
+    }
+  }
+
+  /**
+   * ゲーム状態確認処理
+   * @param {Object} data - { roomId, playerId }
+   * @param {Function} callback - コールバック関数
+   */
+  handleCheckGameStatus(data, callback) {
+    try {
+      const { roomId, playerId } = data;
+      logger.debug(`[CheckGameStatus] roomId: ${roomId}, playerId: ${playerId}`);
+      
+      if (!roomId || !playerId) {
+        return callback({ error: 'Invalid parameters', gameEnded: false });
+      }
+      
+      const jsonData = dataManager.loadData();
+      const room = jsonData.rooms[roomId];
+      
+      if (!room) {
+        logger.debug(`[CheckGameStatus] ルーム ${roomId} が存在しません`);
+        return callback({ gameEnded: true, reason: 'room_not_found' });
+      }
+      
+      // プレイヤーがルームに存在するか確認
+      const playerExists = room.players.includes(playerId);
+      
+      if (!playerExists) {
+        logger.debug(`[CheckGameStatus] プレイヤー ${playerId} がルーム ${roomId} に存在しません`);
+        return callback({ gameEnded: true, reason: 'player_not_in_room' });
+      }
+      
+      // ゲームが終了しているか確認
+      const gameEnded = !room.playing;
+      
+      logger.debug(`[CheckGameStatus] ルーム ${roomId} playing: ${room.playing}, gameEnded: ${gameEnded}`);
+      
+      callback({
+        gameEnded: gameEnded,
+        roomPlaying: room.playing,
+        playerCount: room.players.length,
+        reason: gameEnded ? 'game_completed' : 'game_in_progress'
+      });
+      
+    } catch (error) {
+      logger.error(`[CheckGameStatus] エラー:`, error);
+      callback({ error: 'Internal error', gameEnded: true });
     }
   }
 

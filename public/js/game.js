@@ -20,6 +20,9 @@ showContainer.style.display   = 'none';
 // ゲーム終了監視用変数
 let connectionCheckInterval = null;
 let gameEndTimeout = null;
+let gameEnded = false;
+let redirectProcessing = false;
+let isCPUGame = false;  // CPU対戦かどうかのフラグ
 
 // メッセージ初期化
 initializeMessages();
@@ -1294,10 +1297,17 @@ socket.on('anotherTurn', async (data) => {
 socket.on('gameEnded', async (data) => {
   clearTimeout(gameEndTimeout);
   console.log('[GameEndMonitor] Game ended normally, stopping monitoring');
+  console.log('[gameEnded] Received gameEnded event with data:', data);
+  gameEnded = true;  // ゲーム終了フラグを設定
   
   Anim.stopTurnTimer();
   // 相手演出が残っていれば完了を待つ
   console.log('[gameEnded] Starting result transition with animation wait...');
+  
+  // プレイヤー対戦の場合、より短いタイムアウトでアニメーション待機
+  const isPlayerVsPlayer = !isCPUGame;
+  const animationTimeout = isPlayerVsPlayer ? 3000 : 5000;  // プレイヤー対戦では3秒
+  const overallTimeout = isPlayerVsPlayer ? 6000 : 10000;   // 全体で6秒
   try {
     // タイムアウト付きでアニメーション待機
     const animationPromises = [];
@@ -1310,7 +1320,7 @@ socket.on('gameEnded', async (data) => {
           new Promise(resolve => setTimeout(() => {
             console.log('[gameEnded] Opponent animation timeout');
             resolve();
-          }, 5000))
+          }, animationTimeout))
         ])
       );
     }
@@ -1323,7 +1333,7 @@ socket.on('gameEnded', async (data) => {
           new Promise(resolve => setTimeout(() => {
             console.log('[gameEnded] Self animation timeout');
             resolve();
-          }, 5000))
+          }, animationTimeout))
         ])
       );
     }
@@ -1332,22 +1342,22 @@ socket.on('gameEnded', async (data) => {
       console.log('[gameEnded] Waiting for FX idle...');
       animationPromises.push(
         Promise.race([
-          Anim.waitForFxIdle(3000),
+          Anim.waitForFxIdle(animationTimeout * 0.8),  // FX待機時間を短縮
           new Promise(resolve => setTimeout(() => {
             console.log('[gameEnded] FX idle timeout');
             resolve();
-          }, 4000))
+          }, animationTimeout))
         ])
       );
     }
     
-    // 全てのアニメーション待機を並列実行（最大10秒でタイムアウト）
+    // 全てのアニメーション待機を並列実行
     await Promise.race([
       Promise.all(animationPromises),
       new Promise(resolve => setTimeout(() => {
         console.log('[gameEnded] Overall animation timeout reached');
         resolve();
-      }, 10000))
+      }, overallTimeout))
     ]);
     
     console.log('[gameEnded] Animation wait completed or timed out');
@@ -1365,38 +1375,79 @@ socket.on('gameEnded', async (data) => {
 function safeNavigateToResult(url) {
   console.log('[SafeNavigation] Attempting navigation to:', url);
   
-  try {
-    // 方法1: location.replace()を試す
-    location.replace(url);
-  } catch (e1) {
-    console.warn('[SafeNavigation] location.replace() failed:', e1);
+  // 重複実行を防ぐ
+  if (window.navigationInProgress || redirectProcessing) {
+    console.log('[SafeNavigation] Navigation already in progress, skipping');
+    return;
+  }
+  window.navigationInProgress = true;
+  redirectProcessing = true;
+  
+  // アニメーション完了待機（最大2秒）
+  const waitForAnimations = async () => {
+    try {
+      if (window.__lastOpponentAnimPromise) {
+        await Promise.race([window.__lastOpponentAnimPromise, new Promise(resolve => setTimeout(resolve, 2000))]);
+      }
+      if (window.__lastSelfAnimPromise) {
+        await Promise.race([window.__lastSelfAnimPromise, new Promise(resolve => setTimeout(resolve, 2000))]);
+      }
+      if (Anim && typeof Anim.waitForFxIdle === 'function') {
+        await Promise.race([Anim.waitForFxIdle(2000), new Promise(resolve => setTimeout(resolve, 2000))]);
+      }
+    } catch (e) {
+      console.warn('[SafeNavigation] Animation wait error:', e);
+    }
+  };
+  
+  const attemptNavigation = async () => {
+    await waitForAnimations();
     
     try {
-      // 方法2: location.href を試す  
-      window.location.href = url;
-    } catch (e2) {
-      console.warn('[SafeNavigation] location.href failed:', e2);
+      // 方法1: location.replace()を試す
+      location.replace(url);
+    } catch (e1) {
+      console.warn('[SafeNavigation] location.replace() failed:', e1);
       
-      try {
-        // 方法3: history.pushState() + location.reload()
-        history.pushState(null, '', url);
-        window.location.reload();
-      } catch (e3) {
-        console.error('[SafeNavigation] All navigation methods failed:', e3);
-        
-        // 方法4: ユーザーに手動遷移を促す
-        const userConfirm = confirm(`ゲームが終了しました。結果画面に移動しますか？\n${url}`);
-        if (userConfirm) {
-          window.open(url, '_self');
+      setTimeout(() => {
+        try {
+          // 方法2: location.href を試す  
+          window.location.href = url;
+        } catch (e2) {
+          console.warn('[SafeNavigation] location.href failed:', e2);
+          
+          setTimeout(() => {
+            try {
+              // 方法3: history.pushState() + location.reload()
+              history.pushState(null, '', url);
+              window.location.reload();
+            } catch (e3) {
+              console.error('[SafeNavigation] All navigation methods failed:', e3);
+              
+              // 方法4: ユーザーに手動遷移を促す
+              const userConfirm = confirm(`ゲームが終了しました。結果画面に移動しますか？\n${url}`);
+              if (userConfirm) {
+                window.open(url, '_self');
+              }
+            }
+          }, 500);
         }
-      }
+      }, 500);
     }
-  }
+  };
+  
+  attemptNavigation();
 }
 
 // リザルト遷移を分離して確実に実行
 function navigateToResult(data) {
   console.log('[gameEnded] Navigating to result...');
+  
+  if (redirectProcessing) {
+    console.log('[navigateToResult] Redirect already processing, skipping');
+    return;
+  }
+  redirectProcessing = true;
   
   if (window.audioManager) {
     window.audioManager.stopBGM();
@@ -1421,11 +1472,23 @@ function navigateToResult(data) {
 function startGameEndMonitoring() {
   console.log('[GameEndMonitor] Starting game end monitoring...');
   
-  // 30秒後に強制的にリザルト確認
+  // プレイヤー対戦では20秒、CPU対戦では30秒でタイムアウト
+  const timeoutDuration = isCPUGame ? 30000 : 20000;
+  
   gameEndTimeout = setTimeout(() => {
     console.warn('[GameEndMonitor] Game end timeout reached, checking status...');
     checkGameEndStatus();
-  }, 30000);
+  }, timeoutDuration);
+  
+  // プレイヤー対戦では追加の安全確認を15秒後にも実行
+  if (!isCPUGame) {
+    setTimeout(() => {
+      if (gameEnded && !redirectProcessing) {
+        console.warn('[GameEndMonitor] Early safety check - game ended but no redirect started');
+        checkGameEndStatus();
+      }
+    }, 15000);
+  }
 }
 
 // ゲーム終了状態をポーリングで確認
@@ -1433,11 +1496,30 @@ function checkGameEndStatus() {
   if (!socket.connected) {
     console.warn('[GameEndMonitor] Socket disconnected, attempting reconnection...');
     socket.connect();
+    
+    // 接続失敗時はローカル状態で判定
+    setTimeout(() => {
+      if (!socket.connected && gameEnded) {
+        console.warn('[GameEndMonitor] Connection failed, using local game state for navigation');
+        const fallbackUrl = `result.html?result=disconnect&reason=${encodeURIComponent('接続失敗')}&roomId=${roomId}&playerId=${playerId}`;
+        safeNavigateToResult(fallbackUrl);
+      }
+    }, 3000);
     return;
   }
   
-  // サーバーにゲーム状態を問い合わせ
+  // サーバーにゲーム状態を問い合わせ（タイムアウト付き）
+  const statusCheckTimeout = setTimeout(() => {
+    console.warn('[GameEndMonitor] Server status check timeout, using fallback navigation');
+    if (gameEnded) {
+      const fallbackUrl = `result.html?result=timeout&reason=${encodeURIComponent('サーバー応答タイムアウト')}&roomId=${roomId}&playerId=${playerId}`;
+      safeNavigateToResult(fallbackUrl);
+    }
+  }, 5000);
+  
   socket.emit('checkGameStatus', { roomId, playerId }, (response) => {
+    clearTimeout(statusCheckTimeout);
+    
     if (response && response.gameEnded) {
       console.log('[GameEndMonitor] Server confirmed game ended, forcing result navigation...');
       
@@ -1445,6 +1527,11 @@ function checkGameEndStatus() {
         `result.html?result=timeout&reason=${encodeURIComponent('接続タイムアウト')}&roomId=${roomId}&playerId=${playerId}&players=${players}`;
       
       safeNavigateToResult(resultUrl);
+    } else if (gameEnded) {
+      // ローカルでは終了しているがサーバーは継続中の場合
+      console.warn('[GameEndMonitor] Local game ended but server says continuing - using local state');
+      const localUrl = `result.html?result=local&reason=${encodeURIComponent('ローカル終了検出')}&roomId=${roomId}&playerId=${playerId}`;
+      safeNavigateToResult(localUrl);
     } else {
       console.log('[GameEndMonitor] Game still in progress according to server');
     }
@@ -1473,6 +1560,7 @@ socket.on('disconnect', () => {
 socket.on('redirectToResult', async (data) => {
   clearTimeout(gameEndTimeout);
   console.log('[GameEndMonitor] Redirect received, stopping monitoring');
+  console.log('[redirectToResult] Received redirect event with data:', data);
   
   console.log('画面遷移:', data.url);
   if (!data || !data.url) return;
@@ -1516,6 +1604,12 @@ socket.on('waitingForOpponent', (data) => {
 
 socket.on('hideWaitingInfo', async () => {
   if (waitingInfoDiv) waitingInfoDiv.style.display = 'none';
+  
+  // CPU対戦かどうかを判定（URL パラメータから）
+  const urlParams = new URLSearchParams(window.location.search);
+  const cpuMode = urlParams.get('cpu');
+  isCPUGame = (cpuMode === 'true' || cpuMode === '1');
+  console.log(`[GameSetup] CPU Game Mode: ${isCPUGame}`);
   
   // ゲーム開始時のシャッフルアニメーション
   await Anim.shuffleCards(1.5);
