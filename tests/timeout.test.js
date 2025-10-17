@@ -173,7 +173,7 @@ describe('Timeout Handling', () => {
       expect(CONFIG.SOCKET_TIMEOUT).toBeDefined();
       expect(typeof CONFIG.SOCKET_TIMEOUT).toBe('number');
       expect(CONFIG.SOCKET_TIMEOUT).toBeGreaterThan(0);
-      expect(CONFIG.SOCKET_TIMEOUT).toBe(60000); // 1分
+      expect(CONFIG.SOCKET_TIMEOUT).toBe(65000); // アニメーション考慮で65秒
     });
 
     it('should handle timeout within expected time frame', () => {

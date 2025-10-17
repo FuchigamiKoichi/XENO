@@ -156,6 +156,8 @@
   // ズームUI（完了で resolve する Promise 版）
   function zoomCard(imgSrc, effectText, holdSec = 1.0) {
     return new Promise((resolve) => {
+      startAnimation(); // アニメーション開始を記録
+      
       const zoomArea   = document.getElementById('cardZoom');
       const zoomedCard = document.getElementById('zoomedCard');
       const desc       = document.getElementById('effectDescription');
@@ -167,6 +169,7 @@
 
       gsap.timeline({
         onComplete: () => {
+          endAnimation(); // アニメーション終了を記録
           resolve();
         }
       })
@@ -180,6 +183,8 @@
   // 手札へドロー（自分）
   function drawCardToHand(drawnCard) {
     return new Promise((resolve) => {
+      startAnimation(); // アニメーション開始を記録
+      
       cleanupAnimTemps();
 
       const anchorFrom = getDeckAnchorRect();
@@ -209,6 +214,7 @@
           temp.value = drawnCard;                 
           temp.dataset.card = String(drawnCard);
           refs.playerHandZone.appendChild(temp);
+          endAnimation(); // アニメーション終了を記録
           resolve('done');
         }
       })
@@ -1183,43 +1189,49 @@
     console.log('playCardEffect called with cardNumber:', cardNumber, 'isBarriered:', isBarriered, 'handInfo:', handInfo); // デバッグログ追加
     console.log('GSAP available:', typeof gsap !== 'undefined'); // GSAP存在確認
     
-    // GSAPテストを一度だけ実行
-    if (!window.gsapTested) {
-      window.gsapTested = true;
-      testGSAP();
-    }
+    startAnimation(); // アニメーション開始を記録
     
-    const effects = {
-      1: cardEffect1,
-      2: cardEffect2,
-      3: cardEffect3,
-      4: cardEffect4,
-      5: cardEffect5,
-      6: cardEffect6,
-      7: cardEffect7,
-      8: cardEffect8,
-      9: cardEffect9,
-      10: cardEffect10
-    };
-
-    const effectFunction = effects[cardNumber];
-    console.log('Effect function found:', !!effectFunction, 'for card:', cardNumber); // デバッグログ追加
-    if (effectFunction) {
-      console.log('Executing effect for card:', cardNumber); // デバッグログ追加
-      
-      // カード6の場合は手札情報を渡す
-      if (cardNumber === 6 && handInfo) {
-        await effectFunction(handInfo);
-      } else {
-        await effectFunction();
+    try {
+      // GSAPテストを一度だけ実行
+      if (!window.gsapTested) {
+        window.gsapTested = true;
+        testGSAP();
       }
       
-      console.log('Effect completed for card:', cardNumber); // 完了ログ追加
-      
-      // 演出完了後に少し待機してドローアニメーションとの重複を防ぐ
-      await new Promise(resolve => setTimeout(resolve, 200));
-    } else {
-      console.log('No effect function found for card:', cardNumber, 'using default'); // デバッグログ追加
+      const effects = {
+        1: cardEffect1,
+        2: cardEffect2,
+        3: cardEffect3,
+        4: cardEffect4,
+        5: cardEffect5,
+        6: cardEffect6,
+        7: cardEffect7,
+        8: cardEffect8,
+        9: cardEffect9,
+        10: cardEffect10
+      };
+
+      const effectFunction = effects[cardNumber];
+      console.log('Effect function found:', !!effectFunction, 'for card:', cardNumber); // デバッグログ追加
+      if (effectFunction) {
+        console.log('Executing effect for card:', cardNumber); // デバッグログ追加
+        
+        // カード6の場合は手札情報を渡す
+        if (cardNumber === 6 && handInfo) {
+          await effectFunction(handInfo);
+        } else {
+          await effectFunction();
+        }
+        
+        console.log('Effect completed for card:', cardNumber); // 完了ログ追加
+        
+        // 演出完了後に少し待機してドローアニメーションとの重複を防ぐ
+        await new Promise(resolve => setTimeout(resolve, 200));
+      } else {
+        console.log('No effect function found for card:', cardNumber, 'using default'); // デバッグログ追加
+      }
+    } finally {
+      endAnimation(); // アニメーション終了を記録
     }
   }
 
@@ -1479,6 +1491,27 @@
     }
   }
 
+  // アニメーション状態管理
+  let animationCount = 0;
+  
+  function startAnimation() {
+    animationCount++;
+    if (window.SocketHandlers) {
+      window.SocketHandlers.isAnimationInProgress = animationCount > 0;
+    }
+  }
+  
+  function endAnimation() {
+    animationCount = Math.max(0, animationCount - 1);
+    if (window.SocketHandlers) {
+      window.SocketHandlers.isAnimationInProgress = animationCount > 0;
+    }
+  }
+  
+  function isAnimationInProgress() {
+    return animationCount > 0;
+  }
+
   // 公開
   window.Anim = {
     init,
@@ -1504,6 +1537,10 @@
     enqueueBarrierEffect,
     waitForFxIdle,
     enqueueGuessAnnounce,
-    enqueueGuessResult
+    enqueueGuessResult,
+    // アニメーション状態管理
+    startAnimation,
+    endAnimation,
+    isAnimationInProgress
   };
 })();
