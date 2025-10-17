@@ -82,7 +82,7 @@ class SocketHandlers {
         // this.handleDeleteRoom(socket, data, callback, io);
         setTimeout(() => {
           this.handleDeleteRoom(socket, data, callback, io);
-        }, 5000); // 5秒後にクリーンアップ実行
+        }, 60000 * 5); // 5秒後にクリーンアップ実行
       });
 
       // ゲーム状態確認（リザルト遷移確認用）
