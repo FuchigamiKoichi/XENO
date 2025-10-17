@@ -20,7 +20,7 @@ socket.emit('changeSocketid', {id:playerId, roomId: roomId})
 // ルームのメンバー更新を受け取る
 socket.on('updateRoomMembers', (data) => {
     players = data.players
-    window.location.replace(`room.html?roomid=${roomId}?playerid=${playerId}?players=${players}`)
+    location.replace(`room.html?roomid=${roomId}?playerid=${playerId}?players=${players}`)
 });
 
 function createPlayerBlock(player, permissionClass) {
@@ -68,5 +68,5 @@ startBtn.addEventListener('click', () => {
 })
 
 socket.on('startGame', (data) => { 
-    window.location.replace(`game.html?roomid=${roomId}?playerid=${playerId}?players=${data.players}`)
+    location.replace(`game.html?roomid=${roomId}?playerid=${playerId}?players=${data.players}`)
 })

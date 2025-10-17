@@ -125,7 +125,7 @@ socket.on('navigateToGame', (data) => {
         if (window.audioManager) {
             window.audioManager.stopBGM();
         }
-        window.location.replace(data.url);
+        location.replace(data.url);
     }
 });
 
