@@ -108,7 +108,7 @@ describe('Stress Tests - Function Validation', () => {
       expect(normalized.winners[0].name).toBe('Winner1');
     });
 
-    // Test findPlayerByName with unusual player data
+    // Test findPlayerById with unusual player data
     it('should handle unusual player data structures', () => {
       const longId = 'very_long_id_'.repeat(100);
       const weirdJsonData = {
@@ -122,17 +122,17 @@ describe('Stress Tests - Function Validation', () => {
       weirdJsonData.players[longId] = { name: 'LongIdPlayer', socketId: 'socket_long' };
       
       // Should find player with special characters
-      const result1 = SocketHandlers.findPlayerByName(weirdJsonData, '特殊プレイヤー名');
+      const result1 = SocketHandlers.findPlayerById(weirdJsonData, '特殊ID_123');
       expect(result1).toBeTruthy();
       expect(result1.id).toBe('特殊ID_123');
       
       // Should find player with symbols
-      const result2 = SocketHandlers.findPlayerByName(weirdJsonData, 'Player!@#');
+      const result2 = SocketHandlers.findPlayerById(weirdJsonData, 'player-with-symbols!@#');
       expect(result2).toBeTruthy();
       expect(result2.id).toBe('player-with-symbols!@#');
       
       // Should find player with empty string ID
-      const result3 = SocketHandlers.findPlayerByName(weirdJsonData, 'EmptyIdPlayer');
+      const result3 = SocketHandlers.findPlayerById(weirdJsonData, '');
       expect(result3).toBeTruthy();
       expect(result3.id).toBe('');
     });
@@ -193,7 +193,7 @@ describe('Stress Tests - Function Validation', () => {
       const playerData = {
         players: {
           'cpu_1': { name: 'cpu_1', socketId: 'cpu_socket' },
-          'special_player_特殊': { name: '特殊プレイヤー', socketId: 'special_socket' }
+          'special_id': { name: '特殊プレイヤー', socketId: 'special_socket' }
         }
       };
       
@@ -202,7 +202,7 @@ describe('Stress Tests - Function Validation', () => {
       expect(hasBarrier).toBe(true); // CPU has barrier
       
       // Find special player
-      const foundPlayer = SocketHandlers.findPlayerByName(playerData, '特殊プレイヤー');
+      const foundPlayer = SocketHandlers.findPlayerById(playerData, 'special_id');
       expect(foundPlayer).toBeTruthy();
       expect(foundPlayer.player.socketId).toBe('special_socket');
       

@@ -94,32 +94,32 @@ describe('SocketHandlers', () => {
     });
   });
 
-  describe('findPlayerByName', () => {
-    it('should find player by name', () => {
+  describe('findPlayerById', () => {
+    it('should find player by id', () => {
       const jsonData = {
         players: {
-          'player-1': { name: 'Alice' },
-          'player-2': { name: 'Bob' },
-          'player-3': { name: 'Charlie' }
+          'player-1': { name: 'Alice', socketId: 'socket-1' },
+          'player-2': { name: 'Bob', socketId: 'socket-2' },
+          'player-3': { name: 'Charlie', socketId: 'socket-3' }
         }
       };
 
-      const result = SocketHandlers.findPlayerByName(jsonData, 'Bob');
+      const result = SocketHandlers.findPlayerById(jsonData, 'player-2');
       
       expect(result).toEqual({
         id: 'player-2',
-        player: { name: 'Bob' }
+        player: { name: 'Bob', socketId: 'socket-2' }
       });
     });
 
     it('should return null when player not found', () => {
       const jsonData = {
         players: {
-          'player-1': { name: 'Alice' }
+          'player-1': { name: 'Alice', socketId: 'socket-1' }
         }
       };
 
-      const result = SocketHandlers.findPlayerByName(jsonData, 'NonExistent');
+      const result = SocketHandlers.findPlayerById(jsonData, 'non-existent-id');
       
       expect(result).toBeNull();
     });
@@ -127,24 +127,61 @@ describe('SocketHandlers', () => {
     it('should handle empty players object', () => {
       const jsonData = { players: {} };
 
-      const result = SocketHandlers.findPlayerByName(jsonData, 'Alice');
+      const result = SocketHandlers.findPlayerById(jsonData, 'player-1');
       
       expect(result).toBeNull();
     });
 
     it('should handle null jsonData', () => {
-      const result = SocketHandlers.findPlayerByName(null, 'Alice');
+      const result = SocketHandlers.findPlayerById({ players: null }, 'player-1');
+      
+      expect(result).toBeNull();
+    });
+  });
+
+  describe('findRoomPlayer', () => {
+    it('should find player in room by game player object', () => {
+      const jsonData = {
+        rooms: {
+          'room-1': { players: ['player-1', 'player-2'] }
+        },
+        players: {
+          'player-1': { name: 'Alice', socketId: 'socket-1' },
+          'player-2': { name: 'Bob', socketId: 'socket-2' }
+        }
+      };
+
+      const gamePlayer = { name: 'Bob', socketId: 'old-socket' };
+      const result = SocketHandlers.findRoomPlayer(jsonData, 'room-1', gamePlayer);
+      
+      expect(result).toEqual({
+        id: 'player-2',
+        player: { name: 'Bob', socketId: 'socket-2' }
+      });
+    });
+
+    it('should return null for CPU players', () => {
+      const jsonData = {
+        rooms: { 'room-1': { players: ['player-1'] } },
+        players: { 'player-1': { name: 'Alice', socketId: 'socket-1' } }
+      };
+
+      const gamePlayer = { name: 'cpu_1', socketId: 'cpu-socket' };
+      const result = SocketHandlers.findRoomPlayer(jsonData, 'room-1', gamePlayer);
       
       expect(result).toBeNull();
     });
 
-    it('should handle missing players property', () => {
-      const jsonData = {};
-
-      const result = SocketHandlers.findPlayerByName(jsonData, 'Alice');
+    it('should return null when room not found', () => {
+      const jsonData = { rooms: {}, players: {} };
+      const gamePlayer = { name: 'Alice', socketId: 'socket-1' };
+      
+      const result = SocketHandlers.findRoomPlayer(jsonData, 'non-existent-room', gamePlayer);
       
       expect(result).toBeNull();
     });
+
+
   });
 
   describe('buildResultUrl', () => {
