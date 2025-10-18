@@ -906,7 +906,6 @@ class SocketHandlers {
   static handleRequestRematch(socket, data, io) {
     DataManager.loadData();
     const jsonData = DataManager.getJsonData();
-    jsonData.rooms[data.roomId].playing = false;
     
     const { roomId, playerId } = data;
     
@@ -917,6 +916,14 @@ class SocketHandlers {
 
     Logger.info(`${playerId} からルーム ${roomId} への再戦リクエストを受け取りました。`);
     const room = jsonData.rooms[roomId];
+
+    if (!room) {
+      Logger.error(`ルーム ${roomId} が存在しません。`);
+      return;
+    }
+
+    // ルームのplaying状態をfalseに設定
+    room.playing = false;
 
     if (room.players.length >= CONFIG.MAX_PLAYERS_PER_ROOM) {
         Logger.info(`ルーム ${roomId} の初回再戦リクエスト。プレイヤーリストとready状態をリセットします。`);
@@ -1036,11 +1043,9 @@ class SocketHandlers {
       const reachedPlayers = room.playersReachedResult || [];
       
       if (humanPlayers.length > 0 && reachedPlayers.length >= humanPlayers.length) {
-        Logger.info(`[RoomCleanup] 全プレイヤーがリザルト到達、ルーム ${roomId} の即座クリーンアップを実行`);
-        // 少し遅延を設けて安全に削除
-        setTimeout(() => {
-          RoomManager.removeRoom(roomId);
-        }, 5000);
+        Logger.info(`[RoomCleanup] 全プレイヤーがリザルト到達（ロビー復帰時に退出判定を行います）`);
+        // リザルト画面到達時点では退出判定を行わず、ロビー復帰時に判定する
+        // ルーム削除処理はhandleReturnToLobbyで実行
       }
     } catch (e) {
       Logger.error(`[RoomCleanup] 全プレイヤー到達チェックエラー ${roomId}:`, e);
