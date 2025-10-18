@@ -169,12 +169,19 @@ class GameService {
     
     Logger.info('準備完了！ゲームを開始します');
     let socketIdList = [];
+    let playerIdList = [];
     
     for (let i = 0; i < jsonData.rooms[roomId].players.length; i++) {
-      socketIdList.push(jsonData.players[jsonData.rooms[roomId].players[i]].socketId);
+      const playerId = jsonData.rooms[roomId].players[i];
+      playerIdList.push(playerId);
+      socketIdList.push(jsonData.players[playerId].socketId);
     }
     
-    const gameData = { roomId: roomId, players: socketIdList };
+    const gameData = { 
+      roomId: roomId, 
+      players: socketIdList, 
+      playerIds: playerIdList 
+    };
     const playerCount = jsonData.rooms[roomId].players.length;
     
     // プレイヤー数に応じて関数配列を構築

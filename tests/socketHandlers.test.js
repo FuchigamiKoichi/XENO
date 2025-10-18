@@ -98,9 +98,9 @@ describe('SocketHandlers', () => {
     it('should find player by id', () => {
       const jsonData = {
         players: {
-          'player-1': { name: 'Alice' },
-          'player-2': { name: 'Bob' },
-          'player-3': { name: 'Charlie' }
+          'player-1': { name: 'Alice', socketId: 'socket-1' },
+          'player-2': { name: 'Bob', socketId: 'socket-2' },
+          'player-3': { name: 'Charlie', socketId: 'socket-3' }
         }
       };
 
@@ -108,14 +108,14 @@ describe('SocketHandlers', () => {
       
       expect(result).toEqual({
         id: 'player-2',
-        player: { name: 'Bob' }
+        player: { name: 'Bob', socketId: 'socket-2' }
       });
     });
 
     it('should return null when player not found', () => {
       const jsonData = {
         players: {
-          'player-1': { name: 'Alice' }
+          'player-1': { name: 'Alice', socketId: 'socket-1' }
         }
       };
 
@@ -145,6 +145,8 @@ describe('SocketHandlers', () => {
       
       expect(result).toBeNull();
     });
+
+
   });
 
   describe('buildResultUrl', () => {

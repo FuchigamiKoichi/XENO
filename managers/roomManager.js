@@ -65,10 +65,23 @@ class RoomManager {
     const jsonData = DataManager.getJsonData();
     
     if (jsonData.rooms[roomId]) {
+      // ルーム削除前にプレイヤーの状態もクリーンアップ
+      const room = jsonData.rooms[roomId];
+      for (const playerId of room.players) {
+        if (jsonData.players[playerId]) {
+          jsonData.players[playerId].ready = 0;
+          jsonData.players[playerId].live = true;
+          jsonData.players[playerId].surrendered = false;
+          Logger.debug(`プレイヤー ${playerId} の状態をリセット`);
+        }
+      }
+      
       delete jsonData.rooms[roomId];
       Logger.info(`ルーム ${roomId} 削除`);
       DataManager.saveData();
+      return true;
     }
+    return false;
   }
 
   static setRoomPlayingStatus(roomId, playing) {
