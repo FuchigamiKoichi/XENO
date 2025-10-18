@@ -94,8 +94,8 @@ describe('SocketHandlers', () => {
     });
   });
 
-  describe('findPlayerByName', () => {
-    it('should find player by name', () => {
+  describe('findPlayerById', () => {
+    it('should find player by id', () => {
       const jsonData = {
         players: {
           'player-1': { name: 'Alice' },
@@ -104,7 +104,7 @@ describe('SocketHandlers', () => {
         }
       };
 
-      const result = SocketHandlers.findPlayerByName(jsonData, 'Bob');
+      const result = SocketHandlers.findPlayerById(jsonData, 'player-2');
       
       expect(result).toEqual({
         id: 'player-2',
@@ -119,7 +119,7 @@ describe('SocketHandlers', () => {
         }
       };
 
-      const result = SocketHandlers.findPlayerByName(jsonData, 'NonExistent');
+      const result = SocketHandlers.findPlayerById(jsonData, 'nonexistent-id');
       
       expect(result).toBeNull();
     });
@@ -127,13 +127,13 @@ describe('SocketHandlers', () => {
     it('should handle empty players object', () => {
       const jsonData = { players: {} };
 
-      const result = SocketHandlers.findPlayerByName(jsonData, 'Alice');
+      const result = SocketHandlers.findPlayerById(jsonData, 'player-1');
       
       expect(result).toBeNull();
     });
 
     it('should handle null jsonData', () => {
-      const result = SocketHandlers.findPlayerByName(null, 'Alice');
+      const result = SocketHandlers.findPlayerById(null, 'player-1');
       
       expect(result).toBeNull();
     });
@@ -141,7 +141,7 @@ describe('SocketHandlers', () => {
     it('should handle missing players property', () => {
       const jsonData = {};
 
-      const result = SocketHandlers.findPlayerByName(jsonData, 'Alice');
+      const result = SocketHandlers.findPlayerById(jsonData, 'player-1');
       
       expect(result).toBeNull();
     });
