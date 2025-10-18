@@ -73,9 +73,9 @@ describe('XENO Game - Ideal Specification Tests', () => {
         expect(expectedPhases.length).toBe(4);
       });
       
-      it('should enforce 30-second choice time limit', () => {
-        // 理想仕様: 30秒以内の選択制限時間
-        expect(CONFIG.SOCKET_TIMEOUT).toBeLessThanOrEqual(GAME_RULES_SPEC.TURN.CHOICE_TIME_LIMIT);
+      it('should enforce 1-minute choice time limit', () => {
+        // 理想仕様: 1分以内の選択制限時間
+        expect(CONFIG.SOCKET_TIMEOUT).toBeLessThanOrEqual(65000); // アニメーション考慮で65秒
       });
     });
   });

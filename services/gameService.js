@@ -46,8 +46,8 @@ class GameService {
         finalChoice = GameService.getFallbackChoice(choices, kind, `invalid CPU response: ${mlChoice}`);
       }
       
-      // カードプレイ、可視更新、予想処理は他のプレイヤーに通知
-      if ((kind === 'play_card' || kind === 'update' || kind === 'pred') && io) {
+      // カードプレイ、可視更新、予想処理、カード捨て処理は他のプレイヤーに通知
+      if ((kind === 'play_card' || kind === 'update' || kind === 'pred' || kind === 'trush' || kind === 'trash') && io) {
         GameService.notifyOtherPlayers(now, choices, finalChoice, kind, socketId, io);
       }
       
@@ -169,12 +169,19 @@ class GameService {
     
     Logger.info('準備完了！ゲームを開始します');
     let socketIdList = [];
+    let playerIdList = [];
     
     for (let i = 0; i < jsonData.rooms[roomId].players.length; i++) {
-      socketIdList.push(jsonData.players[jsonData.rooms[roomId].players[i]].socketId);
+      const playerId = jsonData.rooms[roomId].players[i];
+      playerIdList.push(playerId);
+      socketIdList.push(jsonData.players[playerId].socketId);
     }
     
-    const gameData = { roomId: roomId, players: socketIdList };
+    const gameData = { 
+      roomId: roomId, 
+      players: socketIdList, 
+      playerIds: playerIdList 
+    };
     const playerCount = jsonData.rooms[roomId].players.length;
     
     // プレイヤー数に応じて関数配列を構築
@@ -256,8 +263,8 @@ class GameService {
           Logger.debug(`最終選択: ${result}`);
         }
         
-        // カードプレイ、可視更新、予想処理を他のプレイヤーに通知
-        if (kind === 'play_card' || kind === 'update' || kind === 'pred') {
+        // カードプレイ、可視更新、予想処理、カード捨て処理を他のプレイヤーに通知
+        if (kind === 'play_card' || kind === 'update' || kind === 'pred' || kind === 'trash') {
           GameService.notifyOtherPlayers(now, choices, finalResult, kind, socketId, io);
         }
         
@@ -277,6 +284,13 @@ class GameService {
       }
     } catch (e) {
       Logger.error("choice (yourTurn) failed:", e);
+      
+      // タイムアウトエラーの場合のみ、nullを返してゲーム側でタイムアウト処理を行わせる
+      if (e.message && e.message.toLowerCase().includes('timeout')) {
+        Logger.warn(`プレイヤー ${socketId} がタイムアウトしました`);
+        return null;  // タイムアウト時はnullを返す
+      }
+      
       return GameService.getFallbackChoice(choices, kind, `player choice error: ${e.message}`);
     }
   }
@@ -458,7 +472,9 @@ class GameService {
             Logger.debug(`既に切断済みのソケット (${socketId}) に対するタイムアウトのため、エラー処理をスキップ。`);
             return resolve(null); 
           }
-          reject(err);
+          // タイムアウトエラーの場合、エラーメッセージを明確にする
+          const timeoutError = new Error(`timeout: ${err.message}`);
+          reject(timeoutError);
         } else {
           const value = GameService.parseAckResponse(choices, kind, responses);
           Logger.debug(`ACK正規化結果: ${util.inspect(value, { depth: null })}`);

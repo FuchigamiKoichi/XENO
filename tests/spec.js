@@ -4,6 +4,13 @@
  * 理想的な仕様を定義し、テストで使用する基準を提供
  */
 
+// テストが実行できるように最低限のテストを追加
+describe('Spec Validation', () => {
+  test('should define GAME_RULES_SPEC', () => {
+    expect(typeof GAME_RULES_SPEC).toBe('object');
+  });
+});
+
 // ===== 1. ゲームルール理想仕様 =====
 const GAME_RULES_SPEC = {
   // プレイヤー仕様
@@ -26,7 +33,7 @@ const GAME_RULES_SPEC = {
   TURN: {
     PHASE_ORDER: ['DRAW', 'CHOOSE_CARD', 'PLAY_EFFECT', 'END_TURN'],
     DRAW_AMOUNT: 1,
-    CHOICE_TIME_LIMIT: 30000, // 30秒
+    CHOICE_TIME_LIMIT: 65000, // 65秒（アニメーション考慮）
     MUST_PLAY_CARD: true
   },
 

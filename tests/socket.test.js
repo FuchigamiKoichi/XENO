@@ -84,17 +84,17 @@ describe('XENO Socket Handlers - Ideal Specification Tests', () => {
         };
         
         // 人間プレイヤーの検索
-        const aliceResult = SocketHandlers.findPlayerByName(multiPlayerData, 'Alice');
+        const aliceResult = SocketHandlers.findPlayerById(multiPlayerData, 'player_1');
         expect(aliceResult.player.ready).toBe(true);
         expect(aliceResult.player.socketId).toBe('socket_1');
         
         // CPUプレイヤーの検索
-        const cpuResult = SocketHandlers.findPlayerByName(multiPlayerData, 'cpu_1');
+        const cpuResult = SocketHandlers.findPlayerById(multiPlayerData, 'cpu_1');
         expect(cpuResult.player.isCpu).toBe(true);
         expect(cpuResult.player.socketId).toBe('cpu_socket');
         
         // 存在しないプレイヤー
-        const notFoundResult = SocketHandlers.findPlayerByName(multiPlayerData, 'NonExistent');
+        const notFoundResult = SocketHandlers.findPlayerById(multiPlayerData, 'non_existent');
         expect(notFoundResult).toBeNull();
       });
       
@@ -108,9 +108,9 @@ describe('XENO Socket Handlers - Ideal Specification Tests', () => {
           }
         };
         
-        const humanPlayer = SocketHandlers.findPlayerByName(mixedPlayerData, 'RealPlayer');
-        const basicCpu = SocketHandlers.findPlayerByName(mixedPlayerData, 'cpu_1');
-        const expertCpu = SocketHandlers.findPlayerByName(mixedPlayerData, 'cpu_expert');
+        const humanPlayer = SocketHandlers.findPlayerById(mixedPlayerData, 'human_1');
+        const basicCpu = SocketHandlers.findPlayerById(mixedPlayerData, 'cpu_1');
+        const expertCpu = SocketHandlers.findPlayerById(mixedPlayerData, 'cpu_expert');
         
         expect(humanPlayer.player.type).toBe('human');
         expect(basicCpu.player.type).toBe('cpu');
@@ -224,7 +224,7 @@ describe('XENO Socket Handlers - Ideal Specification Tests', () => {
         };
         
         const startTime = performance.now();
-        const result = SocketHandlers.findPlayerByName(largePlayerData, 'Player5000');
+        const result = SocketHandlers.findPlayerById(largePlayerData, 'player_5000');
         const endTime = performance.now();
         
         expect(endTime - startTime).toBeLessThan(50); // 50ms以内
@@ -296,12 +296,12 @@ describe('XENO Socket Handlers - Ideal Specification Tests', () => {
         };
         
         // 完全なデータの検索
-        const complete = SocketHandlers.findPlayerByName(incompletePlayerData, 'CompletePlayer');
+        const complete = SocketHandlers.findPlayerById(incompletePlayerData, 'complete');
         expect(complete).toBeTruthy();
         expect(complete.player.socketId).toBe('socket1');
         
         // 不完全なデータでもエラーにならない
-        const incomplete = SocketHandlers.findPlayerByName(incompletePlayerData, 'NoSocketPlayer');
+        const incomplete = SocketHandlers.findPlayerById(incompletePlayerData, 'missing_socket');
         expect(incomplete).toBeTruthy();
         expect(incomplete.player.name).toBe('NoSocketPlayer');
       });
@@ -414,11 +414,11 @@ describe('XENO Socket Handlers - Ideal Specification Tests', () => {
         };
         
         // 各国際プレイヤーの検索
-        const japanese = SocketHandlers.findPlayerByName(internationalPlayers, '田中太郎');
-        const english = SocketHandlers.findPlayerByName(internationalPlayers, 'John Smith');
-        const korean = SocketHandlers.findPlayerByName(internationalPlayers, '김철수');
-        const chinese = SocketHandlers.findPlayerByName(internationalPlayers, '李小明');
-        const emoji = SocketHandlers.findPlayerByName(internationalPlayers, '🎮ゲーマー🎯');
+        const japanese = SocketHandlers.findPlayerById(internationalPlayers, 'jp_1');
+        const english = SocketHandlers.findPlayerById(internationalPlayers, 'en_1');
+        const korean = SocketHandlers.findPlayerById(internationalPlayers, 'ko_1');
+        const chinese = SocketHandlers.findPlayerById(internationalPlayers, 'cn_1');
+        const emoji = SocketHandlers.findPlayerById(internationalPlayers, 'emoji_1');
         
         expect(japanese.player.country).toBe('JP');
         expect(english.player.country).toBe('US');

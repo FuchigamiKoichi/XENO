@@ -13,7 +13,7 @@
   const FX = {
     dur: 0.5,            // 標準アニメ時間
     ease: 'power2.out',  // 標準イージング
-    long: 300            // ターンタイマー（秒）
+    long: 60             // ターンタイマー（秒）
   };
 
   // ===== アニメーションスケジューラ（重なり防止）=====
@@ -156,6 +156,8 @@
   // ズームUI（完了で resolve する Promise 版）
   function zoomCard(imgSrc, effectText, holdSec = 1.0) {
     return new Promise((resolve) => {
+      startAnimation(); // アニメーション開始を記録
+      
       const zoomArea   = document.getElementById('cardZoom');
       const zoomedCard = document.getElementById('zoomedCard');
       const desc       = document.getElementById('effectDescription');
@@ -167,6 +169,7 @@
 
       gsap.timeline({
         onComplete: () => {
+          endAnimation(); // アニメーション終了を記録
           resolve();
         }
       })
@@ -180,6 +183,8 @@
   // 手札へドロー（自分）
   function drawCardToHand(drawnCard) {
     return new Promise((resolve) => {
+      startAnimation(); // アニメーション開始を記録
+      
       cleanupAnimTemps();
 
       const anchorFrom = getDeckAnchorRect();
@@ -209,6 +214,7 @@
           temp.value = drawnCard;                 
           temp.dataset.card = String(drawnCard);
           refs.playerHandZone.appendChild(temp);
+          endAnimation(); // アニメーション終了を記録
           resolve('done');
         }
       })
@@ -261,21 +267,45 @@
   }
 
   // ターンタイマー
-  let turnTween;
-  function startTurnTimer() {
-    if (!refs.timerBar) return;
-    if (turnTween) turnTween.kill();
-    gsap.set(refs.timerBar, { width: '100%' });
-    turnTween = gsap.to(refs.timerBar, {
-      width: '0%',
-      duration: FX.long,
-      ease: 'none'
-    });
+  let turnStartTime = 0;     // ターン開始時刻
+  let turnDurationMs = 0;    // 制限時間（ミリ秒）
+  let timerRafId = null;
+
+  // タイマー更新
+  function _updateTimer() {
+      const elapsedTime = Date.now() - turnStartTime;
+      const remainingRatio = 1 - (elapsedTime / turnDurationMs);
+
+      // バーの幅を実際の残り時間の割合に設定
+      if (refs.timerBar) {
+          refs.timerBar.style.width = `${Math.max(0, remainingRatio * 100)}%`;
+      }
+      // 時間切れチェック
+      if (remainingRatio > 0) {
+          timerRafId = requestAnimationFrame(_updateTimer);
+      }
   }
+
+  function startTurnTimer(durationSec = 60) {
+      if (!refs.timerBar) return;
+      
+      stopTurnTimer();
+      turnStartTime = Date.now();
+      turnDurationMs = durationSec * 1000;
+
+      refs.timerBar.style.width = '100%';
+      // 更新ループ
+      timerRafId = requestAnimationFrame(_updateTimer);
+  }
+
   function stopTurnTimer() {
-    if (!refs.timerBar) return;
-    if (turnTween) turnTween.kill();
-    gsap.set(refs.timerBar, { width: '100%' });
+      if (timerRafId) {
+          cancelAnimationFrame(timerRafId);
+          timerRafId = null;
+      }
+      if (refs.timerBar) {
+          refs.timerBar.style.width = '100%';
+      }
   }
 
   // ===== カード演出アニメーション =====
@@ -1159,43 +1189,49 @@
     console.log('playCardEffect called with cardNumber:', cardNumber, 'isBarriered:', isBarriered, 'handInfo:', handInfo); // デバッグログ追加
     console.log('GSAP available:', typeof gsap !== 'undefined'); // GSAP存在確認
     
-    // GSAPテストを一度だけ実行
-    if (!window.gsapTested) {
-      window.gsapTested = true;
-      testGSAP();
-    }
+    startAnimation(); // アニメーション開始を記録
     
-    const effects = {
-      1: cardEffect1,
-      2: cardEffect2,
-      3: cardEffect3,
-      4: cardEffect4,
-      5: cardEffect5,
-      6: cardEffect6,
-      7: cardEffect7,
-      8: cardEffect8,
-      9: cardEffect9,
-      10: cardEffect10
-    };
-
-    const effectFunction = effects[cardNumber];
-    console.log('Effect function found:', !!effectFunction, 'for card:', cardNumber); // デバッグログ追加
-    if (effectFunction) {
-      console.log('Executing effect for card:', cardNumber); // デバッグログ追加
-      
-      // カード6の場合は手札情報を渡す
-      if (cardNumber === 6 && handInfo) {
-        await effectFunction(handInfo);
-      } else {
-        await effectFunction();
+    try {
+      // GSAPテストを一度だけ実行
+      if (!window.gsapTested) {
+        window.gsapTested = true;
+        testGSAP();
       }
       
-      console.log('Effect completed for card:', cardNumber); // 完了ログ追加
-      
-      // 演出完了後に少し待機してドローアニメーションとの重複を防ぐ
-      await new Promise(resolve => setTimeout(resolve, 200));
-    } else {
-      console.log('No effect function found for card:', cardNumber, 'using default'); // デバッグログ追加
+      const effects = {
+        1: cardEffect1,
+        2: cardEffect2,
+        3: cardEffect3,
+        4: cardEffect4,
+        5: cardEffect5,
+        6: cardEffect6,
+        7: cardEffect7,
+        8: cardEffect8,
+        9: cardEffect9,
+        10: cardEffect10
+      };
+
+      const effectFunction = effects[cardNumber];
+      console.log('Effect function found:', !!effectFunction, 'for card:', cardNumber); // デバッグログ追加
+      if (effectFunction) {
+        console.log('Executing effect for card:', cardNumber); // デバッグログ追加
+        
+        // カード6の場合は手札情報を渡す
+        if (cardNumber === 6 && handInfo) {
+          await effectFunction(handInfo);
+        } else {
+          await effectFunction();
+        }
+        
+        console.log('Effect completed for card:', cardNumber); // 完了ログ追加
+        
+        // 演出完了後に少し待機してドローアニメーションとの重複を防ぐ
+        await new Promise(resolve => setTimeout(resolve, 200));
+      } else {
+        console.log('No effect function found for card:', cardNumber, 'using default'); // デバッグログ追加
+      }
+    } finally {
+      endAnimation(); // アニメーション終了を記録
     }
   }
 
@@ -1338,6 +1374,144 @@
     });
   }
 
+  // ===== TRUSH（カードを捨てる）アニメーション =====
+
+  /**
+   * プレイヤーがカードを捨てるアニメーション（手札検索なしver）
+   * @param {number} cardNumber - 捨てられるカードの番号
+   * @param {boolean} isPlayer - プレイヤー自身かどうか
+   * @returns {Promise} アニメーション完了のPromise
+   */
+  function trashCard(cardNumber, isPlayer = true) {
+    return new Promise((resolve) => {
+      console.log(`trashCard animation starting: card ${cardNumber}, isPlayer: ${isPlayer}`);
+      
+      const handZone = isPlayer ? refs.playerHandZone : refs.opponentHandZone;
+      if (!handZone) {
+        console.error('Hand zone not found');
+        resolve();
+        return;
+      }
+
+      // 手札検索ではなく、カード番号から直接画像を生成してアニメーション
+      console.log(`[trash] Creating animation card for number ${cardNumber}`);
+      
+      // カード画像要素を動的に生成
+      const animCard = document.createElement('img');
+      animCard.src = `../images/${cardNumber}.webp`;
+      animCard.classList.add('trash-animation-card');
+      animCard.style.cssText = `
+        position: absolute;
+        width: 100px;
+        height: 150px;
+        z-index: 1000;
+        pointer-events: none;
+        border-radius: 8px;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+      `;
+      
+      // 手札エリアの中央付近に初期配置
+      const handRect = handZone.getBoundingClientRect();
+      const gameContainer = document.getElementById('gameScreen') || document.body;
+      const containerRect = gameContainer.getBoundingClientRect();
+      
+      // 手札エリア相対の初期位置を計算
+      const initialX = handRect.left - containerRect.left + (handRect.width / 2) - 50; // カード幅の半分を引く
+      const initialY = handRect.top - containerRect.top + (handRect.height / 2) - 75;  // カード高さの半分を引く
+      
+      animCard.style.left = `${initialX}px`;
+      animCard.style.top = `${initialY}px`;
+      
+      // ゲームコンテナに追加
+      gameContainer.appendChild(animCard);
+      
+      console.log(`[trash] Animation card created and positioned at (${initialX}, ${initialY})`);
+
+      // アニメーション実行
+      const timeline = gsap.timeline({
+        onComplete: () => {
+          console.log(`trashCard animation completed for card ${cardNumber}`);
+          // アニメーション用カード要素を削除
+          if (animCard.parentNode) {
+            animCard.parentNode.removeChild(animCard);
+          }
+          resolve();
+        }
+      });
+
+      // カードを捨てるアニメーション：回転しながら上に飛んでフェードアウト
+      timeline
+        .to(animCard, {
+          y: -150,
+          rotation: isPlayer ? 360 : -360, // 1回転
+          scale: 1.2,
+          duration: 0.6,
+          ease: 'power2.out'
+        })
+        .to(animCard, {
+          opacity: 0,
+          y: -300,
+          rotation: isPlayer ? 540 : -540, // さらに半回転
+          scale: 0.2,
+          duration: 0.4,
+          ease: 'power2.in'
+        }, 0.3);
+
+      // 捨てる効果音を再生
+      playCardDropSE();
+    });
+  }
+
+  /**
+   * trashアニメーションをキューに追加（プレイヤー側）
+   * @param {number} cardNumber - 捨てられるカードの番号
+   * @returns {Promise} 完了Promise
+   */
+  function enqueuePlayerTrash(cardNumber) {
+    return _enqueue('draw', () => trashCard(cardNumber, true));
+  }
+
+  /**
+   * trashアニメーションをキューに追加（相手側）
+   * @param {number} cardNumber - 捨てられるカードの番号
+   * @returns {Promise} 完了Promise
+   */
+  function enqueueOpponentTrash(cardNumber) {
+    return _enqueue('draw', () => trashCard(cardNumber, false));
+  }
+
+  // 効果音再生関数（存在しない場合は無音で処理）
+  function playCardDropSE() {
+    try {
+      if (window.AudioManager && typeof window.AudioManager.playSE === 'function') {
+        window.AudioManager.playSE('cardDrop', 0.7);
+      }
+    } catch (e) {
+      console.log('Card drop SE not available');
+    }
+  }
+
+  // アニメーション状態管理
+  let animationCount = 0;
+  
+  function startAnimation() {
+    animationCount++;
+    if (window.SocketHandlers) {
+      window.SocketHandlers.isAnimationInProgress = animationCount > 0;
+    }
+  }
+  
+  function endAnimation() {
+    animationCount = Math.max(0, animationCount - 1);
+    if (window.SocketHandlers) {
+      window.SocketHandlers.isAnimationInProgress = animationCount > 0;
+    }
+  }
+  
+  function isAnimationInProgress() {
+    return animationCount > 0;
+  }
+
   // 公開
   window.Anim = {
     init,
@@ -1352,6 +1526,10 @@
     stopTurnTimer,
     playCardEffect,
     playBarrierEffect,
+    // trashアニメーション
+    trashCard,
+    enqueuePlayerTrash,
+    enqueueOpponentTrash,
     // 非同期に積むための新API（必要に応じて利用）
     enqueuePlay,
     enqueuePlayerDraw,
@@ -1359,6 +1537,10 @@
     enqueueBarrierEffect,
     waitForFxIdle,
     enqueueGuessAnnounce,
-    enqueueGuessResult
+    enqueueGuessResult,
+    // アニメーション状態管理
+    startAnimation,
+    endAnimation,
+    isAnimationInProgress
   };
 })();

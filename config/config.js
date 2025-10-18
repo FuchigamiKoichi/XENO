@@ -9,7 +9,7 @@ const CONFIG = {
   DATA_FILE: './data.json',
   MIN_PLAYERS_PER_ROOM: 2,  // 理想仕様: 最小2人プレイ
   MAX_PLAYERS_PER_ROOM: 2,  // 理想仕様: 最大2人プレイ（テスト仕様準拠）
-  SOCKET_TIMEOUT: 5 * 60000, // 理想仕様: 5分制限時間（テスト仕様準拠）
+  SOCKET_TIMEOUT: 65000, // 理想仕様: 65秒制限時間（アニメーション考慮）
 
   // ゲームルール
   GAME_RULES: {
