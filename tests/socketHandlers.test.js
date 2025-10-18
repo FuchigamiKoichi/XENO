@@ -119,7 +119,7 @@ describe('SocketHandlers', () => {
         }
       };
 
-      const result = SocketHandlers.findPlayerById(jsonData, 'non-existent-id');
+      const result = SocketHandlers.findPlayerById(jsonData, 'nonexistent-id');
       
       expect(result).toBeNull();
     });
@@ -133,50 +133,15 @@ describe('SocketHandlers', () => {
     });
 
     it('should handle null jsonData', () => {
-      const result = SocketHandlers.findPlayerById({ players: null }, 'player-1');
-      
-      expect(result).toBeNull();
-    });
-  });
-
-  describe('findRoomPlayer', () => {
-    it('should find player in room by game player object', () => {
-      const jsonData = {
-        rooms: {
-          'room-1': { players: ['player-1', 'player-2'] }
-        },
-        players: {
-          'player-1': { name: 'Alice', socketId: 'socket-1' },
-          'player-2': { name: 'Bob', socketId: 'socket-2' }
-        }
-      };
-
-      const gamePlayer = { name: 'Bob', socketId: 'old-socket' };
-      const result = SocketHandlers.findRoomPlayer(jsonData, 'room-1', gamePlayer);
-      
-      expect(result).toEqual({
-        id: 'player-2',
-        player: { name: 'Bob', socketId: 'socket-2' }
-      });
-    });
-
-    it('should return null for CPU players', () => {
-      const jsonData = {
-        rooms: { 'room-1': { players: ['player-1'] } },
-        players: { 'player-1': { name: 'Alice', socketId: 'socket-1' } }
-      };
-
-      const gamePlayer = { name: 'cpu_1', socketId: 'cpu-socket' };
-      const result = SocketHandlers.findRoomPlayer(jsonData, 'room-1', gamePlayer);
+      const result = SocketHandlers.findPlayerById(null, 'player-1');
       
       expect(result).toBeNull();
     });
 
-    it('should return null when room not found', () => {
-      const jsonData = { rooms: {}, players: {} };
-      const gamePlayer = { name: 'Alice', socketId: 'socket-1' };
-      
-      const result = SocketHandlers.findRoomPlayer(jsonData, 'non-existent-room', gamePlayer);
+    it('should handle missing players property', () => {
+      const jsonData = {};
+
+      const result = SocketHandlers.findPlayerById(jsonData, 'player-1');
       
       expect(result).toBeNull();
     });

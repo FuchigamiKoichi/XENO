@@ -385,15 +385,14 @@ class SocketHandlers {
   }
 
   /**
-   * プレイヤーIDからプレイヤー情報を取得
-   * @param {Object} jsonData - ゲームデータ
-   * @param {string} playerId - プレイヤーID
-   * @returns {Object|null} プレイヤー情報 { id, player }
+   * プレイヤーIDから { id, player } を返す。未発見なら null
    */
   static findPlayerById(jsonData, playerId) {
-    const player = jsonData.players?.[playerId];
+    if (!jsonData || !jsonData.players) {
+      return null;
+    }
+    const player = jsonData.players[playerId];
     if (player) {
-      console.log(`[findPlayerById] 見つかりました: ${playerId} -> ${player.name} (socketId: ${player.socketId})`);
       return { id: playerId, player };
     }
     console.warn(`[findPlayerById] プレイヤーが見つかりません: ${playerId}`);
@@ -521,41 +520,80 @@ class SocketHandlers {
 
     // 敗者通知
     for (const loser of losers || []) {
-      if (excludeCpu && typeof loser?.name === 'string' && loser.name.startsWith('cpu_')) {
-        continue;
-      }
-      
-      // gamePlayerオブジェクトからplayerIdを取得し、data.jsonから正確な情報を取得
-      const playerInfo = SocketHandlers.getPlayerInfoFromGame(loser, jsonData);
-      Logger.debug(`[Result] 敗者検索結果 ${loser.name}:`, playerInfo);
-      
-      if (playerInfo && playerInfo.player && playerInfo.player.socketId) {
-        const url = SocketHandlers.buildResultUrl('lose', roomId, playerInfo.id, reasonText);
-        Logger.debug(`[Result] 敗者リダイレクトURL: ${url}, socketId: ${playerInfo.player.socketId}`);
-        io.to(playerInfo.player.socketId).emit('redirectToResult', { url });
-        Logger.debug(`[Result] 敗者リダイレクト送信完了: ${loser.name}`);
-      } else {
-        Logger.error(`[Result] 敗者 ${loser.name} の接続情報が見つかりません:`, playerInfo);
+      if (!loser.name.startsWith('cpu_')) {
+        // loser.idまたはloser.playerIdを使用してプレイヤーを特定
+        let playerId = loser.id || loser.playerId;
+        console.log('test');
+        console.log(loser);
+        console.log('test');
+        
+        // フォールバック: nameからplayerIdを検索
+        if (!playerId && loser.name) {
+          // プレイヤー名からIDを逆引き
+          const playerIds = Object.keys(jsonData.players || {});
+          for (const id of playerIds) {
+            if (jsonData.players[id].name === loser.name) {
+              playerId = id;
+              break;
+            }
+          }
+        }
+        
+        if (!playerId) {
+          Logger.warn(`[Result] 敗者のplayerIdが見つかりません: ${loser.name}`);
+          continue;
+        }
+        if (excludeCpu && playerId.startsWith('cpu_')) {
+          continue;
+        }
+        const found = this.findPlayerById(jsonData, playerId);
+        if (found && found.player && found.player.socketId) {
+          const url = this.buildResultUrl('lose', roomId, found.id, reasonText);
+          io.to(loser.socketId).emit('redirectToResult', { url });
+          Logger.debug(`[Result] 敗者リダイレクト送信: ${loser.name} (ID: ${playerId})`);
+        }
       }
     }
 
     // 勝者通知
     for (const winner of winners || []) {
-      if (excludeCpu && typeof winner?.name === 'string' && winner.name.startsWith('cpu_')) {
-        continue;
-      }
-      
-      // gamePlayerオブジェクトからplayerIdを取得し、data.jsonから正確な情報を取得
-      const playerInfo = SocketHandlers.getPlayerInfoFromGame(winner, jsonData);
-      Logger.debug(`[Result] 勝者検索結果 ${winner.name}:`, playerInfo);
-      
-      if (playerInfo && playerInfo.player && playerInfo.player.socketId) {
-        const url = SocketHandlers.buildResultUrl('win', roomId, playerInfo.id, reasonText);
-        Logger.debug(`[Result] 勝者リダイレクトURL: ${url}, socketId: ${playerInfo.player.socketId}`);
-        io.to(playerInfo.player.socketId).emit('redirectToResult', { url });
-        Logger.debug(`[Result] 勝者リダイレクト送信完了: ${winner.name}`);
-      } else {
-        Logger.error(`[Result] 勝者 ${winner.name} の接続情報が見つかりません:`, playerInfo);
+      if (!winner.name.startsWith('cpu_')){
+        // winner.idまたはwinner.playerIdを使用してプレイヤーを特定
+        let playerId = winner.id || winner.playerId;
+        console.log('test');
+        console.log(winner);
+        console.log('test');
+        
+        // フォールバック: nameからplayerIdを検索
+        if (!playerId && winner.name) {
+          // CPUプレイヤーの場合、名前をそのままIDとして使用
+          if (winner.name.startsWith('cpu_')) {
+            playerId = winner.name;
+          } else {
+            // プレイヤー名からIDを逆引き
+            const playerIds = Object.keys(jsonData.players || {});
+            for (const id of playerIds) {
+              if (jsonData.players[id].name === winner.name) {
+                playerId = id;
+                break;
+              }
+            }
+          }
+        }
+        
+        if (!playerId) {
+          Logger.warn(`[Result] 勝者のplayerIdが見つかりません: ${winner.name}`);
+          continue;
+        }
+        if (excludeCpu && playerId.startsWith('cpu_')) {
+          continue;
+        }
+        const found = this.findPlayerById(jsonData, playerId);
+        if (winner.socketId) {
+          const url = this.buildResultUrl('win', roomId, found.id, reasonText);
+          io.to(winner.socketId).emit('redirectToResult', { url });
+          Logger.debug(`[Result] 勝者リダイレクト送信: ${winner.name} (ID: ${playerId})`);
+        }
       }
     }
   }
@@ -672,58 +710,82 @@ class SocketHandlers {
                 // ルームにいるプレイヤー全員に通知
                 for (const playerId of room.players) {
                   const playerData = currentJsonData.players[playerId];
-                  if (playerData && playerData.socketId && playerData.name !== 'cpu_1') {
+                  if (playerData && playerData.socketId && !playerId.startsWith('cpu_')) {
                     const reason = encodeURIComponent('引き分け');
                     const url = `result.html?result=draw&reason=${reason}&roomId=${data.roomId}&playerId=${playerId}`;
                     io.to(playerData.socketId).emit('redirectToResult', { url: url });
-                    Logger.debug(`[Result] 引き分けリダイレクト送信: ${playerData.name}`);
+                    Logger.debug(`[Result] 引き分けリダイレクト送信: ${playerData.name} (ID: ${playerId})`);
                   }
                 }
               }
              }else{
               // 敗者への通知
               for (const loser of losers) {
-                Logger.debug(`[Result] 敗者データ: id=${loser.id}, name=${loser.name}, constructor=${loser.constructor.name}`);
+                // プレイヤーIDからプレイヤーデータを検索
+                let playerId = loser.id || loser.playerId;
                 
-                // IDベースの検索のみを使用
-                if (loser.id && currentJsonData.players[loser.id]) {
-                  const playerId = loser.id;
-                  const playerFound = SocketHandlers.findPlayerById(currentJsonData, playerId);
-                  
-                  if (playerFound && playerFound.player.socketId) {
-                    const reason = encodeURIComponent('ゲーム終了');
-                    const url = `result.html?result=lose&reason=${reason}&roomId=${data.roomId}&playerId=${playerId}`;
-                    Logger.debug(`[Result] 敗者リダイレクトURL: ${url}, socketId: ${playerFound.player.socketId}`);
-                    io.to(playerFound.player.socketId).emit('redirectToResult', { url: url });
-                    Logger.debug(`[Result] 敗者リダイレクト送信完了: ${playerFound.player.name} (${playerId})`);
+                // フォールバック: nameからplayerIdを検索
+                if (!playerId && loser.name) {
+                  // CPUプレイヤーの場合、名前をそのままIDとして使用
+                  if (loser.name.startsWith('cpu_')) {
+                    playerId = loser.name;
                   } else {
-                    Logger.warn(`[Result] 敗者プレイヤーが見つからないかSocketIDがありません: id=${loser.id}, name=${loser.name}`);
+                    // プレイヤー名からIDを逆引き
+                    const playerIds = Object.keys(currentJsonData.players || {});
+                    for (const id of playerIds) {
+                      if (currentJsonData.players[id].name === loser.name) {
+                        playerId = id;
+                        break;
+                      }
+                    }
                   }
-                } else {
-                  Logger.warn(`[Result] 敗者IDが無効またはプレイヤーが存在しません: id=${loser.id}, name=${loser.name}`);
+                }
+                
+                if (!playerId) {
+                  Logger.warn(`[Result] 敗者のplayerIdが見つかりません: ${loser.name}`);
+                  continue;
+                }
+                const found = this.findPlayerById(currentJsonData, playerId);
+                if (found && found.player && found.player.socketId) {
+                  const reason = encodeURIComponent('ゲーム終了');
+                  const url = `result.html?result=lose&reason=${reason}&roomId=${data.roomId}&playerId=${playerId}`;
+                  io.to(found.player.socketId).emit('redirectToResult', { url: url });
+                  Logger.debug(`[Result] 敗者リダイレクト送信: ${loser.name} (ID: ${playerId})`);
                 }
               }
 
               // 勝者への通知
               for (const winner of winners) {
-                Logger.debug(`[Result] 勝者データ: id=${winner.id}, name=${winner.name}, constructor=${winner.constructor.name}`);
+                // プレイヤーIDからプレイヤーデータを検索
+                let playerId = winner.id || winner.playerId;
                 
-                // IDベースの検索のみを使用
-                if (winner.id && currentJsonData.players[winner.id]) {
-                  const playerId = winner.id;
-                  const playerFound = SocketHandlers.findPlayerById(currentJsonData, playerId);
-                  
-                  if (playerFound && playerFound.player.socketId) {
-                    const reason = encodeURIComponent('ゲーム終了');
-                    const url = `result.html?result=win&reason=${reason}&roomId=${data.roomId}&playerId=${playerId}`;
-                    Logger.debug(`[Result] 勝者リダイレクトURL: ${url}, socketId: ${playerFound.player.socketId}`);
-                    io.to(playerFound.player.socketId).emit('redirectToResult', { url: url });
-                    Logger.debug(`[Result] 勝者リダイレクト送信完了: ${playerFound.player.name} (${playerId})`);
+                // フォールバック: nameからplayerIdを検索
+                if (!playerId && winner.name) {
+                  // CPUプレイヤーの場合、名前をそのままIDとして使用
+                  if (winner.name.startsWith('cpu_')) {
+                    playerId = winner.name;
                   } else {
-                    Logger.warn(`[Result] 勝者プレイヤーが見つからないかSocketIDがありません: id=${winner.id}, name=${winner.name}`);
+                    // プレイヤー名からIDを逆引き
+                    const playerIds = Object.keys(currentJsonData.players || {});
+                    for (const id of playerIds) {
+                      if (currentJsonData.players[id].name === winner.name) {
+                        playerId = id;
+                        break;
+                      }
+                    }
                   }
-                } else {
-                  Logger.warn(`[Result] 勝者IDが無効またはプレイヤーが存在しません: id=${winner.id}, name=${winner.name}`);
+                }
+                
+                if (!playerId) {
+                  Logger.warn(`[Result] 勝者のplayerIdが見つかりません: ${winner.name}`);
+                  continue;
+                }
+                const found = this.findPlayerById(currentJsonData, playerId);
+                if (found && found.player && found.player.socketId) {
+                  const reason = encodeURIComponent('ゲーム終了');
+                  const url = `result.html?result=win&reason=${reason}&roomId=${data.roomId}&playerId=${playerId}`;
+                  io.to(found.player.socketId).emit('redirectToResult', { url: url });
+                  Logger.debug(`[Result] 勝者リダイレクト送信: ${winner.name} (ID: ${playerId})`);
                 }
               }
             }
@@ -844,7 +906,6 @@ class SocketHandlers {
   static handleRequestRematch(socket, data, io) {
     DataManager.loadData();
     const jsonData = DataManager.getJsonData();
-    jsonData.rooms[data.roomId].playing = false;
     
     const { roomId, playerId } = data;
     
@@ -855,6 +916,14 @@ class SocketHandlers {
 
     Logger.info(`${playerId} からルーム ${roomId} への再戦リクエストを受け取りました。`);
     const room = jsonData.rooms[roomId];
+
+    if (!room) {
+      Logger.error(`ルーム ${roomId} が存在しません。`);
+      return;
+    }
+
+    // ルームのplaying状態をfalseに設定
+    room.playing = false;
 
     if (room.players.length >= CONFIG.MAX_PLAYERS_PER_ROOM) {
         Logger.info(`ルーム ${roomId} の初回再戦リクエスト。プレイヤーリストとready状態をリセットします。`);
@@ -974,11 +1043,9 @@ class SocketHandlers {
       const reachedPlayers = room.playersReachedResult || [];
       
       if (humanPlayers.length > 0 && reachedPlayers.length >= humanPlayers.length) {
-        Logger.info(`[RoomCleanup] 全プレイヤーがリザルト到達、ルーム ${roomId} の即座クリーンアップを実行`);
-        // 少し遅延を設けて安全に削除
-        setTimeout(() => {
-          RoomManager.removeRoom(roomId);
-        }, 5000);
+        Logger.info(`[RoomCleanup] 全プレイヤーがリザルト到達（ロビー復帰時に退出判定を行います）`);
+        // リザルト画面到達時点では退出判定を行わず、ロビー復帰時に判定する
+        // ルーム削除処理はhandleReturnToLobbyで実行
       }
     } catch (e) {
       Logger.error(`[RoomCleanup] 全プレイヤー到達チェックエラー ${roomId}:`, e);
