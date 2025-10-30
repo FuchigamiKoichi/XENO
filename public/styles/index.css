@@ -8,7 +8,7 @@
 body {
     font-family: 'Comic Sans MS', 'Papyrus', 'Bradley Hand', cursive, fantasy;
     min-height: 100vh;
-    color: #333;
+    color: #E0E0E0;
     margin: 0;
     padding: 0;
 }
@@ -27,6 +27,7 @@ body {
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
+    background-attachment: fixed;
     position: relative;
     min-height: calc(100vh - 120px);
 }
@@ -34,9 +35,23 @@ body {
 /* 入力パネル：左上に配置 */
 .input-panel {
     position: absolute;
-    top: 20px;
-    left: 50px;
-    width: 350px;
+    top: 25px;
+    left: 20px;
+    width: 450px;
+    /* 半透明の暗い背景 */
+    background: rgba(10, 5, 20, 0.7);
+    
+    /* 背景をぼかす（すりガラス効果） */
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
+    
+    border-radius: 4px; /* シャープな角丸 */
+    
+    /* 毒々しい紫の枠線と光彩 */
+    border: 1px solid rgba(170, 0, 255, 0.3);
+    box-shadow: 0 0 15px rgba(170, 0, 255, 0.2), 
+                inset 0 0 10px rgba(170, 0, 255, 0.1);
+    min-height: 490px;
     max-height: calc(100vh - 180px);
     overflow-y: auto;
     z-index: 10;
@@ -52,8 +67,9 @@ body {
 .select_rooms {
     display: flex;
     flex-direction: column;
-    background-color: rgba(141, 24, 12, 1);
     width: 100%;
+    padding: 20px 25px;
+    gap: 20px;
 }
 
 /* 背景画像表示エリア - 削除（bodyの背景として表示） */
@@ -214,9 +230,31 @@ body {
     transition: all 0.2s ease;
 }
 
-/* セクション3: ルーム作成 */
+
 .create-section {
-    border-left: 4px solid rgba(141, 24, 12, 1);
+    border-bottom: none; 
+    padding-bottom: 0;
+    margin-top: -10px; 
+}
+
+#name, #searchInput, #roomIdInput {
+    background: rgba(0, 0, 0, 0.5);
+    border: 1px solid #4A0061; /* 暗い紫 */
+    border-radius: 4px;
+    padding: 12px 10px;
+    /* color: #E0E0E0; */
+    font-size: 1rem; /* フォントサイズを統一 */
+    font-family: inherit;
+    transition: all 0.2s ease;
+    width: 100%;
+    box-sizing: border-box; /* パディングを含めて 100% */
+}
+/* 入力欄のフォーカス（ネオン光彩） */
+#name:focus, #searchInput:focus, #roomIdInput:focus {
+    outline: none;
+    border-color: #AA00FF; /* 鮮やかな紫 */
+    box-shadow: 0 0 10px #AA00FF, 
+                inset 0 0 5px rgba(170, 0, 255, 0.5);
 }
 
 .create-btn {
@@ -283,7 +321,19 @@ input[type="number"]::placeholder {
     background-color: rgba(161, 34, 22, 1) !important;
 }
 
-/* 名前入力欄のプレースホルダーのフォントサイズを大きく、白文字に */
+.search-and-display, .join-group {
+    display: flex;
+    gap: 10px; 
+    margin-top: 15px;
+}
+.search-and-display input, .join-group input {
+    flex-grow: 1; 
+}
+.search-and-display button, .join-group button {
+    width: auto; 
+    white-space: nowrap; 
+}
+
 #name::placeholder {
     font-size: 32px !important;
     color: white !important;
@@ -316,11 +366,11 @@ input[type="number"]::placeholder {
 }
 
 #rooms button:hover {
-    background-color: #e8e8e8;
-    border-color: #999;
-    transform: translateY(-1px);
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    transition: all 0.2s ease;
+    background-color: #AA00FF;
+    border-color: #AA00FF;
+    color: #FFF;
+    transform: translateY(0);
+    box-shadow: 0 0 10px rgba(170, 0, 255, 0.7);
 }
 
 
@@ -362,6 +412,8 @@ input[type="number"]::placeholder {
         width: 100%;
         max-height: none;
         padding: 15px;
+        backdrop-filter: none; 
+        background: rgba(10, 5, 20, 0.9);
     }
     
     .top-section {
